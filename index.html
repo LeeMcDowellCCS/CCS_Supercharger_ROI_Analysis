@@ -7,106 +7,40 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    font-family: 'Georgia', 'Times New Roman', serif;
-    background: #0d0f14;
-    color: #e8e4dc;
-    min-height: 100vh;
-    padding: 2.5rem 2rem;
-  }
-
+  body { font-family: 'Georgia', 'Times New Roman', serif; background: #0d0f14; color: #e8e4dc; min-height: 100vh; padding: 2.5rem 2rem; }
   .container { max-width: 860px; margin: 0 auto; }
-
   header { margin-bottom: 2.5rem; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 1.5rem; }
   .eyebrow { font-family: 'Courier New', monospace; font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: #7a9e7e; margin-bottom: 0.6rem; }
   h1 { font-size: 22px; font-weight: 400; color: #e8e4dc; letter-spacing: -0.01em; line-height: 1.3; }
   h1 span { color: #7a9e7e; }
   .subtitle { font-family: 'Courier New', monospace; font-size: 11px; color: #5a5a62; margin-top: 0.5rem; letter-spacing: 0.04em; }
-
   .tabs { display: flex; gap: 4px; margin-bottom: 1.75rem; flex-wrap: wrap; }
-  .tab {
-    padding: 6px 16px;
-    font-family: 'Courier New', monospace;
-    font-size: 11px;
-    letter-spacing: 0.06em;
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 2px;
-    background: transparent;
-    color: #5a5a62;
-    cursor: pointer;
-    transition: all 0.15s;
-  }
+  .tab { padding: 6px 16px; font-family: 'Courier New', monospace; font-size: 11px; letter-spacing: 0.06em; border: 1px solid rgba(255,255,255,0.1); border-radius: 2px; background: transparent; color: #5a5a62; cursor: pointer; transition: all 0.15s; }
   .tab:hover { border-color: rgba(122,158,126,0.4); color: #a0b8a3; }
   .tab.active { background: rgba(122,158,126,0.12); border-color: #7a9e7e; color: #7a9e7e; }
-
-  .context-box {
-    font-family: 'Courier New', monospace;
-    font-size: 11px;
-    line-height: 1.8;
-    color: #6a6a72;
-    border-left: 2px solid rgba(122,158,126,0.3);
-    padding-left: 1rem;
-    margin-bottom: 1.75rem;
-  }
-
+  .context-box { font-family: 'Courier New', monospace; font-size: 11px; line-height: 1.8; color: #6a6a72; border-left: 2px solid rgba(122,158,126,0.3); padding-left: 1rem; margin-bottom: 1.75rem; }
   .metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-bottom: 2rem; }
-  .mcard {
-    background: #13161e;
-    border: 1px solid rgba(255,255,255,0.07);
-    border-radius: 3px;
-    padding: 14px 16px;
-    transition: border-color 0.2s;
-  }
+  .mcard { background: #13161e; border: 1px solid rgba(255,255,255,0.07); border-radius: 3px; padding: 14px 16px; }
   .mcard.best { border-color: rgba(122,158,126,0.5); }
-  .mlabel {
-    font-family: 'Courier New', monospace;
-    font-size: 10px;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: #4a4a52;
-    margin-bottom: 6px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-  .badge {
-    font-size: 9px;
-    padding: 2px 6px;
-    background: rgba(122,158,126,0.15);
-    color: #7a9e7e;
-    border-radius: 2px;
-    letter-spacing: 0.08em;
-  }
+  .mlabel { font-family: 'Courier New', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: #4a4a52; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .badge { font-size: 9px; padding: 2px 6px; background: rgba(122,158,126,0.15); color: #7a9e7e; border-radius: 2px; letter-spacing: 0.08em; }
+  .badge-pend { font-size: 9px; padding: 2px 6px; background: rgba(186,117,23,0.15); color: #ba7517; border-radius: 2px; letter-spacing: 0.08em; }
   .mval { font-size: 20px; font-weight: 400; color: #e8e4dc; margin-bottom: 4px; letter-spacing: -0.02em; }
   .msub { font-family: 'Courier New', monospace; font-size: 10px; color: #4a4a52; line-height: 1.7; }
-
   .chart-section { margin-bottom: 2rem; }
-  .chart-label {
-    font-family: 'Courier New', monospace;
-    font-size: 10px;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: #4a4a52;
-    margin-bottom: 10px;
-  }
-
+  .chart-label { font-family: 'Courier New', monospace; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: #4a4a52; margin-bottom: 10px; }
   .legend { display: flex; gap: 20px; margin-bottom: 14px; flex-wrap: wrap; }
   .leg-item { display: flex; align-items: center; gap: 6px; font-family: 'Courier New', monospace; font-size: 10px; color: #5a5a62; }
   .leg-swatch { width: 10px; height: 10px; border-radius: 1px; flex-shrink: 0; }
-
   .chart-wrap { position: relative; width: 100%; }
-
-  footer {
-    margin-top: 2rem;
-    padding-top: 1rem;
-    border-top: 1px solid rgba(255,255,255,0.06);
-    font-family: 'Courier New', monospace;
-    font-size: 10px;
-    line-height: 1.9;
-    color: #3a3a42;
-    letter-spacing: 0.03em;
-  }
+  .scenario-key { margin-bottom: 2rem; border: 1px solid rgba(255,255,255,0.06); border-radius: 3px; overflow: hidden; }
+  .scenario-key-header { font-family: 'Courier New', monospace; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: #4a4a52; padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+  .scenario-row { display: grid; grid-template-columns: 28px 1fr; gap: 12px; padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.04); align-items: start; }
+  .scenario-row:last-child { border-bottom: none; }
+  .s-dot { width: 10px; height: 10px; border-radius: 1px; margin-top: 3px; }
+  .s-title { font-family: 'Courier New', monospace; font-size: 11px; color: #a0a098; margin-bottom: 3px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .s-desc { font-family: 'Courier New', monospace; font-size: 10px; color: #4a4a52; line-height: 1.6; }
+  footer { margin-top: 2rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.06); font-family: 'Courier New', monospace; font-size: 10px; line-height: 1.9; color: #3a3a42; letter-spacing: 0.03em; }
 </style>
 </head>
 <body>
@@ -114,8 +48,33 @@
   <header>
     <p class="eyebrow">Car Charger Specialists &nbsp;/&nbsp; Wally Park &nbsp;/&nbsp; 3811 Wally Pk Wy, College Park GA</p>
     <h1>Supercharger ROI &nbsp;<span>Utilization Sensitivity</span></h1>
-    <p class="subtitle">Tesla V4 &nbsp;|&nbsp; $0.52/kWh &nbsp;|&nbsp; 7% YoY growth &nbsp;|&nbsp; 15yr @ 10% discount &nbsp;|&nbsp; $30k GA Power rebate applied</p>
+    <p class="subtitle">Tesla V4 &nbsp;|&nbsp; $0.52/kWh &nbsp;|&nbsp; 7% YoY utilization growth &nbsp;|&nbsp; 15yr @ 10% discount rate</p>
   </header>
+
+  <div class="scenario-key">
+    <div class="scenario-key-header">Scenario definitions</div>
+    <div class="scenario-row">
+      <div><div class="s-dot" style="background:#4a8fd4;"></div></div>
+      <div>
+        <div class="s-title">Scenario 1 &nbsp;&mdash;&nbsp; Phased Sequential</div>
+        <div class="s-desc">2 Make Ready jobs ~6 months apart &nbsp;·&nbsp; 1 V4 Cabinet + 8 dispensers per phase &nbsp;·&nbsp; Revenue at 8 chargers Year 1, 16 chargers Year 2+<br>Gross CAPEX: $791,756 &nbsp;·&nbsp; 2 x $30k rebate = -$60k &nbsp;·&nbsp; Net CAPEX: $731,756 &nbsp;·&nbsp; CIAC: ~$62,232/phase</div>
+      </div>
+    </div>
+    <div class="scenario-row">
+      <div><div class="s-dot" style="background:#7a9e7e;"></div></div>
+      <div>
+        <div class="s-title">Scenario 2 &nbsp;&mdash;&nbsp; Simultaneous Make Ready &nbsp;<span class="badge-pend">GA Power approval required</span></div>
+        <div class="s-desc">2 Make Ready jobs performed concurrently &nbsp;·&nbsp; 2 V4 Cabinets + 16 dispensers from day one &nbsp;·&nbsp; No revenue gap vs. Scenario 1<br>Gross CAPEX: $791,756 &nbsp;·&nbsp; 2 x $30k rebate = -$60k &nbsp;·&nbsp; Net CAPEX: $731,756 &nbsp;·&nbsp; CIAC: ~$62,232/job</div>
+      </div>
+    </div>
+    <div class="scenario-row">
+      <div><div class="s-dot" style="background:#c4623a;"></div></div>
+      <div>
+        <div class="s-title">Scenario 3 &nbsp;&mdash;&nbsp; Single Make Ready Job</div>
+        <div class="s-desc">1 Make Ready job &nbsp;·&nbsp; 2 V4 Cabinets + 16 dispensers from day one &nbsp;·&nbsp; One $300k Make Ready allowance, one $30k rebate<br>Gross CAPEX: $1,083,757 &nbsp;·&nbsp; 1 x $30k rebate = -$30k &nbsp;·&nbsp; Net CAPEX: $1,053,757 &nbsp;·&nbsp; CIAC: $424,463</div>
+      </div>
+    </div>
+  </div>
 
   <div class="tabs" id="utabs">
     <button class="tab active" data-u="200">Low &nbsp;200 kWh</button>
@@ -128,115 +87,103 @@
   <div class="metrics" id="ucards"></div>
 
   <div class="legend">
-    <span class="leg-item"><span class="leg-swatch" style="background:#4a8fd4;"></span>Scenario 1 — 8 chargers now</span>
-    <span class="leg-item"><span class="leg-swatch" style="background:#7a9e7e;"></span>Scenario 2 — phased</span>
-    <span class="leg-item"><span class="leg-swatch" style="background:#c4623a;"></span>Scenario 3 — 16 chargers now</span>
+    <span class="leg-item"><span class="leg-swatch" style="background:#4a8fd4;"></span>Scenario 1 — phased sequential</span>
+    <span class="leg-item"><span class="leg-swatch" style="background:#7a9e7e;"></span>Scenario 2 — simultaneous</span>
+    <span class="leg-item"><span class="leg-swatch" style="background:#c4623a;"></span>Scenario 3 — single job</span>
   </div>
 
   <div class="chart-section">
     <p class="chart-label">Net present value &nbsp;(15yr @ 10%)</p>
     <div class="chart-wrap" style="height: 240px;">
-      <canvas id="npvChart" role="img" aria-label="NPV comparison by scenario"></canvas>
+      <canvas id="npvChart" role="img" aria-label="NPV comparison by scenario at selected utilization level"></canvas>
     </div>
   </div>
 
   <div class="chart-section">
     <p class="chart-label">Payback period &nbsp;(years)</p>
     <div class="chart-wrap" style="height: 180px;">
-      <canvas id="pbChart" role="img" aria-label="Payback period comparison by scenario"></canvas>
+      <canvas id="pbChart" role="img" aria-label="Payback period comparison by scenario at selected utilization level"></canvas>
     </div>
   </div>
 
   <footer>
-    Medium (400 kWh) = baseline in delivered models &nbsp;·&nbsp;
-    High (600 kWh) = reasonable airport-adjacent expectation &nbsp;·&nbsp;
+    Medium (400 kWh) = conservative baseline for established retail supercharger &nbsp;·&nbsp;
+    High (600 kWh) = realistic for ATL airport-adjacent site &nbsp;·&nbsp;
     Airport peak (750 kWh) = ~3 sessions/day at 250 kWh avg, plausible with ATL rideshare staging &nbsp;·&nbsp;
-    Scenario 2 NPV exceeds Scenario 3 at every utilization level
+    Scenario 1 revenue reflects 8 chargers Year 1, 16 chargers Year 2+ &nbsp;·&nbsp;
+    Scenario 2 subject to GA Power approval of concurrent Make Ready jobs &nbsp;·&nbsp;
+    $30k GA Power Business Rebate per job ($60k max per customer) — contingent upon application approval
   </footer>
 </div>
 
 <script>
 const DATA = {
   200: {
-    context: "Low utilization — roughly 2–3 slow sessions/day per stall. Viable for a quiet suburban retail site, but well below what airport-adjacent demand near ATL would realistically produce. Worst-case floor.",
-    s1: { npv: 1220311, rev: 508745, pb: 2.47 },
-    s2: { npv: 2410175, rev: 1007368, pb: 2.69 },
-    s3: { npv: 2118623, rev: 1017491, pb: 3.44 },
+    context: "Low utilization — roughly 2–3 slow sessions/day per stall. Well below what airport-adjacent demand near ATL would realistically produce. Worst-case floor.",
+    s1: { npv: 2313205, rev: 997246,  pb: 2.91 },
+    s2: { npv: 2440623, rev: 1017491, pb: 2.47 },
+    s3: { npv: 2118622, rev: 1017491, pb: 3.44 },
   },
   400: {
-    context: "Medium utilization — the baseline assumption in all three delivered models. Standard for an established retail supercharger. Conservative for a site this close to ATL Hartsfield-Jackson.",
-    s1: { npv: 2806501, rev: 1017491, pb: 1.29 },
-    s2: { npv: 5518846, rev: 2014736, pb: 1.52 },
+    context: "Medium utilization — conservative baseline for an established retail supercharger. Likely understates real demand for a site this close to ATL Hartsfield-Jackson.",
+    s1: { npv: 5358167, rev: 1994491, pb: 1.75 },
+    s2: { npv: 5613003, rev: 2034982, pb: 1.29 },
     s3: { npv: 5291002, rev: 2034982, pb: 1.82 },
   },
   600: {
     context: "High utilization — realistic expectation for an airport-adjacent site. ATL has 50,000+ employees and among the highest Uber/Lyft staging volume in the US. This is likely the right planning number for Wally Park.",
-    s1: { npv: 4392691, rev: 1526236, pb: 0.87 },
-    s2: { npv: 8627516, rev: 3022105, pb: 1.11 },
-    s3: { npv: 8463382, rev: 3052473, pb: 1.24 },
+    s1: { npv: 8403128, rev: 2991737, pb: 1.35 },
+    s2: { npv: 8785382, rev: 3052473, pb: 0.87 },
+    s3: { npv: 8463381, rev: 3052473, pb: 1.24 },
   },
   750: {
     context: "Airport peak — aggressive but defensible. 3 sessions/day at 250 kWh avg is well within V4 capacity. Requires strong rideshare adoption and site visibility from Camp Creek Pkwy. Upside scenario.",
-    s1: { npv: 5582333, rev: 1907795, pb: 0.70 },
-    s2: { npv: 10959019, rev: 3777631, pb: 0.87 },
+    s1: { npv: 10686849, rev: 3739671, pb: 1.18 },
+    s2: { npv: 11164667, rev: 3815591, pb: 0.70 },
     s3: { npv: 10842666, rev: 3815591, pb: 1.00 },
   }
 };
 
 const fmtM = v => '$' + (v / 1000000).toFixed(2) + 'M';
 const fmt$ = v => '$' + Math.round(v).toLocaleString();
-const capex = ['$365,878', '$731,757', '$1,053,757'];
+const capex = ['$731,756 net', '$731,756 net', '$1,053,757 net'];
 const colors = ['#4a8fd4', '#7a9e7e', '#c4623a'];
-const labels = ['S1 — 8 now', 'S2 — phased', 'S3 — 16 now'];
+const labels = ['S1 — sequential', 'S2 — simultaneous', 'S3 — single job'];
+const names = ['Scenario 1', 'Scenario 2', 'Scenario 3'];
+const pendingBadge = [false, true, false];
 
 let npvChart, pbChart;
-
-const chartDefaults = {
-  responsive: true,
-  maintainAspectRatio: false,
-  plugins: { legend: { display: false } },
-  scales: {
-    x: {
-      grid: { display: false },
-      ticks: { color: '#5a5a62', font: { family: "'Courier New', monospace", size: 11 } }
-    },
-    y: {
-      grid: { color: 'rgba(255,255,255,0.05)' },
-      ticks: { color: '#4a4a52', font: { family: "'Courier New', monospace", size: 10 } },
-      border: { display: false }
-    }
-  }
-};
+const tickStyle = { color: '#5a5a62', font: { family: "'Courier New', monospace", size: 11 } };
+const gridStyle = { color: 'rgba(255,255,255,0.05)' };
 
 function render(u) {
   const d = DATA[u];
   document.getElementById('ucontext').textContent = d.context;
-
   const scenarios = [d.s1, d.s2, d.s3];
   const best = Math.max(...scenarios.map(s => s.npv));
-  const names = ['Scenario 1', 'Scenario 2', 'Scenario 3'];
 
   document.getElementById('ucards').innerHTML = scenarios.map((s, i) => `
     <div class="mcard ${s.npv === best ? 'best' : ''}">
-      <p class="mlabel">${names[i]}${s.npv === best ? '<span class="badge">best NPV</span>' : ''}</p>
+      <p class="mlabel">
+        ${names[i]}
+        ${s.npv === best ? '<span class="badge">best NPV</span>' : ''}
+        ${pendingBadge[i] ? '<span class="badge-pend">pending approval</span>' : ''}
+      </p>
       <p class="mval">${fmtM(s.npv)}</p>
-      <p class="msub">NPV &nbsp;·&nbsp; ${s.pb.toFixed(2)}yr payback<br>${fmt$(Math.round(s.rev / 1000) * 1000)} avg/yr &nbsp;·&nbsp; ${capex[i]} CAPEX</p>
+      <p class="msub">NPV &nbsp;·&nbsp; ${s.pb.toFixed(2)}yr payback<br>${fmt$(Math.round(s.rev / 1000) * 1000)} avg/yr<br>${capex[i]}</p>
     </div>`).join('');
 
   const npvCtx = document.getElementById('npvChart');
   if (npvChart) npvChart.destroy();
   npvChart = new Chart(npvCtx, {
     type: 'bar',
-    data: {
-      labels,
-      datasets: [{ data: scenarios.map(s => Math.round(s.npv)), backgroundColor: colors, borderWidth: 0, borderRadius: 2 }]
-    },
+    data: { labels, datasets: [{ data: scenarios.map(s => Math.round(s.npv)), backgroundColor: colors, borderWidth: 0, borderRadius: 2 }] },
     options: {
-      ...chartDefaults,
+      responsive: true, maintainAspectRatio: false,
       plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ' ' + fmtM(ctx.raw) }, bodyFont: { family: "'Courier New', monospace" } } },
       scales: {
-        ...chartDefaults.scales,
-        y: { ...chartDefaults.scales.y, ticks: { ...chartDefaults.scales.y.ticks, callback: v => '$' + (v / 1000000).toFixed(1) + 'M' } }
+        x: { grid: { display: false }, ticks: tickStyle },
+        y: { grid: gridStyle, ticks: { ...tickStyle, callback: v => '$' + (v / 1000000).toFixed(1) + 'M' }, border: { display: false } }
       }
     }
   });
@@ -245,16 +192,13 @@ function render(u) {
   if (pbChart) pbChart.destroy();
   pbChart = new Chart(pbCtx, {
     type: 'bar',
-    data: {
-      labels,
-      datasets: [{ data: scenarios.map(s => parseFloat(s.pb.toFixed(2))), backgroundColor: colors, borderWidth: 0, borderRadius: 2 }]
-    },
+    data: { labels, datasets: [{ data: scenarios.map(s => parseFloat(s.pb.toFixed(2))), backgroundColor: colors, borderWidth: 0, borderRadius: 2 }] },
     options: {
-      ...chartDefaults,
+      responsive: true, maintainAspectRatio: false,
       plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ' ' + ctx.raw + ' years' }, bodyFont: { family: "'Courier New', monospace" } } },
       scales: {
-        ...chartDefaults.scales,
-        y: { ...chartDefaults.scales.y, ticks: { ...chartDefaults.scales.y.ticks, callback: v => v + 'yr' } }
+        x: { grid: { display: false }, ticks: tickStyle },
+        y: { grid: gridStyle, ticks: { ...tickStyle, callback: v => v + 'yr' }, border: { display: false } }
       }
     }
   });
