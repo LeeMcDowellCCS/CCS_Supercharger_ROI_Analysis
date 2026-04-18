@@ -3,216 +3,1381 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Wally Park – Supercharger Utilization Sensitivity</title>
+<title>Car Charger Specialists | Tesla V4 Supercharger Site Pro Forma</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Georgia', 'Times New Roman', serif; background: #0d0f14; color: #e8e4dc; min-height: 100vh; padding: 2.5rem 2rem; }
-  .container { max-width: 860px; margin: 0 auto; }
-  header { margin-bottom: 2.5rem; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 1.5rem; }
-  .eyebrow { font-family: 'Courier New', monospace; font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: #7a9e7e; margin-bottom: 0.6rem; }
-  h1 { font-size: 22px; font-weight: 400; color: #e8e4dc; letter-spacing: -0.01em; line-height: 1.3; }
-  h1 span { color: #7a9e7e; }
-  .subtitle { font-family: 'Courier New', monospace; font-size: 11px; color: #5a5a62; margin-top: 0.5rem; letter-spacing: 0.04em; }
-  .tabs { display: flex; gap: 4px; margin-bottom: 1.75rem; flex-wrap: wrap; }
-  .tab { padding: 6px 16px; font-family: 'Courier New', monospace; font-size: 11px; letter-spacing: 0.06em; border: 1px solid rgba(255,255,255,0.1); border-radius: 2px; background: transparent; color: #5a5a62; cursor: pointer; transition: all 0.15s; }
-  .tab:hover { border-color: rgba(122,158,126,0.4); color: #a0b8a3; }
-  .tab.active { background: rgba(122,158,126,0.12); border-color: #7a9e7e; color: #7a9e7e; }
-  .context-box { font-family: 'Courier New', monospace; font-size: 11px; line-height: 1.8; color: #6a6a72; border-left: 2px solid rgba(122,158,126,0.3); padding-left: 1rem; margin-bottom: 1.75rem; }
-  .metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-bottom: 2rem; }
-  .mcard { background: #13161e; border: 1px solid rgba(255,255,255,0.07); border-radius: 3px; padding: 14px 16px; }
-  .mcard.best { border-color: rgba(122,158,126,0.5); }
-  .mlabel { font-family: 'Courier New', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: #4a4a52; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-  .badge { font-size: 9px; padding: 2px 6px; background: rgba(122,158,126,0.15); color: #7a9e7e; border-radius: 2px; letter-spacing: 0.08em; }
-  .badge-pend { font-size: 9px; padding: 2px 6px; background: rgba(186,117,23,0.15); color: #ba7517; border-radius: 2px; letter-spacing: 0.08em; }
-  .mval { font-size: 20px; font-weight: 400; color: #e8e4dc; margin-bottom: 4px; letter-spacing: -0.02em; }
-  .msub { font-family: 'Courier New', monospace; font-size: 10px; color: #4a4a52; line-height: 1.7; }
-  .chart-section { margin-bottom: 2rem; }
-  .chart-label { font-family: 'Courier New', monospace; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: #4a4a52; margin-bottom: 10px; }
-  .legend { display: flex; gap: 20px; margin-bottom: 14px; flex-wrap: wrap; }
-  .leg-item { display: flex; align-items: center; gap: 6px; font-family: 'Courier New', monospace; font-size: 10px; color: #5a5a62; }
-  .leg-swatch { width: 10px; height: 10px; border-radius: 1px; flex-shrink: 0; }
-  .chart-wrap { position: relative; width: 100%; }
-  .scenario-key { margin-bottom: 2rem; border: 1px solid rgba(255,255,255,0.06); border-radius: 3px; overflow: hidden; }
-  .scenario-key-header { font-family: 'Courier New', monospace; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: #4a4a52; padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.06); }
-  .scenario-row { display: grid; grid-template-columns: 28px 1fr; gap: 12px; padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.04); align-items: start; }
-  .scenario-row:last-child { border-bottom: none; }
-  .s-dot { width: 10px; height: 10px; border-radius: 1px; margin-top: 3px; }
-  .s-title { font-family: 'Courier New', monospace; font-size: 11px; color: #a0a098; margin-bottom: 3px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-  .s-desc { font-family: 'Courier New', monospace; font-size: 10px; color: #4a4a52; line-height: 1.6; }
-  footer { margin-top: 2rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.06); font-family: 'Courier New', monospace; font-size: 10px; line-height: 1.9; color: #3a3a42; letter-spacing: 0.03em; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0a0a0a;
+  --bg2: #141414;
+  --surface: #1a1a1a;
+  --surface2: #242424;
+  --surface3: #2e2e2e;
+  --border: rgba(255,255,255,0.08);
+  --border2: rgba(255,255,255,0.14);
+  --text: #ffffff;
+  --text2: #b8b8b8;
+  --text3: #7a7a7a;
+  --text4: #4a4a4a;
+  --blue: #7bc8e8;
+  --blue-dim: rgba(123,200,232,0.12);
+  --yellow: #f4c430;
+  --yellow-dim: rgba(244,196,48,0.12);
+  --gray-metal: #8a8a8a;
+  --accent-dark: #1e3a4a;
+  --red: #d65555;
+  --green: #5dca8a;
+  --sans: 'Barlow', -apple-system, sans-serif;
+  --cond: 'Barlow Condensed', sans-serif;
+}
+
+body { background: var(--bg); color: var(--text); font-family: var(--sans); min-height: 100vh; font-weight: 400; }
+
+.page { max-width: 1020px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+
+/* HEADER / BRAND */
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 2.5rem;
+}
+.bolt {
+  width: 50px;
+  height: 64px;
+  flex-shrink: 0;
+  position: relative;
+}
+.bolt svg { width: 100%; height: 100%; display: block; }
+.brand-text { flex: 1; }
+.brand-name {
+  font-family: var(--cond);
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  color: var(--text);
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+.brand-name .ccs {
+  color: var(--gray-metal);
+  -webkit-text-stroke: 1px rgba(255,255,255,0.4);
+}
+.brand-tagline {
+  font-family: var(--cond);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.28em;
+  color: var(--text3);
+  text-transform: uppercase;
+  margin-top: 4px;
+}
+.brand-contact {
+  text-align: right;
+  font-size: 12px;
+  color: var(--text3);
+  line-height: 1.6;
+}
+.brand-contact a { color: var(--blue); text-decoration: none; }
+.brand-contact a:hover { text-decoration: underline; }
+
+/* HERO */
+.hero { margin-bottom: 2.5rem; }
+.hero-eyebrow {
+  font-family: var(--cond);
+  font-size: 12px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--blue);
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+.hero h1 {
+  font-family: var(--cond);
+  font-size: 42px;
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: 0.01em;
+  color: var(--text);
+  margin-bottom: 12px;
+  text-transform: uppercase;
+}
+.hero h1 .accent { color: var(--yellow); }
+.hero p {
+  font-size: 14px;
+  color: var(--text2);
+  line-height: 1.6;
+  max-width: 720px;
+}
+
+/* DISCLAIMER */
+.disclaimer {
+  background: var(--yellow-dim);
+  border-left: 3px solid var(--yellow);
+  padding: 14px 18px;
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--text2);
+  margin-bottom: 2.5rem;
+  border-radius: 0 4px 4px 0;
+}
+.disclaimer strong { color: var(--yellow); font-weight: 600; letter-spacing: 0.04em; }
+
+/* SECTIONS */
+.section { margin-bottom: 2.5rem; }
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 1.25rem;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+.section-num {
+  width: 28px;
+  height: 28px;
+  background: var(--blue-dim);
+  color: var(--blue);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--cond);
+  font-size: 14px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.section-title {
+  font-family: var(--cond);
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+.section-subtitle {
+  font-size: 12px;
+  color: var(--text3);
+  margin-left: auto;
+}
+
+/* FIELDS */
+.input-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.input-grid.three { grid-template-columns: 1fr 1fr 1fr; }
+.input-grid.two-one { grid-template-columns: 2fr 1fr; }
+.span-2 { grid-column: 1 / -1; }
+
+.field { display: flex; flex-direction: column; gap: 8px; position: relative; }
+.field-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--cond);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text2);
+}
+
+.info-btn {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: transparent;
+  border: 1px solid var(--text4);
+  color: var(--text3);
+  font-size: 10px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  font-family: var(--sans);
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+.info-btn:hover { border-color: var(--blue); color: var(--blue); }
+
+.info-popup {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  background: var(--surface3);
+  border: 1px solid var(--border2);
+  border-radius: 4px;
+  padding: 12px 14px;
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--text2);
+  z-index: 20;
+  display: none;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  margin-bottom: 8px;
+}
+.info-popup.visible { display: block; }
+.info-popup strong { color: var(--blue); font-weight: 600; }
+.info-popup .why {
+  display: block;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+  color: var(--text3);
+  font-size: 11px;
+}
+
+.field input, .field select {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 11px 13px;
+  font-family: var(--sans);
+  font-size: 14px;
+  color: var(--text);
+  outline: none;
+  transition: all 0.15s;
+  width: 100%;
+}
+.field input:focus, .field select:focus {
+  border-color: var(--blue);
+  background: var(--surface2);
+}
+.field input::placeholder { color: var(--text4); }
+.field select { cursor: pointer; }
+.field select option { background: var(--surface); }
+
+/* CONFIG CARDS */
+.config-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.config-card {
+  border: 1.5px solid var(--border);
+  border-radius: 4px;
+  padding: 18px;
+  cursor: pointer;
+  transition: all 0.15s;
+  background: var(--surface);
+  position: relative;
+  overflow: hidden;
+}
+.config-card:hover { border-color: var(--border2); }
+.config-card.selected {
+  border-color: var(--blue);
+  background: var(--blue-dim);
+}
+.config-card.selected::before {
+  content: "SELECTED";
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-family: var(--cond);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  color: var(--blue);
+  background: rgba(123,200,232,0.2);
+  padding: 3px 8px;
+  border-radius: 2px;
+}
+.ctitle {
+  font-family: var(--cond);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+.cdetail {
+  font-size: 12px;
+  color: var(--text3);
+  line-height: 1.7;
+  margin-bottom: 12px;
+}
+.cprice-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+.cprice-label {
+  font-family: var(--cond);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text4);
+}
+.cprice-input {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 6px 10px;
+  font-family: var(--sans);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--yellow);
+  width: 130px;
+  outline: none;
+  font-variant-numeric: tabular-nums;
+}
+.cprice-input:focus { border-color: var(--blue); }
+.cprice-hint { font-size: 10px; color: var(--text4); margin-top: 4px; }
+
+/* ADVANCED */
+.advanced-toggle {
+  font-family: var(--cond);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text3);
+  cursor: pointer;
+  padding: 10px 0;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: color 0.15s;
+}
+.advanced-toggle:hover { color: var(--blue); }
+.advanced-toggle .caret { transition: transform 0.15s; }
+.advanced-toggle.open .caret { transform: rotate(90deg); }
+
+.advanced-content { display: none; padding: 16px 0 4px; }
+.advanced-content.visible { display: block; }
+
+.source-note {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 12px 16px;
+  font-size: 11px;
+  line-height: 1.7;
+  color: var(--text3);
+  margin-top: 16px;
+}
+.source-note strong { color: var(--text2); }
+
+/* CTA */
+.cta-btn {
+  width: 100%;
+  padding: 18px;
+  background: linear-gradient(to bottom, var(--blue), #5aa8c8);
+  color: var(--bg);
+  border: none;
+  border-radius: 4px;
+  font-family: var(--cond);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.15s;
+  margin-top: 1.5rem;
+  box-shadow: 0 4px 16px rgba(123,200,232,0.2);
+}
+.cta-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(123,200,232,0.35); }
+
+/* RESULTS */
+.results { display: none; margin-top: 3.5rem; }
+.results.visible { display: block; }
+
+.results-header {
+  border-top: 2px solid var(--blue);
+  padding-top: 1.5rem;
+  margin-bottom: 2rem;
+}
+.results-title {
+  font-family: var(--cond);
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.results-addr { font-size: 12px; color: var(--text3); line-height: 1.6; }
+
+/* UTIL TABS */
+.util-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 1.5rem;
+  padding: 4px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  width: fit-content;
+}
+.util-tab {
+  padding: 8px 18px;
+  font-family: var(--cond);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  border: none;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--text3);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.util-tab:hover { color: var(--text2); }
+.util-tab.active { background: var(--blue); color: var(--bg); }
+
+/* KPIs */
+.kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 2rem; }
+.kpi {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 16px 18px;
+  transition: border-color 0.2s;
+}
+.kpi.highlight { border-color: var(--blue); background: linear-gradient(135deg, var(--blue-dim), transparent); }
+.kpi-label {
+  font-family: var(--cond);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text3);
+  margin-bottom: 8px;
+}
+.kpi-val {
+  font-family: var(--cond);
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1;
+  margin-bottom: 4px;
+  font-variant-numeric: tabular-nums;
+}
+.kpi-sub { font-size: 11px; color: var(--text3); }
+
+/* TARIFF BOX */
+.tariff-box, .bill-preview {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 18px 20px;
+  margin-bottom: 1.5rem;
+}
+.tariff-box h3, .bill-preview h3 {
+  font-family: var(--cond);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--blue);
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+.tariff-row, .bill-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+}
+.tariff-row:last-child, .bill-row:last-child { border-bottom: none; }
+.tariff-row .tl, .bill-row .bl { color: var(--text3); }
+.tariff-row .tv, .bill-row .bv {
+  color: var(--text);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.bill-row.total {
+  border-top: 1px solid var(--border2);
+  margin-top: 8px;
+  padding-top: 12px;
+}
+.bill-row.total .bl { color: var(--text); font-weight: 600; }
+.bill-row.total .bv { color: var(--yellow); font-size: 15px; font-weight: 600; }
+
+/* CIEV NOTE */
+.ciev-note {
+  background: var(--blue-dim);
+  border-left: 3px solid var(--blue);
+  padding: 14px 18px;
+  font-size: 12px;
+  line-height: 1.75;
+  color: var(--text2);
+  margin-bottom: 2rem;
+  border-radius: 0 4px 4px 0;
+}
+.ciev-note strong { color: var(--blue); }
+
+/* CHARTS */
+.chart-section { margin-bottom: 2rem; }
+.chart-title {
+  font-family: var(--cond);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text3);
+  margin-bottom: 12px;
+}
+.chart-wrap { position: relative; width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 16px; }
+
+/* TABLE */
+.yr-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  margin-bottom: 1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+  font-variant-numeric: tabular-nums;
+}
+.yr-table th {
+  font-family: var(--cond);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text3);
+  text-align: right;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg2);
+}
+.yr-table th:first-child { text-align: left; }
+.yr-table td {
+  padding: 9px 14px;
+  text-align: right;
+  border-bottom: 1px solid var(--border);
+  color: var(--text2);
+}
+.yr-table tr:last-child td { border-bottom: none; }
+.yr-table td:first-child { text-align: left; color: var(--text2); }
+.yr-table .neg { color: var(--red); }
+.yr-table .pos { color: var(--green); }
+.yr-table .bdaf-tag {
+  display: inline-block;
+  font-size: 9px;
+  font-family: var(--cond);
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 2px;
+  margin-left: 6px;
+  background: var(--yellow-dim);
+  color: var(--yellow);
+  letter-spacing: 0.05em;
+}
+
+/* FOOTER */
+.footer {
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+.footer-left { flex: 1; min-width: 280px; }
+.footer-disclaimer {
+  font-size: 10px;
+  line-height: 1.7;
+  color: var(--text4);
+  letter-spacing: 0.01em;
+}
+.footer-brand {
+  font-family: var(--cond);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text3);
+  margin-bottom: 8px;
+}
+
+@media (max-width: 720px) {
+  .input-grid, .input-grid.three, .input-grid.two-one, .config-cards, .kpi-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .kpi-grid { grid-template-columns: 1fr 1fr; }
+  .brand { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .brand-contact { text-align: left; }
+  .hero h1 { font-size: 32px; }
+}
+@media (max-width: 480px) {
+  .input-grid, .input-grid.three, .input-grid.two-one, .config-cards { grid-template-columns: 1fr; }
+}
 </style>
 </head>
 <body>
-<div class="container">
-  <header>
-    <p class="eyebrow">Car Charger Specialists &nbsp;/&nbsp; Wally Park &nbsp;/&nbsp; 3811 Wally Pk Wy, College Park GA</p>
-    <h1>Supercharger ROI &nbsp;<span>Utilization Sensitivity</span></h1>
-    <p class="subtitle">Tesla V4 &nbsp;|&nbsp; $0.52/kWh &nbsp;|&nbsp; 7% YoY utilization growth &nbsp;|&nbsp; 15yr @ 10% discount rate</p>
-  </header>
+<div class="page">
 
-  <div class="scenario-key">
-    <div class="scenario-key-header">Scenario definitions</div>
-    <div class="scenario-row">
-      <div><div class="s-dot" style="background:#4a8fd4;"></div></div>
-      <div>
-        <div class="s-title">Scenario 1 &nbsp;&mdash;&nbsp; Phased Sequential</div>
-        <div class="s-desc">2 Make Ready jobs ~6 months apart &nbsp;·&nbsp; 1 V4 Cabinet + 8 dispensers per phase &nbsp;·&nbsp; Revenue at 8 chargers Year 1, 16 chargers Year 2+<br>Gross CAPEX: $791,756 &nbsp;·&nbsp; 2 x $30k rebate = -$60k &nbsp;·&nbsp; Net CAPEX: $731,756 &nbsp;·&nbsp; CIAC: ~$62,232/phase</div>
+  <!-- BRAND HEADER -->
+  <div class="brand">
+    <div class="bolt">
+      <svg viewBox="0 0 50 64" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="28,0 10,34 22,34 14,64 40,26 26,26 34,0" fill="#7bc8e8"/>
+        <polygon points="32,10 18,38 26,38 22,60 40,34 30,34 36,10" fill="#f4c430"/>
+      </svg>
+    </div>
+    <div class="brand-text">
+      <div class="brand-name">
+        <span class="ccs">CCS</span>
+      </div>
+      <div class="brand-tagline">Car Charger Specialists</div>
+    </div>
+    <div class="brand-contact">
+      <div>404-520-7349</div>
+      <div><a href="https://carchargerspecialists.com" target="_blank">carchargerspecialists.com</a></div>
+    </div>
+  </div>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-eyebrow">Commercial EV Site Planning Tool</div>
+    <h1>Tesla V4 Supercharger<br><span class="accent">Site Pro Forma</span></h1>
+    <p>Estimate your site's profitability with real Georgia Power tariff data, Tesla Model Y charging curve modeling, and invoice-calibrated utility fees. Built for business owners considering their first EV charging investment.</p>
+  </div>
+
+  <!-- DISCLAIMER -->
+  <div class="disclaimer">
+    <strong>ESTIMATE ONLY.</strong> Projections generated in good faith using published Georgia Power tariff schedules, real customer invoice data, and industry-standard assumptions. Results are not guaranteed or promised. Actual results vary based on site conditions, utility approval, equipment pricing, real-world utilization, and factors outside the control of Car Charger Specialists, LLC. This tool is for planning purposes only and does not constitute a contract, commitment, or formal proposal.
+  </div>
+
+  <!-- SECTION 1: SITE INFO -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">1</div>
+      <div class="section-title">Site Information</div>
+    </div>
+
+    <div class="input-grid two-one">
+      <div class="field span-2">
+        <div class="field-label">
+          Site Address
+          <button class="info-btn" onclick="toggleInfo('addrInfo')">?</button>
+        </div>
+        <div class="info-popup" id="addrInfo">
+          <strong>Where will the chargers be installed?</strong><br>
+          Enter the street address of the site you're considering. As you type, suggestions will appear to help you select the exact location. We use the address to estimate expected customer traffic and charging demand based on the property type and surrounding area.
+        </div>
+        <input type="text" id="address" placeholder="Type site address here..." autocomplete="off" />
+      </div>
+
+      <div class="field">
+        <div class="field-label">
+          Site Type
+          <button class="info-btn" onclick="toggleInfo('siteInfo')">?</button>
+        </div>
+        <div class="info-popup" id="siteInfo">
+          <strong>What kind of property is this?</strong><br>
+          Different property types attract different amounts of charging traffic. An airport-adjacent site sees rideshare drivers all day; a hotel sees mostly evening charging from overnight guests; a highway corridor sees road trippers in a hurry.
+          <span class="why">We'll automatically detect this when you pick an address above, but you can override it manually if you know your site better than the map does.</span>
+        </div>
+        <select id="siteType">
+          <option value="retail">Retail / Shopping Center</option>
+          <option value="airport">Airport Adjacent</option>
+          <option value="hotel">Hotel / Hospitality</option>
+          <option value="office">Office / Corporate</option>
+          <option value="parking">Parking Deck / Garage</option>
+          <option value="highway">Highway Corridor</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <div class="field-label">
+          Price You Charge Drivers
+          <button class="info-btn" onclick="toggleInfo('priceInfo')">?</button>
+        </div>
+        <div class="info-popup" id="priceInfo">
+          <strong>What will you charge EV drivers per kWh?</strong><br>
+          This is the price drivers see at the pump, so to speak. In Georgia, public fast charging typically ranges from $0.42 to $0.58/kWh. Tesla's own Superchargers average around $0.52/kWh. Lower prices attract more traffic but reduce margin per session. Higher prices mean better margin but you may see reduced utilization in competitive markets.
+          <span class="why">Default of <strong>$0.52/kWh</strong> is the current Tesla Supercharger national average and a fair middle-ground starting point for ROI modeling.</span>
+        </div>
+        <input type="number" id="chargePrice" value="0.52" step="0.01" min="0.10" max="1.00" />
       </div>
     </div>
-    <div class="scenario-row">
-      <div><div class="s-dot" style="background:#7a9e7e;"></div></div>
-      <div>
-        <div class="s-title">Scenario 2 &nbsp;&mdash;&nbsp; Simultaneous Make Ready &nbsp;<span class="badge-pend">GA Power approval required</span></div>
-        <div class="s-desc">2 Make Ready jobs performed concurrently &nbsp;·&nbsp; 2 V4 Cabinets + 16 dispensers from day one &nbsp;·&nbsp; No revenue gap vs. Scenario 1<br>Gross CAPEX: $791,756 &nbsp;·&nbsp; 2 x $30k rebate = -$60k &nbsp;·&nbsp; Net CAPEX: $731,756 &nbsp;·&nbsp; CIAC: ~$62,232/job</div>
+  </div>
+
+  <!-- SECTION 2: EQUIPMENT -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">2</div>
+      <div class="section-title">Equipment Configuration</div>
+      <div class="section-subtitle">Select cabinet size</div>
+    </div>
+
+    <div class="config-cards">
+      <div class="config-card selected" id="card4" onclick="selectConfig(4)">
+        <div class="ctitle">V4 Cabinet / 4 Posts</div>
+        <div class="cdetail">
+          1 Tesla V4 Cabinet with 4 charging posts. Best for smaller properties or as an initial installation with room to expand. Peak demand scales with how many cars charge at once (see below).
+        </div>
+        <div class="cprice-row">
+          <div>
+            <div class="cprice-label">
+              CAPEX (Installed)
+              <button class="info-btn" onclick="toggleInfo('capex4Info')" style="margin-left: 4px;">?</button>
+            </div>
+            <input type="number" id="capex4" value="250000" step="5000" min="100000" class="cprice-input" onclick="event.stopPropagation()" />
+            <div class="cprice-hint">Adjust if you have a specific quote</div>
+          </div>
+        </div>
+        <div class="info-popup" id="capex4Info" style="left:0;right:0;top:auto;bottom:100%;margin-bottom:8px;margin-top:0;">
+          <strong>Installed cost for a 4-port V4 site.</strong><br>
+          Includes the Tesla V4 Cabinet, 4 V4 Posts, concrete pads, trenching, conduit, wiring, bollards, signage, engineering, permitting, labor, and project management.
+          <span class="why">Default of <strong>$250,000</strong> reflects typical CCS project pricing for a standard single-cabinet site in Georgia. Your actual number will depend on site conditions (trenching distance, pavement restoration, utility scope). If you have a firm quote, enter it here.</span>
+        </div>
+      </div>
+
+      <div class="config-card" id="card8" onclick="selectConfig(8)">
+        <div class="ctitle">V4 Cabinet / 8 Posts</div>
+        <div class="cdetail">
+          1 Tesla V4 Cabinet with 8 charging posts. Best for high-traffic sites where you expect multiple simultaneous charging sessions. Higher throughput, same cabinet, double the revenue potential.
+        </div>
+        <div class="cprice-row">
+          <div>
+            <div class="cprice-label">
+              CAPEX (Installed)
+              <button class="info-btn" onclick="toggleInfo('capex8Info')" style="margin-left: 4px;">?</button>
+            </div>
+            <input type="number" id="capex8" value="500000" step="5000" min="200000" class="cprice-input" onclick="event.stopPropagation()" />
+            <div class="cprice-hint">Adjust if you have a specific quote</div>
+          </div>
+        </div>
+        <div class="info-popup" id="capex8Info" style="left:0;right:0;top:auto;bottom:100%;margin-bottom:8px;margin-top:0;">
+          <strong>Installed cost for an 8-port V4 site.</strong><br>
+          Includes everything in the 4-port package plus 4 additional V4 Posts and their associated trenching, conduit, concrete, bollards, and signage.
+          <span class="why">Default of <strong>$500,000</strong> reflects typical CCS project pricing. The cabinet itself and service entrance are the same as the 4-port option. Most of the extra cost is the additional posts and the site work to reach them.</span>
+        </div>
       </div>
     </div>
-    <div class="scenario-row">
-      <div><div class="s-dot" style="background:#c4623a;"></div></div>
-      <div>
-        <div class="s-title">Scenario 3 &nbsp;&mdash;&nbsp; Single Make Ready Job</div>
-        <div class="s-desc">1 Make Ready job &nbsp;·&nbsp; 2 V4 Cabinets + 16 dispensers from day one &nbsp;·&nbsp; One $300k Make Ready allowance, one $30k rebate<br>Gross CAPEX: $1,083,757 &nbsp;·&nbsp; 1 x $30k rebate = -$30k &nbsp;·&nbsp; Net CAPEX: $1,053,757 &nbsp;·&nbsp; CIAC: $424,463</div>
+  </div>
+
+  <!-- SECTION 3: FINANCIALS -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">3</div>
+      <div class="section-title">Financial Assumptions</div>
+    </div>
+
+    <div class="input-grid three">
+      <div class="field">
+        <div class="field-label">
+          Projection Period
+          <button class="info-btn" onclick="toggleInfo('yearsInfo')">?</button>
+        </div>
+        <div class="info-popup" id="yearsInfo">
+          <strong>How many years to project revenue and costs?</strong><br>
+          Tesla V4 hardware has an expected useful life of 15+ years with proper maintenance. A longer projection shows more total revenue but also introduces more uncertainty about future market conditions, EV adoption, and equipment replacement.
+          <span class="why">Default of <strong>15 years</strong> matches standard infrastructure investment analysis and the typical warranty life of charging equipment.</span>
+        </div>
+        <select id="projYears">
+          <option value="10">10 years</option>
+          <option value="15" selected>15 years</option>
+          <option value="20">20 years</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <div class="field-label">
+          Discount Rate
+          <button class="info-btn" onclick="toggleInfo('discInfo')">?</button>
+        </div>
+        <div class="info-popup" id="discInfo">
+          <strong>The "time value of money" rate.</strong><br>
+          A dollar earned ten years from now is worth less to you than a dollar earned today because you could invest today's dollar and grow it. The discount rate represents your required return: if you could safely earn 10% a year investing your money elsewhere, that's your benchmark. This tool uses your discount rate to convert future cash flows into today's dollars (Net Present Value, or NPV).
+          <span class="why">Default of <strong>10%</strong> is a standard benchmark for commercial infrastructure investments. Use 8% for conservative long-term capital, 12-15% if you have higher-return alternatives available.</span>
+        </div>
+        <input type="number" id="discRate" value="10" step="0.5" min="1" max="25" />
+      </div>
+
+      <div class="field">
+        <div class="field-label">
+          Annual Utilization Growth
+          <button class="info-btn" onclick="toggleInfo('growthInfo')">?</button>
+        </div>
+        <div class="info-popup" id="growthInfo">
+          <strong>How fast will charging volume grow year over year?</strong><br>
+          EV adoption is still accelerating in the US. As more EVs hit the road, a busy charging site will see growing demand. This setting assumes your daily charging volume grows by this percentage each year.
+          <span class="why">Default of <strong>7%</strong> is a moderate assumption reflecting current EV market growth forecasts. Use 4-5% for a conservative case, 10%+ if you believe in aggressive adoption.</span>
+        </div>
+        <input type="number" id="utilGrowth" value="7" step="0.5" min="0" max="20" />
       </div>
     </div>
   </div>
 
-  <div class="tabs" id="utabs">
-    <button class="tab active" data-u="200">Low &nbsp;200 kWh</button>
-    <button class="tab" data-u="400">Medium &nbsp;400 kWh</button>
-    <button class="tab" data-u="600">High &nbsp;600 kWh</button>
-    <button class="tab" data-u="750">Airport peak &nbsp;750 kWh</button>
-  </div>
-
-  <div class="context-box" id="ucontext"></div>
-  <div class="metrics" id="ucards"></div>
-
-  <div class="legend">
-    <span class="leg-item"><span class="leg-swatch" style="background:#4a8fd4;"></span>Scenario 1 — phased sequential</span>
-    <span class="leg-item"><span class="leg-swatch" style="background:#7a9e7e;"></span>Scenario 2 — simultaneous</span>
-    <span class="leg-item"><span class="leg-swatch" style="background:#c4623a;"></span>Scenario 3 — single job</span>
-  </div>
-
-  <div class="chart-section">
-    <p class="chart-label">Net present value &nbsp;(15yr @ 10%)</p>
-    <div class="chart-wrap" style="height: 240px;">
-      <canvas id="npvChart" role="img" aria-label="NPV comparison by scenario at selected utilization level"></canvas>
+  <!-- SECTION 4: ADVANCED -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">4</div>
+      <div class="section-title">Advanced: Georgia Power Rates</div>
+      <div class="section-subtitle">Calibrated from real invoices</div>
+    </div>
+    <div class="advanced-toggle" onclick="toggleAdvanced(this)">
+      <span class="caret">▸</span> Show / Hide Utility Rate Details
+    </div>
+    <div class="advanced-content" id="advContent">
+      <div class="input-grid three">
+        <div class="field">
+          <div class="field-label">
+            Fuel Cost Recovery ($/kWh)
+            <button class="info-btn" onclick="toggleInfo('fuelInfo')">?</button>
+          </div>
+          <div class="info-popup" id="fuelInfo">
+            <strong>Georgia Power's fuel pass-through charge.</strong><br>
+            This is what Georgia Power charges to recover the cost of natural gas and coal burned to generate your electricity. It's adjusted quarterly and has ranged from $0.02 to $0.05/kWh over the past few years.
+            <span class="why">Default of <strong>$0.045876/kWh</strong> matches the rate on real Georgia Power commercial invoices from August 2025.</span>
+          </div>
+          <input type="number" id="fuelRate" value="0.045876" step="0.001" min="0" />
+        </div>
+        <div class="field">
+          <div class="field-label">
+            Env. Compliance (%)
+            <button class="info-btn" onclick="toggleInfo('envInfo')">?</button>
+          </div>
+          <div class="info-popup" id="envInfo">
+            <strong>Environmental compliance cost recovery.</strong><br>
+            A percentage-based charge Georgia Power adds to cover costs of meeting state and federal environmental regulations (emissions controls, water treatment, coal ash management).
+            <span class="why">Default of <strong>13.23%</strong> reflects actual Georgia Power commercial invoices from August 2025.</span>
+          </div>
+          <input type="number" id="envPct" value="13.23" step="0.1" min="0" />
+        </div>
+        <div class="field">
+          <div class="field-label">
+            Demand Side Mgmt (%)
+            <button class="info-btn" onclick="toggleInfo('dsmInfo')">?</button>
+          </div>
+          <div class="info-popup" id="dsmInfo">
+            <strong>Demand Side Management schedule.</strong><br>
+            A small line-item charge that funds Georgia Power's energy-efficiency rebate programs (the same programs that gave you the $30k EV business rebate, ironically).
+            <span class="why">Default of <strong>1.29%</strong> matches real commercial invoices. This is one of the smaller adders.</span>
+          </div>
+          <input type="number" id="dsmPct" value="1.29" step="0.1" min="0" />
+        </div>
+        <div class="field">
+          <div class="field-label">
+            Municipal Franchise (%)
+            <button class="info-btn" onclick="toggleInfo('mffInfo')">?</button>
+          </div>
+          <div class="info-popup" id="mffInfo">
+            <strong>Your city's cut for letting the utility operate in their jurisdiction.</strong><br>
+            Cities charge the utility a franchise fee for using public rights-of-way, and the utility passes it through to you on your bill. Rates vary by city - Atlanta is around 4%, smaller cities may be 3% or less.
+            <span class="why">Default of <strong>3.5%</strong> is a reasonable Georgia middle-ground.</span>
+          </div>
+          <input type="number" id="mffPct" value="3.5" step="0.1" min="0" />
+        </div>
+        <div class="field">
+          <div class="field-label">
+            Sales Tax (%)
+            <button class="info-btn" onclick="toggleInfo('taxInfo')">?</button>
+          </div>
+          <div class="info-popup" id="taxInfo">
+            <strong>State + local sales tax on your electric bill.</strong><br>
+            Georgia state sales tax is 4%, plus county/city add-ons typically 3-4%. Total usually lands between 7-9% depending on jurisdiction.
+            <span class="why">Default of <strong>8%</strong> is typical for Metro Atlanta counties.</span>
+          </div>
+          <input type="number" id="taxPct" value="8.0" step="0.1" min="0" />
+        </div>
+        <div class="field">
+          <div class="field-label">
+            Excess Facilities ($/mo)
+            <button class="info-btn" onclick="toggleInfo('excessInfo')">?</button>
+          </div>
+          <div class="info-popup" id="excessInfo">
+            <strong>Monthly fee for dedicated utility equipment.</strong><br>
+            If Georgia Power has to install dedicated equipment for your site that serves only you (like a dedicated transformer or service drop), they may charge an ongoing monthly fee.
+            <span class="why">Default of <strong>$60/month</strong> reflects real commercial invoices.</span>
+          </div>
+          <input type="number" id="excessFac" value="60" step="5" min="0" />
+        </div>
+      </div>
+      <div class="source-note">
+        <strong>Calibration sources:</strong> Defaults derived from real Georgia Power commercial invoices including a PLM tariff customer at 3391 Peachtree Rd (August 2025, 6,000 kWh) and a PLL tariff customer at the same address (August 2025, 616,331 kWh). Fuel Cost Recovery matched exactly at $0.045876/kWh across both invoices.<br><br>
+        <strong>Peak demand modeling:</strong> Tesla Model Y is used as the reference vehicle (peak ~250 kW brief, average ~150 kW sustained during the 30-minute billing demand window). Cabinet demand scales with how many cars charge simultaneously during peak hour, capped at the 998 kW cabinet rating.
+      </div>
     </div>
   </div>
 
-  <div class="chart-section">
-    <p class="chart-label">Payback period &nbsp;(years)</p>
-    <div class="chart-wrap" style="height: 180px;">
-      <canvas id="pbChart" role="img" aria-label="Payback period comparison by scenario at selected utilization level"></canvas>
+  <button class="cta-btn" onclick="runProForma()">Generate Pro Forma</button>
+
+  <!-- RESULTS -->
+  <div class="results" id="results">
+    <div class="results-header">
+      <div class="results-title">Pro Forma Results</div>
+      <div class="results-addr" id="raddr"></div>
     </div>
+
+    <div class="util-tabs" id="utilTabs">
+      <button class="util-tab" data-u="low" onclick="switchUtil(this,'low')">Low</button>
+      <button class="util-tab active" data-u="med" onclick="switchUtil(this,'med')">Medium</button>
+      <button class="util-tab" data-u="high" onclick="switchUtil(this,'high')">High</button>
+      <button class="util-tab" data-u="peak" onclick="switchUtil(this,'peak')">Peak</button>
+    </div>
+
+    <div class="kpi-grid" id="kpiGrid"></div>
+
+    <div class="tariff-box" id="tariffBox"></div>
+    <div class="bill-preview" id="billPreview"></div>
+    <div class="ciev-note" id="cievNote"></div>
+
+    <div class="chart-section">
+      <div class="chart-title">Cumulative Cash Flow</div>
+      <div class="chart-wrap" style="height: 280px;">
+        <canvas id="cfChart" role="img" aria-label="Cumulative cash flow over projection period"></canvas>
+      </div>
+    </div>
+
+    <div class="chart-section">
+      <div class="chart-title">Annual Revenue vs All-In Costs</div>
+      <div class="chart-wrap" style="height: 240px;">
+        <canvas id="rcChart" role="img" aria-label="Annual revenue and costs"></canvas>
+      </div>
+    </div>
+
+    <div class="chart-title" style="margin-top: 2rem;">Annual Cash Flow Detail</div>
+    <div id="tableWrap"></div>
   </div>
 
-  <footer>
-    Medium (400 kWh) = conservative baseline for established retail supercharger &nbsp;·&nbsp;
-    High (600 kWh) = realistic for ATL airport-adjacent site &nbsp;·&nbsp;
-    Airport peak (750 kWh) = ~3 sessions/day at 250 kWh avg, plausible with ATL rideshare staging &nbsp;·&nbsp;
-    Scenario 1 revenue reflects 8 chargers Year 1, 16 chargers Year 2+ &nbsp;·&nbsp;
-    Scenario 2 subject to GA Power approval of concurrent Make Ready jobs &nbsp;·&nbsp;
-    $30k GA Power Business Rebate per job ($60k max per customer) — contingent upon application approval
-  </footer>
+  <!-- FOOTER -->
+  <div class="footer">
+    <div class="footer-left">
+      <div class="footer-brand">Car Charger Specialists, LLC &nbsp;/&nbsp; EN217495</div>
+      <div class="footer-disclaimer">
+        This pro forma uses Georgia Power PLS-18 tariff rates, the CIEV-1 Charge It Electric Vehicle Charger Rider Schedule, and adder rates calibrated from actual Georgia Power customer invoices. Electricity cost estimates incorporate the CIEV Billing Demand Adjustment Factor (BDAF) applied to billing demand for Years 1-4 (0.20 / 0.40 / 0.60 / 0.80 respectively), transitioning to full rate in Year 5 or when the rolling 12-month load factor reaches 15%, whichever comes first. Peak billing demand is modeled using Tesla Model Y as reference (150 kW avg during 30-min billing window) with concurrency scaling by site utilization. Fuel Cost Recovery is adjusted quarterly by Georgia Power and may increase or decrease over time. Georgia Power Make Ready program coverage of up to $300,000 per job and the $30,000 Business Rebate are subject to application approval and not guaranteed. Tesla Services Fee of $0.10/kWh is applied to all energy throughput. This tool does not constitute a contract, guarantee, or formal proposal. © 2026 Car Charger Specialists, LLC &nbsp;/&nbsp; 404-520-7349 &nbsp;/&nbsp; installations@carchargerspecialists.com
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
-const DATA = {
-  200: {
-    context: "Low utilization — roughly 2–3 slow sessions/day per stall. Well below what airport-adjacent demand near ATL would realistically produce. Worst-case floor.",
-    s1: { npv: 2313205, rev: 997246,  pb: 2.91 },
-    s2: { npv: 2440623, rev: 1017491, pb: 2.47 },
-    s3: { npv: 2118622, rev: 1017491, pb: 3.44 },
-  },
-  400: {
-    context: "Medium utilization — conservative baseline for an established retail supercharger. Likely understates real demand for a site this close to ATL Hartsfield-Jackson.",
-    s1: { npv: 5358167, rev: 1994491, pb: 1.75 },
-    s2: { npv: 5613003, rev: 2034982, pb: 1.29 },
-    s3: { npv: 5291002, rev: 2034982, pb: 1.82 },
-  },
-  600: {
-    context: "High utilization — realistic expectation for an airport-adjacent site. ATL has 50,000+ employees and among the highest Uber/Lyft staging volume in the US. This is likely the right planning number for Wally Park.",
-    s1: { npv: 8403128, rev: 2991737, pb: 1.35 },
-    s2: { npv: 8785382, rev: 3052473, pb: 0.87 },
-    s3: { npv: 8463381, rev: 3052473, pb: 1.24 },
-  },
-  750: {
-    context: "Airport peak — aggressive but defensible. 3 sessions/day at 250 kWh avg is well within V4 capacity. Requires strong rideshare adoption and site visibility from Camp Creek Pkwy. Upside scenario.",
-    s1: { npv: 10686849, rev: 3739671, pb: 1.18 },
-    s2: { npv: 11164667, rev: 3815591, pb: 0.70 },
-    s3: { npv: 10842666, rev: 3815591, pb: 1.00 },
-  }
+// ============== GOOGLE PLACES AUTOCOMPLETE (New API) ==============
+// Uses Places API (New) via Maps JavaScript API dynamic library loader.
+// To enable: paste your Google Cloud API key below (key must have both
+// Maps JavaScript API and Places API (New) enabled).
+// Tool works as a plain text input without the key.
+const GOOGLE_API_KEY = 'AIzaSyA6hl9TU4ZJCDS6ZQoHW6pxkfSt1OviZeo';
+
+// Map Google Place types to our site type values
+const PLACE_TYPE_MAP = {
+  airport: 'airport', lodging: 'hotel',
+  shopping_mall: 'retail', supermarket: 'retail', store: 'retail',
+  parking: 'parking', gas_station: 'retail',
+  restaurant: 'retail', cafe: 'retail'
 };
 
-const fmtM = v => '$' + (v / 1000000).toFixed(2) + 'M';
-const fmt$ = v => '$' + Math.round(v).toLocaleString();
-const capex = ['$731,756 net', '$731,756 net', '$1,053,757 net'];
-const colors = ['#4a8fd4', '#7a9e7e', '#c4623a'];
-const labels = ['S1 — sequential', 'S2 — simultaneous', 'S3 — single job'];
-const names = ['Scenario 1', 'Scenario 2', 'Scenario 3'];
-const pendingBadge = [false, true, false];
+async function initGooglePlaces() {
+  if (GOOGLE_API_KEY === 'YOUR_GOOGLE_API_KEY') return;
 
-let npvChart, pbChart;
-const tickStyle = { color: '#5a5a62', font: { family: "'Courier New', monospace", size: 11 } };
-const gridStyle = { color: 'rgba(255,255,255,0.05)' };
+  try {
+    // Load the new Places library
+    const { AutocompleteSuggestion, AutocompleteSessionToken } =
+      await google.maps.importLibrary('places');
 
-function render(u) {
-  const d = DATA[u];
-  document.getElementById('ucontext').textContent = d.context;
-  const scenarios = [d.s1, d.s2, d.s3];
-  const best = Math.max(...scenarios.map(s => s.npv));
+    const input = document.getElementById('address');
+    const dropdown = document.createElement('div');
+    dropdown.id = 'addr-dropdown';
+    dropdown.style.cssText = `
+      position: absolute; top: 100%; left: 0; right: 0;
+      background: var(--surface3); border: 1px solid var(--border2);
+      border-top: none; border-radius: 0 0 4px 4px;
+      max-height: 280px; overflow-y: auto; z-index: 50;
+      display: none; box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    `;
+    input.parentElement.style.position = 'relative';
+    input.parentElement.appendChild(dropdown);
 
-  document.getElementById('ucards').innerHTML = scenarios.map((s, i) => `
-    <div class="mcard ${s.npv === best ? 'best' : ''}">
-      <p class="mlabel">
-        ${names[i]}
-        ${s.npv === best ? '<span class="badge">best NPV</span>' : ''}
-        ${pendingBadge[i] ? '<span class="badge-pend">pending approval</span>' : ''}
-      </p>
-      <p class="mval">${fmtM(s.npv)}</p>
-      <p class="msub">NPV &nbsp;·&nbsp; ${s.pb.toFixed(2)}yr payback<br>${fmt$(Math.round(s.rev / 1000) * 1000)} avg/yr<br>${capex[i]}</p>
-    </div>`).join('');
+    let sessionToken = new AutocompleteSessionToken();
+    let debounceTimer;
 
-  const npvCtx = document.getElementById('npvChart');
-  if (npvChart) npvChart.destroy();
-  npvChart = new Chart(npvCtx, {
-    type: 'bar',
-    data: { labels, datasets: [{ data: scenarios.map(s => Math.round(s.npv)), backgroundColor: colors, borderWidth: 0, borderRadius: 2 }] },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ' ' + fmtM(ctx.raw) }, bodyFont: { family: "'Courier New', monospace" } } },
-      scales: {
-        x: { grid: { display: false }, ticks: tickStyle },
-        y: { grid: gridStyle, ticks: { ...tickStyle, callback: v => '$' + (v / 1000000).toFixed(1) + 'M' }, border: { display: false } }
+    input.addEventListener('input', () => {
+      clearTimeout(debounceTimer);
+      const query = input.value.trim();
+      if (query.length < 3) {
+        dropdown.style.display = 'none';
+        return;
       }
-    }
-  });
 
-  const pbCtx = document.getElementById('pbChart');
-  if (pbChart) pbChart.destroy();
-  pbChart = new Chart(pbCtx, {
-    type: 'bar',
-    data: { labels, datasets: [{ data: scenarios.map(s => parseFloat(s.pb.toFixed(2))), backgroundColor: colors, borderWidth: 0, borderRadius: 2 }] },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ' ' + ctx.raw + ' years' }, bodyFont: { family: "'Courier New', monospace" } } },
-      scales: {
-        x: { grid: { display: false }, ticks: tickStyle },
-        y: { grid: gridStyle, ticks: { ...tickStyle, callback: v => v + 'yr' }, border: { display: false } }
+      debounceTimer = setTimeout(async () => {
+        try {
+          const { suggestions } = await AutocompleteSuggestion.fetchAutocompleteSuggestions({
+            input: query,
+            sessionToken,
+            includedRegionCodes: ['us'],
+            includedPrimaryTypes: ['street_address', 'premise', 'subpremise', 'route']
+          });
+
+          if (!suggestions || suggestions.length === 0) {
+            dropdown.style.display = 'none';
+            return;
+          }
+
+          dropdown.innerHTML = suggestions.map((s, i) => {
+            const pred = s.placePrediction;
+            if (!pred) return '';
+            const mainText = pred.mainText?.text || pred.text?.text || '';
+            const secondaryText = pred.secondaryText?.text || '';
+            return `
+              <div class="addr-option" data-idx="${i}" style="
+                padding: 10px 14px; cursor: pointer; font-size: 13px;
+                color: var(--text); border-bottom: 1px solid var(--border);
+                transition: background 0.1s;
+              ">
+                <div style="font-weight: 500;">${mainText}</div>
+                <div style="font-size: 11px; color: var(--text3); margin-top: 2px;">${secondaryText}</div>
+              </div>
+            `;
+          }).join('');
+          dropdown.style.display = 'block';
+
+          dropdown.querySelectorAll('.addr-option').forEach(opt => {
+            opt.addEventListener('mouseenter', () => { opt.style.background = 'var(--surface2)'; });
+            opt.addEventListener('mouseleave', () => { opt.style.background = 'transparent'; });
+            opt.addEventListener('click', async () => {
+              const idx = parseInt(opt.dataset.idx);
+              const pred = suggestions[idx].placePrediction;
+              const place = pred.toPlace();
+              await place.fetchFields({ fields: ['formattedAddress', 'types', 'location'] });
+
+              input.value = place.formattedAddress || pred.text.text;
+              dropdown.style.display = 'none';
+
+              // Auto-detect site type from place types
+              if (place.types) {
+                for (const t of place.types) {
+                  if (PLACE_TYPE_MAP[t]) {
+                    document.getElementById('siteType').value = PLACE_TYPE_MAP[t];
+                    break;
+                  }
+                }
+              }
+
+              // Start a new session token for billing purposes
+              sessionToken = new AutocompleteSessionToken();
+            });
+          });
+        } catch (err) {
+          console.error('Autocomplete error:', err);
+          dropdown.style.display = 'none';
+        }
+      }, 250);
+    });
+
+    // Close dropdown on outside click
+    document.addEventListener('click', (e) => {
+      if (!input.contains(e.target) && !dropdown.contains(e.target)) {
+        dropdown.style.display = 'none';
       }
-    }
-  });
+    });
+  } catch (err) {
+    console.error('Failed to load Google Places:', err);
+  }
 }
 
-document.getElementById('utabs').addEventListener('click', e => {
-  const btn = e.target.closest('.tab');
-  if (!btn) return;
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  btn.classList.add('active');
-  render(parseInt(btn.dataset.u));
+function loadGoogleMaps() {
+  if (GOOGLE_API_KEY === 'YOUR_GOOGLE_API_KEY') return;
+  // Google's recommended dynamic library loader bootstrap
+  (g=>{var h,a,k,p="The Google Maps JavaScript API",c="google",l="importLibrary",q="__ib__",m=document,b=window;b=b[c]||(b[c]={});var d=b.maps||(b.maps={}),r=new Set,e=new URLSearchParams,u=()=>h||(h=new Promise(async(f,n)=>{await (a=m.createElement("script"));e.set("libraries",[...r]+"");for(k in g)e.set(k.replace(/[A-Z]/g,t=>"_"+t[0].toLowerCase()),g[k]);e.set("callback",c+".maps."+q);a.src=`https://maps.${c}apis.com/maps/api/js?`+e;d[q]=f;a.onerror=()=>h=n(Error(p+" could not load."));a.nonce=m.querySelector("script[nonce]")?.nonce||"";m.head.append(a)}));d[l]?console.warn(p+" only loads once. Ignoring:",g):d[l]=(f,...n)=>r.add(f)&&u().then(()=>d[l](f,...n))})({
+    key: GOOGLE_API_KEY,
+    v: 'weekly'
+  });
+  initGooglePlaces();
+}
+loadGoogleMaps();
+
+// ============== INFO POPUPS ==============
+function toggleInfo(id) {
+  const popup = document.getElementById(id);
+  const wasVisible = popup.classList.contains('visible');
+  document.querySelectorAll('.info-popup').forEach(p => p.classList.remove('visible'));
+  if (!wasVisible) popup.classList.add('visible');
+  event.stopPropagation();
+}
+document.addEventListener('click', e => {
+  if (!e.target.closest('.info-btn') && !e.target.closest('.info-popup')) {
+    document.querySelectorAll('.info-popup').forEach(p => p.classList.remove('visible'));
+  }
 });
 
-render(200);
+// ============== STATE ==============
+let selectedPorts = 4;
+let cfChart, rcChart;
+let currentResults = null;
+let currentUtil = 'med';
+
+const SITE_UTIL = {
+  retail:  { low: 150, med: 300, high: 500, peak: 650 },
+  airport: { low: 200, med: 400, high: 600, peak: 750 },
+  hotel:   { low: 120, med: 250, high: 420, peak: 550 },
+  office:  { low: 80,  med: 180, high: 320, peak: 450 },
+  parking: { low: 100, med: 220, high: 380, peak: 500 },
+  highway: { low: 180, med: 350, high: 550, peak: 700 },
+};
+const SITE_LABELS = {
+  retail: 'Retail / Shopping Center', airport: 'Airport Adjacent',
+  hotel: 'Hotel / Hospitality', office: 'Office / Corporate',
+  parking: 'Parking Deck / Garage', highway: 'Highway Corridor'
+};
+const UTIL_LABELS = { low: 'Low', med: 'Medium', high: 'High', peak: 'Peak' };
+
+function selectConfig(n) {
+  selectedPorts = n;
+  document.getElementById('card4').classList.toggle('selected', n === 4);
+  document.getElementById('card8').classList.toggle('selected', n === 8);
+}
+
+function toggleAdvanced(el) {
+  el.classList.toggle('open');
+  document.getElementById('advContent').classList.toggle('visible');
+}
+
+// ============== DEMAND MODELING ==============
+function calcPeakDemand(ports, utilLevel) {
+  const CABINET_CAP = 998;
+  const AVG_PER_CAR = 150;
+  const concurrency = {
+    4: { low: 1, med: 2, high: 3, peak: 4 },
+    8: { low: 2, med: 3, high: 5, peak: 7 }
+  };
+  const cars = concurrency[ports][utilLevel];
+  return Math.min(cars * AVG_PER_CAR, CABINET_CAP);
+}
+
+// ============== TARIFF CALCULATIONS ==============
+function calcBaseCharges(monthly_kwh, peak_kw, bdaf) {
+  const basic = 38;
+  const adj_demand = peak_kw * bdaf;
+  const t200 = adj_demand * 200;
+  const t400 = adj_demand * 400;
+  const t600 = adj_demand * 600;
+  let energy = 0;
+  let rem = Math.max(0, monthly_kwh - 25);
+  const b1 = Math.max(0, Math.min(2975, t200 - 25));
+  const c1 = Math.min(rem, b1); energy += c1 * 0.159506; rem -= c1;
+  if (rem > 0) { const b2 = Math.max(0, Math.min(7000, t200 - 3000)); const c2 = Math.min(rem, b2); energy += c2 * 0.150142; rem -= c2; }
+  if (rem > 0) { const b3 = Math.max(0, t200 - 10000); const c3 = Math.min(rem, b3); energy += c3 * 0.130614; rem -= c3; }
+  if (rem > 0) { const b4 = Math.max(0, t400 - t200); const c4 = Math.min(rem, b4); energy += c4 * 0.016092; rem -= c4; }
+  if (rem > 0) { const b5 = Math.max(0, t600 - t400); const c5 = Math.min(rem, b5); energy += c5 * 0.012194; rem -= c5; }
+  if (rem > 0) { energy += rem * 0.010610; }
+  return basic + energy;
+}
+
+function calcFullBill(monthly_kwh, peak_kw, bdaf, adders) {
+  const base = calcBaseCharges(monthly_kwh, peak_kw, bdaf);
+  const fuel = monthly_kwh * adders.fuelRate;
+  const env = base * (adders.envPct / 100);
+  const dsm = base * (adders.dsmPct / 100);
+  const mff = base * (adders.mffPct / 100);
+  const subtotal = base + fuel + env + dsm + mff + adders.excessFac;
+  const tax = subtotal * (adders.taxPct / 100);
+  return { base, fuel, env, dsm, mff, excessFac: adders.excessFac, subtotal, tax, total: subtotal + tax };
+}
+
+function getBDAF(yr) {
+  if (yr === 1) return 0.20;
+  if (yr === 2) return 0.40;
+  if (yr === 3) return 0.60;
+  if (yr === 4) return 0.80;
+  return 1.00;
+}
+
+function getAdders() {
+  return {
+    fuelRate: parseFloat(document.getElementById('fuelRate').value) || 0.045876,
+    envPct: parseFloat(document.getElementById('envPct').value) || 13.23,
+    dsmPct: parseFloat(document.getElementById('dsmPct').value) || 1.29,
+    mffPct: parseFloat(document.getElementById('mffPct').value) || 3.5,
+    taxPct: parseFloat(document.getElementById('taxPct').value) || 8.0,
+    excessFac: parseFloat(document.getElementById('excessFac').value) || 60,
+  };
+}
+
+function calcProForma(ports, capex, rebate, dailyKwh, chargePrice, years, discRate, utilGrowth, adders, utilLevel) {
+  const peak_kw = calcPeakDemand(ports, utilLevel);
+  const tesla_fee = 0.10;
+  const rows = [];
+  let cumCF = -capex;
+  let payback = null;
+
+  for (let yr = 1; yr <= years; yr++) {
+    const util = dailyKwh * Math.pow(1 + utilGrowth / 100, yr - 1);
+    const monthly_kwh = util * ports * 30;
+    const annual_kwh = util * ports * 365;
+    const bdaf = getBDAF(yr);
+    const monthly_bill = calcFullBill(monthly_kwh, peak_kw, bdaf, adders);
+    const annual_elec = monthly_bill.total * 12;
+    const tesla_cost = annual_kwh * tesla_fee;
+    const revenue = annual_kwh * chargePrice;
+    const total_cost = annual_elec + tesla_cost;
+    const net_cf = revenue - total_cost;
+    const eff_rate = annual_elec / annual_kwh;
+    cumCF += net_cf;
+    if (payback === null && cumCF >= 0) {
+      const prev = cumCF - net_cf;
+      payback = yr - 1 + (-prev / net_cf);
+    }
+    rows.push({ yr, util: Math.round(util), annual_kwh: Math.round(annual_kwh), bdaf, eff_rate, monthly_bill, revenue, annual_elec, tesla_cost, total_cost, net_cf, cumCF });
+  }
+
+  const cashFlows = [-capex, ...rows.map(r => r.net_cf)];
+  const npv = cashFlows.reduce((s, cf, t) => s + cf / Math.pow(1 + discRate / 100, t), 0);
+  const avgRev = rows.reduce((s, r) => s + r.revenue, 0) / years;
+  return { rows, npv, payback, avgRev, peak_kw, capex, rebate };
+}
+
+function fmt$(v) {
+  const abs = Math.abs(v);
+  const s = abs >= 1e6 ? '$' + (abs/1e6).toFixed(2) + 'M' : '$' + Math.round(abs).toLocaleString();
+  return v < 0 ? '-' + s : s;
+}
+function fmtR(v) { return '$' + v.toFixed(4) + '/kWh'; }
+
+function runProForma() {
+  const address = document.getElementById('address').value || 'Site Address Not Provided';
+  const siteType = document.getElementById('siteType').value;
+  const chargePrice = parseFloat(document.getElementById('chargePrice').value) || 0.52;
+  const years = parseInt(document.getElementById('projYears').value);
+  const discRate = parseFloat(document.getElementById('discRate').value);
+  const utilGrowth = parseFloat(document.getElementById('utilGrowth').value);
+  const capex = selectedPorts === 4
+    ? (parseFloat(document.getElementById('capex4').value) || 250000)
+    : (parseFloat(document.getElementById('capex8').value) || 500000);
+  const rebate = 30000;
+  const netCapex = capex - rebate;
+
+  currentResults = {
+    address, siteType, chargePrice, years, discRate, utilGrowth,
+    capex, rebate, netCapex, utilMap: SITE_UTIL[siteType], selectedPorts,
+    adders: getAdders()
+  };
+
+  document.getElementById('raddr').textContent =
+    address + '  /  ' + SITE_LABELS[siteType] + '  /  ' +
+    (selectedPorts === 4 ? '4-Port V4 Cabinet' : '8-Port V4 Cabinet');
+  document.getElementById('results').classList.add('visible');
+
+  renderUtil(currentUtil);
+  window.scrollTo({ top: document.getElementById('results').offsetTop - 20, behavior: 'smooth' });
+}
+
+function switchUtil(btn, u) {
+  currentUtil = u;
+  document.querySelectorAll('.util-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  if (currentResults) renderUtil(u);
+}
+
+function renderUtil(u) {
+  const { chargePrice, years, discRate, utilGrowth, capex, rebate, netCapex, utilMap, selectedPorts, adders } = currentResults;
+  const dailyKwh = utilMap[u];
+  const res = calcProForma(selectedPorts, netCapex, rebate, dailyKwh, chargePrice, years, discRate, utilGrowth, adders, u);
+
+  const kpis = [
+    { label: 'Net CAPEX', val: fmt$(netCapex), sub: fmt$(capex) + ' gross - $30k rebate*', hi: false },
+    { label: 'NPV (' + years + 'yr @ ' + discRate + '%)', val: fmt$(res.npv), sub: 'Net present value', hi: true },
+    { label: 'Avg Annual Revenue', val: fmt$(res.avgRev), sub: UTIL_LABELS[u] + ' util. / ' + dailyKwh + ' kWh/day/port', hi: false },
+    { label: 'Payback Period', val: res.payback ? res.payback.toFixed(1) + ' yr' : 'N/A', sub: 'Years to recover CAPEX', hi: false },
+  ];
+  document.getElementById('kpiGrid').innerHTML = kpis.map(k =>
+    `<div class="kpi${k.hi ? ' highlight' : ''}"><div class="kpi-label">${k.label}</div><div class="kpi-val">${k.val}</div><div class="kpi-sub">${k.sub}</div></div>`
+  ).join('');
+
+  const fullYr = Math.min(4, res.rows.length - 1);
+  document.getElementById('tariffBox').innerHTML =
+    '<h3>Georgia Power Tariff Summary / PLS-18 + CIEV-1 Rider</h3>' +
+    '<div class="tariff-row"><span class="tl">Base tariff</span><span class="tv">Power and Light Small (PLS-18)</span></div>' +
+    '<div class="tariff-row"><span class="tl">EV rider</span><span class="tv">CIEV-1 Charge It EV Charger Rider</span></div>' +
+    '<div class="tariff-row"><span class="tl">Peak billing demand (30-min)</span><span class="tv">' + res.peak_kw.toLocaleString() + ' kW &nbsp;<span style="font-size:10px;color:var(--text4)">(' + UTIL_LABELS[u].toLowerCase() + ' concurrency)</span></span></div>' +
+    '<div class="tariff-row"><span class="tl">Year 1 all-in rate (BDAF 0.20)</span><span class="tv">' + fmtR(res.rows[0].eff_rate) + '</span></div>' +
+    '<div class="tariff-row"><span class="tl">Year 2 all-in rate (BDAF 0.40)</span><span class="tv">' + fmtR(res.rows[1].eff_rate) + '</span></div>' +
+    '<div class="tariff-row"><span class="tl">Year 3 all-in rate (BDAF 0.60)</span><span class="tv">' + fmtR(res.rows[2].eff_rate) + '</span></div>' +
+    '<div class="tariff-row"><span class="tl">Year 5+ all-in rate (full)</span><span class="tv">' + fmtR(res.rows[fullYr].eff_rate) + '</span></div>' +
+    '<div class="tariff-row"><span class="tl">Tesla Services Fee</span><span class="tv">$0.10/kWh (all years)</span></div>' +
+    '<div class="tariff-row"><span class="tl">Charging price to drivers</span><span class="tv">$' + chargePrice.toFixed(2) + '/kWh</span></div>';
+
+  const sample = res.rows[0].monthly_bill;
+  const sampleKwh = res.rows[0].annual_kwh / 12;
+  document.getElementById('billPreview').innerHTML =
+    '<h3>Sample Monthly Bill / Year 1, ' + UTIL_LABELS[u] + ' Utilization</h3>' +
+    '<div class="bill-row"><span class="bl">Base charges (tariff + demand)</span><span class="bv">$' + sample.base.toFixed(2) + '</span></div>' +
+    '<div class="bill-row"><span class="bl">Fuel Cost Recovery</span><span class="bv">$' + sample.fuel.toFixed(2) + '</span></div>' +
+    '<div class="bill-row"><span class="bl">Environmental Compliance</span><span class="bv">$' + sample.env.toFixed(2) + '</span></div>' +
+    '<div class="bill-row"><span class="bl">Demand Side Management</span><span class="bv">$' + sample.dsm.toFixed(2) + '</span></div>' +
+    '<div class="bill-row"><span class="bl">Municipal Franchise Fee</span><span class="bv">$' + sample.mff.toFixed(2) + '</span></div>' +
+    '<div class="bill-row"><span class="bl">Excess Facilities Charge</span><span class="bv">$' + sample.excessFac.toFixed(2) + '</span></div>' +
+    '<div class="bill-row"><span class="bl">Sales Tax</span><span class="bv">$' + sample.tax.toFixed(2) + '</span></div>' +
+    '<div class="bill-row total"><span class="bl">Total (' + Math.round(sampleKwh).toLocaleString() + ' kWh)</span><span class="bv">$' + sample.total.toFixed(2) + '</span></div>';
+
+  document.getElementById('cievNote').innerHTML =
+    '<strong>CIEV-1 Rider Benefit:</strong> The Georgia Power Charge It EV Rider reduces billing demand charges during your ramp-up years. At ' + UTIL_LABELS[u].toLowerCase() + ' utilization, your all-in electricity cost drops from ' + fmtR(res.rows[fullYr].eff_rate) + ' (full rate) to ' + fmtR(res.rows[0].eff_rate) + ' in Year 1 and ' + fmtR(res.rows[1].eff_rate) + ' in Year 2. The rider applies until your site reaches a 15% rolling load factor or you complete Year 4, whichever comes first.';
+
+  const labels = res.rows.map(r => 'Yr ' + r.yr);
+  const cumCFs = res.rows.map(r => Math.round(r.cumCF));
+  const revs = res.rows.map(r => Math.round(r.revenue));
+  const costs = res.rows.map(r => Math.round(r.total_cost));
+
+  if (cfChart) cfChart.destroy();
+  cfChart = new Chart(document.getElementById('cfChart'), {
+    type: 'line',
+    data: { labels, datasets: [{
+      label: 'Cumulative CF', data: cumCFs,
+      borderColor: '#7bc8e8', backgroundColor: 'rgba(123,200,232,0.12)',
+      borderWidth: 2, fill: true, tension: 0.3, pointRadius: 3, pointBackgroundColor: '#7bc8e8'
+    }]},
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ' ' + fmt$(ctx.raw) }, bodyFont: { family: 'Barlow' } } },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { family: 'Barlow', size: 11 }, color: '#7a7a7a' } },
+        y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { callback: v => fmt$(v), font: { family: 'Barlow', size: 11 }, color: '#7a7a7a' }, border: { display: false } }
+      }
+    }
+  });
+
+  if (rcChart) rcChart.destroy();
+  rcChart = new Chart(document.getElementById('rcChart'), {
+    type: 'bar',
+    data: { labels, datasets: [
+      { label: 'Revenue', data: revs, backgroundColor: 'rgba(93,202,138,0.75)', borderWidth: 0, borderRadius: 2 },
+      { label: 'All-in Costs', data: costs, backgroundColor: 'rgba(214,85,85,0.5)', borderWidth: 0, borderRadius: 2 }
+    ]},
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ' ' + ctx.dataset.label + ': ' + fmt$(ctx.raw) }, bodyFont: { family: 'Barlow' } } },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { family: 'Barlow', size: 11 }, color: '#7a7a7a' } },
+        y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { callback: v => fmt$(v), font: { family: 'Barlow', size: 11 }, color: '#7a7a7a' }, border: { display: false } }
+      }
+    }
+  });
+
+  const tableRows = res.rows.map(r =>
+    '<tr>' +
+      '<td>Yr ' + r.yr + (r.bdaf < 1 ? ' <span class="bdaf-tag">BDAF ' + r.bdaf + '</span>' : '') + '</td>' +
+      '<td>' + r.annual_kwh.toLocaleString() + '</td>' +
+      '<td>' + fmtR(r.eff_rate) + '</td>' +
+      '<td class="pos">' + fmt$(r.revenue) + '</td>' +
+      '<td class="neg">' + fmt$(-r.annual_elec) + '</td>' +
+      '<td class="neg">' + fmt$(-r.tesla_cost) + '</td>' +
+      '<td class="' + (r.net_cf >= 0 ? 'pos' : 'neg') + '">' + fmt$(r.net_cf) + '</td>' +
+      '<td class="' + (r.cumCF >= 0 ? 'pos' : 'neg') + '">' + fmt$(r.cumCF) + '</td>' +
+    '</tr>'
+  ).join('');
+  document.getElementById('tableWrap').innerHTML =
+    '<table class="yr-table"><thead><tr>' +
+    '<th>Year</th><th>Annual kWh</th><th>All-in Rate</th><th>Revenue</th><th>GA Power</th><th>Tesla Fee</th><th>Net CF</th><th>Cumulative</th>' +
+    '</tr></thead><tbody>' + tableRows + '</tbody></table>' +
+    '<div style="font-size:10px; color:var(--text4); margin-top:8px;">* $30,000 Georgia Power Business Rebate deducted from CAPEX, subject to application approval. All-in Rate includes base charges, fuel recovery, environmental compliance, DSM, franchise fee, excess facilities, and sales tax.</div>';
+}
 </script>
 </body>
 </html>
