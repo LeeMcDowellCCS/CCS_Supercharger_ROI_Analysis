@@ -1353,7 +1353,6 @@ function renderUtil(u) {
 
   const fullYr = Math.min(4, res.rows.length - 1);
   document.getElementById('tariffBox').innerHTML =
-    '<h3>Georgia Power Tariff Summary / PLS-18 + CIEV-1 Rider</h3>' +
     '<h3>Georgia Power Tariff Summary / ' + (res.peak_kw >= 500 ? 'PLL' : 'PLM') + ' + CIEV-1 Rider</h3>' +
     '<div class="tariff-row"><span class="tl">Base tariff</span><span class="tv">' + (res.peak_kw >= 500 ? 'Power and Light Large (PLL)' : 'Power and Light Medium (PLM)') + '</span></div>' +
     '<div class="tariff-row"><span class="tl">Peak billing demand (30-min)</span><span class="tv">' + res.peak_kw.toLocaleString() + ' kW &nbsp;<span style="font-size:10px;color:var(--text4)">(' + UTIL_LABELS[u].toLowerCase() + ' concurrency)</span></span></div>' +
