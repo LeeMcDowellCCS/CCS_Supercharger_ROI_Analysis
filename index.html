@@ -1177,7 +1177,7 @@ function calcFullBill(monthly_kwh, peak_kw, bdaf, adders) {
   const fuel = monthly_kwh * adders.fuelRate;
   const env = base * (adders.envPct / 100);
   const dsm = base * (adders.dsmPct / 100);
-  const mff = base * (adders.mffPct / 100);
+  const mff = (base + fuel + env + dsm) * (adders.mffPct / 100);
   const subtotal = base + fuel + env + dsm + mff + adders.excessFac;
   const tax = subtotal * (adders.taxPct / 100);
   return { base, fuel, env, dsm, mff, excessFac: adders.excessFac, subtotal, tax, total: subtotal + tax };
