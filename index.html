@@ -1364,7 +1364,7 @@ function renderUtil(u) {
     '<div class="tariff-row"><span class="tl">Charging price to drivers</span><span class="tv">$' + chargePrice.toFixed(2) + '/kWh</span></div>';
 
   const sample = res.rows[0].monthly_bill;
-  const sampleKwh = res.rows[0].annual_kwh / 12;
+  const sampleKwh = res.rows[0].annual_kwh / 365 * 30;
   document.getElementById('billPreview').innerHTML =
     '<h3>Sample Monthly Bill / Year 1, ' + UTIL_LABELS[u] + ' Utilization</h3>' +
     '<div class="bill-row"><span class="bl">Base charges (tariff + demand)</span><span class="bv">$' + sample.base.toFixed(2) + '</span></div>' +
