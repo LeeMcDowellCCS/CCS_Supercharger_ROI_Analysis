@@ -443,8 +443,56 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); min-
 .util-tab:hover { color: var(--text2); }
 .util-tab.active { background: var(--blue); color: var(--bg); }
 
+/* PROVIDER TOGGLE */
+.provider-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 2.5rem;
+}
+.provider-toggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  padding: 5px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+.provider-btn {
+  padding: 14px 18px;
+  font-family: var(--cond);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text3);
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+.provider-btn span {
+  font-family: var(--sans);
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  text-transform: none;
+  color: var(--text4);
+}
+.provider-btn:hover { color: var(--text2); }
+.provider-btn.active { background: var(--blue); color: var(--bg); }
+.provider-btn.active span { color: rgba(10,10,10,0.7); }
+.duke-state-field { display: none; }
+.duke-state-field.visible { display: flex; }
+
 /* KPIs */
-.kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 2rem; }
+.kpi-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 2rem; }
 .kpi {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -646,11 +694,41 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); min-
   <div class="hero">
     <div class="hero-eyebrow">Commercial EV Site Planning Tool</div>
     <h1>Tesla V4 Supercharger<br><span class="accent">Site Pro Forma</span></h1>
-    <p>Estimate your site's profitability with real Georgia Power tariff data, Tesla Model Y charging curve modeling, and invoice-calibrated utility fees. Built for business owners considering their first EV charging investment.</p>
+    <p id="heroText">Estimate your site's profitability with real Georgia Power tariff data, Tesla Model Y charging curve modeling, and invoice-calibrated utility fees. Built for business owners considering their first EV charging investment.</p>
+  </div>
+
+  <!-- PROVIDER TOGGLE -->
+  <div class="provider-bar">
+    <div class="provider-toggle">
+      <button class="provider-btn active" id="provGa" onclick="setUtility('gapower')">
+        Georgia Power<span>PLM / PLL + CIEV-1 Rider &nbsp;·&nbsp; Georgia</span>
+      </button>
+      <button class="provider-btn" id="provDuke" onclick="setUtility('duke')">
+        Duke Energy<span>Charger Prep Credit &nbsp;·&nbsp; NC / SC / FL</span>
+      </button>
+    </div>
+    <div class="field duke-state-field" id="dukeStateField">
+      <div class="field-label">
+        Duke Service Territory
+        <button class="info-btn" onclick="toggleInfo('dukeStateInfo')">?</button>
+      </div>
+      <div class="info-popup" id="dukeStateInfo">
+        <strong>Which Duke utility serves your site?</strong><br>
+        Duke operates separate utilities with different rate schedules. Your site's physical location determines which one applies and which rate you'll ultimately be placed on.
+        <span class="why">Duke Energy Carolinas (DEC) covers Charlotte, Greensboro, Durham, Asheville. Duke Energy Progress (DEP) covers Raleigh, Wilmington, Fayetteville. DEC's demand charge is roughly half of DEP's — it matters a lot for fast-charging economics.</span>
+      </div>
+      <select id="dukeState" onchange="renderActiveUtil()">
+        <option value="dec-nc">North Carolina — Duke Energy Carolinas (Schedule LGS)</option>
+        <option value="dep-nc">North Carolina — Duke Energy Progress (Schedule MGS)</option>
+        <option value="dec-sc">South Carolina — Duke Energy Carolinas (Schedule LGS)</option>
+        <option value="dep-sc">South Carolina — Duke Energy Progress (Schedule MGS)</option>
+        <option value="def">Florida — Duke Energy Florida (Schedule GSD-1)</option>
+      </select>
+    </div>
   </div>
 
   <!-- DISCLAIMER -->
-  <div class="disclaimer">
+  <div class="disclaimer" id="disclaimerBox">
     <strong>ESTIMATE ONLY.</strong> Projections generated in good faith using published Georgia Power tariff schedules, real customer invoice data, and industry-standard assumptions. Results are not guaranteed or promised. Actual results vary based on site conditions, utility approval, equipment pricing, real-world utilization, and factors outside the control of Car Charger Specialists, LLC. This tool is for planning purposes only and does not constitute a contract, commitment, or formal proposal.
   </div>
 
@@ -721,7 +799,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); min-
       <div class="config-card selected" id="card4" onclick="selectConfig(4)">
         <div class="ctitle">V4 Cabinet / 4 Posts</div>
         <div class="cdetail">
-          1 Tesla V4 Cabinet with 4 charging posts. Best for smaller properties or as an initial installation with room to expand. Peak demand scales with how many cars charge at once (see below).
+          1 Tesla V4 Cabinet (998 kW) with 4 charging posts. Best for smaller properties or as an initial installation with room to expand. Nameplate <strong>~249.5 kW/port</strong> (998 ÷ 4).
         </div>
         <div class="cprice-row">
           <div>
@@ -736,14 +814,36 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); min-
         <div class="info-popup" id="capex4Info" style="left:0;right:0;top:auto;bottom:100%;margin-bottom:8px;margin-top:0;">
           <strong>Installed cost for a 4-port V4 site.</strong><br>
           Includes the Tesla V4 Cabinet, 4 V4 Posts, concrete pads, trenching, conduit, wiring, bollards, signage, engineering, permitting, labor, and project management.
-          <span class="why">Default of <strong>$250,000</strong> reflects typical CCS project pricing for a standard single-cabinet site in Georgia. Your actual number will depend on site conditions (trenching distance, pavement restoration, utility scope). If you have a firm quote, enter it here.</span>
+          <span class="why">Default of <strong>$250,000</strong> reflects typical CCS project pricing for a standard single-cabinet site. Your actual number will depend on site conditions (trenching distance, pavement restoration, utility scope). If you have a firm quote, enter it here.</span>
+        </div>
+      </div>
+
+      <div class="config-card" id="card6" onclick="selectConfig(6)">
+        <div class="ctitle">V4 Cabinet / 6 Posts</div>
+        <div class="cdetail">
+          1 Tesla V4 Cabinet (998 kW) with 6 charging posts. A middle option for busier sites still served by a single cabinet. Nameplate <strong>~166.3 kW/port</strong> (998 ÷ 6).
+        </div>
+        <div class="cprice-row">
+          <div>
+            <div class="cprice-label">
+              CAPEX (Installed)
+              <button class="info-btn" onclick="toggleInfo('capex6Info')" style="margin-left: 4px;">?</button>
+            </div>
+            <input type="number" id="capex6" value="375000" step="5000" min="150000" class="cprice-input" onclick="event.stopPropagation()" />
+            <div class="cprice-hint">Adjust if you have a specific quote</div>
+          </div>
+        </div>
+        <div class="info-popup" id="capex6Info" style="left:0;right:0;top:auto;bottom:100%;margin-bottom:8px;margin-top:0;">
+          <strong>Installed cost for a 6-port V4 site.</strong><br>
+          Same single V4 cabinet and service entrance as the 4-port option, plus 2 additional posts and their site work.
+          <span class="why">Default of <strong>$375,000</strong> reflects typical CCS project pricing (~$62.5k/port). Adjust to a firm quote if you have one.</span>
         </div>
       </div>
 
       <div class="config-card" id="card8" onclick="selectConfig(8)">
         <div class="ctitle">V4 Cabinet / 8 Posts</div>
         <div class="cdetail">
-          1 Tesla V4 Cabinet with 8 charging posts. Best for high-traffic sites where you expect multiple simultaneous charging sessions. Higher throughput, same cabinet, double the revenue potential.
+          1 Tesla V4 Cabinet (998 kW) with 8 charging posts. Best for high-traffic sites with many simultaneous sessions. Nameplate <strong>~124.75 kW/port</strong> (998 ÷ 8).
         </div>
         <div class="cprice-row">
           <div>
@@ -758,7 +858,29 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); min-
         <div class="info-popup" id="capex8Info" style="left:0;right:0;top:auto;bottom:100%;margin-bottom:8px;margin-top:0;">
           <strong>Installed cost for an 8-port V4 site.</strong><br>
           Includes everything in the 4-port package plus 4 additional V4 Posts and their associated trenching, conduit, concrete, bollards, and signage.
-          <span class="why">Default of <strong>$500,000</strong> reflects typical CCS project pricing. The cabinet itself and service entrance are the same as the 4-port option. Most of the extra cost is the additional posts and the site work to reach them.</span>
+          <span class="why">Default of <strong>$500,000</strong> reflects typical CCS project pricing. The cabinet and service entrance are the same as the 4-port option; most of the extra cost is the additional posts and site work.</span>
+        </div>
+      </div>
+
+      <div class="config-card" id="card16" onclick="selectConfig(16)">
+        <div class="ctitle">2× V4 Cabinet / 16 Posts</div>
+        <div class="cdetail">
+          2 Tesla V4 Cabinets (1,996 kW total) with 16 charging posts. A full charging-hub build for the highest-traffic corridors. Nameplate <strong>~124.75 kW/port</strong> ((998 × 2) ÷ 16).
+        </div>
+        <div class="cprice-row">
+          <div>
+            <div class="cprice-label">
+              CAPEX (Installed)
+              <button class="info-btn" onclick="toggleInfo('capex16Info')" style="margin-left: 4px;">?</button>
+            </div>
+            <input type="number" id="capex16" value="1000000" step="5000" min="400000" class="cprice-input" onclick="event.stopPropagation()" />
+            <div class="cprice-hint">Adjust if you have a specific quote</div>
+          </div>
+        </div>
+        <div class="info-popup" id="capex16Info" style="left:0;right:0;top:auto;bottom:100%;margin-bottom:8px;margin-top:0;">
+          <strong>Installed cost for a 16-port / 2-cabinet V4 site.</strong><br>
+          Two full V4 cabinets, 16 posts, and the associated service entrances, trenching, concrete, bollards, and signage.
+          <span class="why">Default of <strong>$1,000,000</strong> reflects typical CCS project pricing (~$62.5k/port). Larger service and utility scope may apply — adjust to a firm quote.</span>
         </div>
       </div>
     </div>
@@ -821,13 +943,14 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); min-
   <div class="section">
     <div class="section-header">
       <div class="section-num">4</div>
-      <div class="section-title">Advanced: Georgia Power Rates</div>
-      <div class="section-subtitle">Calibrated from real invoices</div>
+      <div class="section-title" id="advSectionTitle">Advanced: Georgia Power Rates</div>
+      <div class="section-subtitle" id="advSectionSub">Calibrated from real invoices</div>
     </div>
     <div class="advanced-toggle" onclick="toggleAdvanced(this)">
       <span class="caret">▸</span> Show / Hide Utility Rate Details
     </div>
     <div class="advanced-content" id="advContent">
+     <div id="gaRatesPanel">
       <div class="input-grid three">
         <div class="field">
           <div class="field-label">
@@ -906,6 +1029,75 @@ If Georgia Power installs dedicated equipment that serves only your site, they m
         <strong>Methodology validation:</strong> Rate structure, tier breakpoints, and adder percentages validated directly against Georgia Power's official Power and Light Calculator at georgiapower.com. Both PLM (Medium, 30-499 kW demand) and PLL (Large, 500+ kW demand) rate structures are implemented. Tariff selection is automatic based on actual peak demand (pre-BDAF). Results from this tool match the GA Power calculator to the penny across scenarios from 50 kW / 5,000 kWh up to 998 kW / 500,000 kWh.<br><br>
 <strong>Peak demand modeling:</strong> Tesla Model Y is used as the reference vehicle (peak ~250 kW brief, average ~150 kW sustained during the 30-minute billing demand window). Cabinet demand scales with how many cars charge simultaneously during peak hour, capped at the 998 kW cabinet rating.
       </div>
+     </div>
+
+     <!-- DUKE ENERGY RATE PANEL -->
+     <div id="dukeRatesPanel" style="display:none">
+      <div id="dukeSchedSummary" class="source-note" style="margin-top:0;margin-bottom:16px;"></div>
+      <div class="input-grid three">
+        <div class="field">
+          <div class="field-label">
+            Fuel &amp; Rider Adder ($/kWh)
+            <button class="info-btn" onclick="toggleInfo('dukeFuelInfo')">?</button>
+          </div>
+          <div class="info-popup" id="dukeFuelInfo">
+            <strong>Duke's per-kWh pass-through charges.</strong><br>
+            Bundles fuel cost recovery plus the energy-efficiency, DSM, renewable (CPRE/REPS), and securitization riders Duke layers on top of the base energy charge. In Florida this also covers the Capacity (CCR) and Environmental (ECRC) cost-recovery clauses.
+            <span class="why">Default is set per selected territory. Duke files these separately from base rates and adjusts them (Florida fuel/clause charges dropped notably for 2026). Adjust if you have a recent Duke commercial invoice.</span>
+          </div>
+          <input type="number" id="dukeFuel" value="0.006" step="0.001" min="0" />
+        </div>
+        <div class="field">
+          <div class="field-label">
+            Sales Tax (%)
+            <button class="info-btn" onclick="toggleInfo('dukeTaxInfo')">?</button>
+          </div>
+          <div class="info-popup" id="dukeTaxInfo">
+            <strong>State + local sales tax on commercial electricity.</strong><br>
+            North Carolina applies a 7.00% combined general rate. South Carolina is ~6% state plus local option tax. Florida charges a 4.35% electricity sales tax plus county discretionary surtax.
+            <span class="why">Default is set per selected territory. Adjust for your county's local add-on.</span>
+          </div>
+          <input type="number" id="dukeTax" value="7.0" step="0.1" min="0" />
+        </div>
+        <div class="field">
+          <div class="field-label">
+            Gross Receipts Tax (%)
+            <button class="info-btn" onclick="toggleInfo('dukeGrtInfo')">?</button>
+          </div>
+          <div class="info-popup" id="dukeGrtInfo">
+            <strong>Florida Gross Receipts Tax on utility service.</strong><br>
+            Florida levies a 2.5% gross receipts tax on electricity, passed through on the bill. This charge does not apply in North Carolina or South Carolina (it is auto-set to 0 there).
+            <span class="why">Default of <strong>2.5%</strong> for Florida, 0% elsewhere.</span>
+          </div>
+          <input type="number" id="dukeGrt" value="0" step="0.1" min="0" />
+        </div>
+        <div class="field">
+          <div class="field-label">
+            Prep Credit ($ / 998 kW cabinet)
+            <button class="info-btn" onclick="toggleInfo('dukeCreditInfo')">?</button>
+          </div>
+          <div class="info-popup" id="dukeCreditInfo">
+            <strong>Duke Commercial Charger Prep Credit, per V4 cabinet.</strong><br>
+            Duke's make-ready credit is based on nameplate kW per charging port, which Duke measures as the cabinet's 998 kW divided by the number of ports it feeds. Because the make-ready serves the whole 998 kW cabinet, the total credit is effectively <strong>fixed per cabinet</strong> regardless of how many ports split it. This tool assumes Service Upgrades Required / New Service at a high-volume site.
+            <span class="why">Default of <strong>$117,716 per cabinet</strong> (≈$117.95/kW) is calibrated to Duke's calculator: a 4-port site (249.5 kW/port) = $29,429/port × 4 = $117,716. Total credit = this value × number of cabinets (1 for 4/6/8-port, 2 for 16-port). Covers make-ready electrical only; subject to approval, apply within 120 days of final invoice.</span>
+          </div>
+          <input type="number" id="dukeCredit" value="117716" step="1000" min="0" />
+        </div>
+        <div class="field span-2">
+          <div class="field-label">
+            Peak Demand / Billing Demand
+            <button class="info-btn" onclick="toggleInfo('dukeDemandInfo')">?</button>
+          </div>
+          <div class="info-popup" id="dukeDemandInfo">
+            <strong>Why there is no ramp on the Duke side.</strong><br>
+            Georgia Power's CIEV-1 rider phases in demand charges over Years 1–4 (the BDAF ramp). <strong>Duke has no equivalent commercial EV rate in NC, SC, or FL</strong> — a fast-charging host pays the full demand charge from Year 1 on a standard general-service schedule. Duke schedules also carry demand ratchets (billing demand held at 50–80% of peak/contract), but for a site that peaks consistently each month, billing demand ≈ measured peak, which is how this tool models it.
+            <span class="why">Peak demand uses the same Tesla Model Y reference (150 kW average per car during the 30-minute window) and concurrency scaling as the Georgia Power side.</span>
+          </div>
+          <input type="text" id="dukeDemandDisplay" value="Full demand from Year 1 (no phase-in) · billing demand ≈ peak" disabled style="opacity:0.75;cursor:default;" />
+        </div>
+      </div>
+      <div class="source-note" id="dukeSourceNote"></div>
+     </div>
     </div>
   </div>
 
@@ -953,7 +1145,7 @@ If Georgia Power installs dedicated equipment that serves only your site, they m
   <div class="footer">
     <div class="footer-left">
       <div class="footer-brand">Car Charger Specialists, LLC &nbsp;/&nbsp; EN217495</div>
-      <div class="footer-disclaimer">
+      <div class="footer-disclaimer" id="footerDisc">
 This pro forma uses Georgia Power PLM and PLL tariff rates (tariff automatically selected based on peak demand: PLM for 30-499 kW, PLL for 500+ kW) and the CIEV-1 Charge It Electric Vehicle Charger Rider Schedule. Rate structure and adder percentages are validated directly against Georgia Power's official Power and Light Calculator. Electricity cost estimates incorporate the CIEV Billing Demand Adjustment Factor (BDAF) applied to billing demand for Years 1-4 (0.20 / 0.40 / 0.60 / 0.80 respectively), transitioning to full rate in Year 5 or when the rolling 12-month load factor reaches 15%, whichever comes first. Peak billing demand is modeled using Tesla Model Y as reference (150 kW avg during 30-min billing window) with concurrency scaling by site utilization. Fuel Cost Recovery is adjusted quarterly by Georgia Power and may increase or decrease over time. Georgia Power Make Ready program coverage of up to $300,000 per job and the $30,000 Business Rebate are subject to application approval and not guaranteed. Tesla Services Fee of $0.10/kWh is applied to all energy throughput. Excess Facilities charges are customer-specific and apply only when GA Power's revenue ratio calculation triggers them. This tool does not constitute a contract, guarantee, or formal proposal. © 2026 Car Charger Specialists, LLC &nbsp;/&nbsp; 404-520-7349 &nbsp;/&nbsp; commercial@carchargerspecialists.com
       </div>
     </div>
@@ -1114,6 +1306,7 @@ let selectedPorts = 4;
 let cfChart, rcChart;
 let currentResults = null;
 let currentUtil = 'med';
+let utility = 'gapower'; // 'gapower' | 'duke'
 
 const SITE_UTIL = {
   retail:  { low: 150, med: 300, high: 500, peak: 650 },
@@ -1130,10 +1323,10 @@ const SITE_LABELS = {
 };
 const UTIL_LABELS = { low: 'Low', med: 'Medium', high: 'High', peak: 'Peak' };
 
+const PORT_CONFIGS = [4, 6, 8, 16];
 function selectConfig(n) {
   selectedPorts = n;
-  document.getElementById('card4').classList.toggle('selected', n === 4);
-  document.getElementById('card8').classList.toggle('selected', n === 8);
+  PORT_CONFIGS.forEach(p => document.getElementById('card' + p).classList.toggle('selected', p === n));
 }
 
 function toggleAdvanced(el) {
@@ -1141,16 +1334,85 @@ function toggleAdvanced(el) {
   document.getElementById('advContent').classList.toggle('visible');
 }
 
-// ============== DEMAND MODELING ==============
+// ============== PROVIDER SWITCHING ==============
+const HERO_GA = "Estimate your site's profitability with real Georgia Power tariff data, Tesla Model Y charging curve modeling, and invoice-calibrated utility fees. Built for business owners considering their first EV charging investment.";
+const HERO_DUKE = "Estimate your site's profitability on Duke Energy's commercial rates across North Carolina, South Carolina, and Florida, with the Duke Charger Prep Credit applied and Tesla Model Y charging curve modeling. Built for business owners considering their first EV charging investment.";
+const DISC_GA = '<strong>ESTIMATE ONLY.</strong> Projections generated in good faith using published Georgia Power tariff schedules, real customer invoice data, and industry-standard assumptions. Results are not guaranteed or promised. Actual results vary based on site conditions, utility approval, equipment pricing, real-world utilization, and factors outside the control of Car Charger Specialists, LLC. This tool is for planning purposes only and does not constitute a contract, commitment, or formal proposal.';
+const DISC_DUKE = '<strong>ESTIMATE ONLY.</strong> Projections use published Duke Energy general-service tariff schedules and the Commercial Charger Prep Credit. Duke offers no commercial EV rate with a demand-charge phase-in, so full demand charges apply from Year 1. Some rider values are bundled or provisional (see the Advanced panel). Results are not guaranteed. Actual results vary based on site conditions, the utility and rate schedule you are ultimately assigned, service upgrades, equipment pricing, and real-world utilization. This tool is for planning purposes only and does not constitute a contract, commitment, or formal proposal.';
+
+let GA_FOOTER_HTML = null;
+const FOOTER_DUKE = 'This pro forma uses published Duke Energy general-service tariff schedules (the schedule shown is auto-matched to the selected territory) and the Duke Commercial Charger Prep Credit. Duke does not offer a commercial EV rate with a demand-charge phase-in in North Carolina, South Carolina, or Florida — there is no equivalent to Georgia Power\'s CIEV-1 rider — so full demand charges apply from Year 1 on a standard general-service schedule. Billing demand is modeled as equal to measured peak demand; Duke schedules also carry demand ratchets (billing demand held at 50–80% of peak/contract) which are approximated by this assumption for a consistently-peaking site. Some rider and fuel components are bundled or provisional and are exposed as editable inputs in the Advanced panel. The Charger Prep Credit of $29,429 per charging port assumes a Public DC Fast Charger in the 241–290 kW nameplate range (one Tesla V4 post), a high-volume site, and Service Upgrades Required / New Service; it covers make-ready electrical only and is subject to application approval. Peak billing demand is modeled using Tesla Model Y as reference (150 kW avg during 30-min window) with concurrency scaling by site utilization. Tesla Services Fee of $0.10/kWh is applied to all energy throughput. This tool does not constitute a contract, guarantee, or formal proposal. © 2026 Car Charger Specialists, LLC &nbsp;/&nbsp; 404-520-7349 &nbsp;/&nbsp; commercial@carchargerspecialists.com';
+
+function setUtility(u) {
+  utility = u;
+  const isDuke = u === 'duke';
+  const footer = document.getElementById('footerDisc');
+  if (GA_FOOTER_HTML === null) GA_FOOTER_HTML = footer.innerHTML;
+  document.getElementById('provGa').classList.toggle('active', !isDuke);
+  document.getElementById('provDuke').classList.toggle('active', isDuke);
+  document.getElementById('dukeStateField').classList.toggle('visible', isDuke);
+  document.getElementById('gaRatesPanel').style.display = isDuke ? 'none' : 'block';
+  document.getElementById('dukeRatesPanel').style.display = isDuke ? 'block' : 'none';
+  document.getElementById('heroText').textContent = isDuke ? HERO_DUKE : HERO_GA;
+  document.getElementById('disclaimerBox').innerHTML = isDuke ? DISC_DUKE : DISC_GA;
+  document.getElementById('advSectionTitle').textContent = isDuke ? 'Advanced: Duke Energy Rates' : 'Advanced: Georgia Power Rates';
+  document.getElementById('advSectionSub').textContent = isDuke ? 'From published tariff schedules' : 'Calibrated from real invoices';
+  footer.innerHTML = isDuke ? FOOTER_DUKE : GA_FOOTER_HTML;
+  if (isDuke) syncDukeDefaults();
+  renderActiveUtil();
+}
+
+// Push the selected Duke territory's default rates into the editable fields
+function syncDukeDefaults() {
+  const cfg = currentDuke();
+  document.getElementById('dukeFuel').value = cfg.fuel;
+  document.getElementById('dukeTax').value = cfg.tax;
+  document.getElementById('dukeGrt').value = cfg.grt;
+  document.getElementById('dukeCredit').value = cfg.creditPerCab;
+  const hoursTxt = cfg.energyBlocks.length > 1
+    ? 'declining hours-use blocks'
+    : '$' + cfg.energyBlocks[0].tiers[cfg.energyBlocks[0].tiers.length - 1].rate.toFixed(5) + '/kWh (base, non-fuel)';
+  document.getElementById('dukeSchedSummary').innerHTML =
+    '<strong>' + cfg.label + '</strong> &nbsp;·&nbsp; ' + cfg.schedule + ' &nbsp;·&nbsp; <span style="color:var(--text3)">' + cfg.effDate + '</span><br>' +
+    'Customer charge <strong>$' + cfg.basic.toFixed(2) + '/mo</strong> &nbsp;·&nbsp; ' +
+    'Demand <strong>$' + cfg.demandRate.toFixed(2) + '/kW</strong>' + (cfg.freeKw ? ' (first ' + cfg.freeKw + ' kW free)' : '') +
+    (cfg.demandAdder ? ' + $' + cfg.demandAdder.toFixed(2) + '/kW rider' : '') + ' &nbsp;·&nbsp; ' +
+    'Base energy ' + hoursTxt +
+    (cfg.provisional ? '<br><span style="color:var(--yellow)">⚠ Provisional — verify current values before relying on results.</span>' : '');
+  document.getElementById('dukeSourceNote').innerHTML =
+    '<strong>Source &amp; methodology:</strong> ' + cfg.src + '<br><br>' +
+    '<strong>Charger Prep Credit:</strong> Duke\'s one-time make-ready credit is based on nameplate kW per port, which Duke measures as the 998 kW cabinet divided by the ports it feeds. Since the make-ready serves the full cabinet, the credit is effectively fixed at <strong>$' +
+    Math.round(cfg.creditPerCab).toLocaleString() + ' per 998 kW cabinet</strong> (a 4-port site = $29,429/port × 4). It is one tri-state program (FL/NC/SC), derived from Duke\'s North Carolina calculator and treated as the same across states pending confirmation. In North Carolina the credit is reimbursed after installation, so the model treats full CAPEX as an upfront (Year 0) outlay and the credit as a Year 1 cash inflow.<br><br>' +
+    '<strong>Peak demand modeling:</strong> Tesla Model Y reference vehicle (150 kW average per car during the 30-minute billing window), concurrency scaling by site utilization, capped at 998 kW per cabinet — identical to the Georgia Power side. Duke has no CIEV-style demand-charge phase-in, so full demand applies every year.';
+}
+
+// Re-render results (if visible) using whichever provider/territory is active
+function renderActiveUtil() {
+  if (utility === 'duke') syncDukeDefaults();
+  if (currentResults && document.getElementById('results').classList.contains('visible')) {
+    runProForma();
+  }
+}
+
+// ============== EQUIPMENT / DEMAND MODELING ==============
+const CABINET_KW = 998;                 // Tesla V4 cabinet rating
+function cabinetsFor(ports) { return Math.ceil(ports / 8); } // max 8 posts per cabinet
+function perPortNameplate(ports) { return CABINET_KW * cabinetsFor(ports) / ports; } // 998/ports-per-cabinet
+function configLabel(ports) {
+  const cabs = cabinetsFor(ports);
+  return ports + '-Port V4 ' + (cabs > 1 ? '(' + cabs + ' Cabinets)' : 'Cabinet');
+}
+
 function calcPeakDemand(ports, utilLevel) {
-  const CABINET_CAP = 998;
   const AVG_PER_CAR = 150;
   const concurrency = {
-    4: { low: 1, med: 2, high: 3, peak: 4 },
-    8: { low: 2, med: 3, high: 5, peak: 7 }
+    4:  { low: 1, med: 2, high: 3,  peak: 4 },
+    6:  { low: 1, med: 2, high: 4,  peak: 6 },
+    8:  { low: 2, med: 3, high: 5,  peak: 7 },
+    16: { low: 3, med: 6, high: 10, peak: 14 }
   };
   const cars = concurrency[ports][utilLevel];
-  return Math.min(cars * AVG_PER_CAR, CABINET_CAP);
+  return Math.min(cars * AVG_PER_CAR, CABINET_KW * cabinetsFor(ports));
 }
 
 // ============== TARIFF CALCULATIONS ==============
@@ -1159,6 +1421,115 @@ function calcPeakDemand(ports, utilLevel) {
 //   30-499 kW    -> PLM (Power and Light Medium)
 //   500+ kW      -> PLL (Power and Light Large)
 // CIEV rider adjusts BILLING demand only; tariff selection uses actual measured demand.
+
+// ============== DUKE ENERGY RATE CONFIG ==============
+// Duke has NO commercial EV rate with a demand-charge phase-in in NC/SC/FL
+// (no equivalent to GA Power's CIEV-1 BDAF ramp). A DCFC host lands on a
+// standard general-service demand schedule at full demand from Year 1.
+// Energy uses declining "hours-use" blocks (kWh per kW of billing demand),
+// mirroring the engine used on the GA side. Billing demand ~= measured peak
+// for a consistently-peaking charging site.
+//   energyBlocks: cumulative kWh-per-kW breakpoint ("hours") with absolute-kWh
+//   sub-tiers inside each block (rate in $/kWh).
+const DUKE_UTILITIES = {
+  'dec-nc': {
+    label: 'Duke Energy Carolinas — North Carolina', short: 'DEC (NC)', state: 'NC',
+    schedule: 'Schedule LGS — Large General Service (>75 kW)', effDate: 'eff. Jan 1, 2026',
+    basic: 26.00, demandRate: 4.82, freeKw: 30, demandAdder: 0,
+    energyBlocks: [
+      { hours: 125, tiers: [ { limit: 3000, rate: 0.13983 }, { limit: Infinity, rate: 0.08259 } ] },
+      { hours: 400, tiers: [ { limit: Infinity, rate: 0.077045 } ] },
+      { hours: Infinity, tiers: [ { limit: Infinity, rate: 0.066824 } ] }
+    ],
+    fuel: 0.006, tax: 7.0, grt: 0, creditPerCab: 117716,
+    provisional: true,
+    src: 'Rate values from the U.S. Utility Rate Database (OpenEI URDB) DEC-NC LGS schedule, effective 1/1/2026 (NCUC Docket E-7 Sub 1276). Fuel and rider values (EE, DSM, CPRE, EDIT) are bundled by URDB (~$0.006/kWh) and shown as an editable adder; confirm against a recent Duke commercial invoice.'
+  },
+  'dep-nc': {
+    label: 'Duke Energy Progress — North Carolina', short: 'DEP (NC)', state: 'NC',
+    schedule: 'Schedule MGS — Medium General Service (30 kW – <1,000 kW)', effDate: 'eff. Jan 1, 2026',
+    basic: 49.08, demandRate: 8.19, freeKw: 0, demandAdder: 2.00,
+    energyBlocks: [ { hours: Infinity, tiers: [ { limit: Infinity, rate: 0.05493 } ] } ],
+    fuel: 0.00546, tax: 7.0, grt: 0, creditPerCab: 117716,
+    provisional: true,
+    src: 'Rate values from OpenEI URDB DEP-NC MGS-TOU schedule, effective 1/1/2026 (NCUC Docket E-2 Sub 1300). On-peak demand ($8.19/kW) plus a $2.00/kW Joint Agency Asset (JAA) adder; TOU energy blended to a flat rate for planning. DEP demand is roughly double DEC — materially worse for low-load-factor fast charging.'
+  },
+  'dec-sc': {
+    label: 'Duke Energy Carolinas — South Carolina', short: 'DEC (SC)', state: 'SC',
+    schedule: 'Schedule LGS — Large General Service (>75 kW)', effDate: 'eff. Nov 1, 2024',
+    basic: 29.00, demandRate: 4.62, freeKw: 30, demandAdder: 0,
+    energyBlocks: [
+      { hours: 125, tiers: [ { limit: 3000, rate: 0.143296 }, { limit: 87000, rate: 0.076175 }, { limit: Infinity, rate: 0.064263 } ] },
+      { hours: 400, tiers: [ { limit: 6000, rate: 0.077142 }, { limit: 134000, rate: 0.076293 }, { limit: Infinity, rate: 0.067691 } ] },
+      { hours: Infinity, tiers: [ { limit: Infinity, rate: 0.059897 } ] }
+    ],
+    fuel: 0.025, tax: 7.0, grt: 0, creditPerCab: 117716,
+    provisional: false,
+    src: 'Base rate structure read directly from the PSCSC tariff leaf (Twenty-Fifth Revised Leaf No. 29, effective 11/1/2024, Docket 2024-3-E). Fuel plus EE / EDIT riders are not itemized on the leaf and are shown as an editable adder (~$0.025/kWh default). A new DEC-SC rate case takes effect ~March 2026 (~+5% commercial).'
+  },
+  'dep-sc': {
+    label: 'Duke Energy Progress — South Carolina', short: 'DEP (SC)', state: 'SC',
+    schedule: 'Schedule MGS — Medium General Service (30 kW – <1,000 kW)', effDate: 'base arch.; +~11% eff. Feb 2026',
+    basic: 24.44, demandRate: 6.17, freeKw: 0, demandAdder: 0,
+    energyBlocks: [ { hours: Infinity, tiers: [ { limit: Infinity, rate: 0.07478 } ] } ],
+    fuel: 0.025, tax: 7.0, grt: 0, creditPerCab: 117716,
+    provisional: true,
+    src: 'Base rate architecture from PSCSC MGS-52 leaf (basic $17.17 + $6.00 three-phase + $1.27 DERP fixed = $24.44/mo; demand $6.17/kW; energy $0.07478/kWh). A new DEP-SC rate case (Docket 2025-154-E) raises MGS ~+11% effective Feb 1, 2026 and moves demand billing to 30-minute intervals — apply an uplift for a 2026 estimate. Fuel/riders shown as an editable adder.'
+  },
+  'def': {
+    label: 'Duke Energy Florida', short: 'DEF (FL)', state: 'FL',
+    schedule: 'Schedule GSD-1 — General Service Demand (secondary)', effDate: 'eff. Aug 1, 2025',
+    basic: 17.85, demandRate: 7.77, freeKw: 0, demandAdder: 0,
+    energyBlocks: [ { hours: Infinity, tiers: [ { limit: Infinity, rate: 0.03262 } ] } ],
+    fuel: 0.055, tax: 4.35, grt: 2.5, creditPerCab: 117716,
+    provisional: true,
+    src: 'Base rates read directly from Duke Energy Florida GSD-1 tariff sheet 6.170, effective 8/1/2025 (FL PSC Doc. 04240-2025): customer $17.85 secondary, demand $7.77/kW (max 30-min, NO ratchet), non-fuel energy $0.03262/kWh. Fuel + Capacity (CCR) + Environmental (ECRC) + Conservation (ECCR) clauses are shown as an editable ~$0.055/kWh adder (all-in ~$0.12–0.14/kWh). Optional GSDT-1 time-of-use (base demand $2.72/kW) can lower the bill if peak avoids the 6–9 p.m. window. Taxes: 2.5% gross receipts + 4.35% electricity sales tax + local surtax.'
+  }
+};
+
+function currentDuke() { return DUKE_UTILITIES[document.getElementById('dukeState').value]; }
+
+// Declining "hours-use" energy engine (kWh per kW of billing demand)
+function calcDukeEnergy(kwh, billing_demand, blocks) {
+  let energy = 0, remaining = kwh, prevHours = 0;
+  for (const blk of blocks) {
+    const cap = blk.hours === Infinity ? Infinity : billing_demand * (blk.hours - prevHours);
+    prevHours = blk.hours;
+    const take = Math.min(remaining, cap);
+    let tr = take;
+    for (const t of blk.tiers) {
+      const x = Math.min(tr, t.limit);
+      energy += x * t.rate;
+      tr -= x;
+      if (tr <= 0) break;
+    }
+    remaining -= take;
+    if (remaining <= 0) break;
+  }
+  return energy;
+}
+
+function calcDukeBill(monthly_kwh, peak_kw, cfg, adders) {
+  const billing_demand = peak_kw; // no BDAF ramp; ratchet ~= peak for steady charging
+  const demand = Math.max(0, billing_demand - cfg.freeKw) * cfg.demandRate + billing_demand * cfg.demandAdder;
+  const energy = calcDukeEnergy(monthly_kwh, billing_demand, cfg.energyBlocks);
+  const base = cfg.basic + demand + energy;
+  const fuel = monthly_kwh * adders.fuel;
+  const subtotal = base + fuel;
+  const grt = subtotal * (adders.grt / 100);
+  const tax = (subtotal + grt) * (adders.tax / 100);
+  return { basic: cfg.basic, demand, energy, base, fuel, grt, tax, subtotal, total: subtotal + grt + tax };
+}
+
+function getDukeAdders() {
+  const cfg = currentDuke();
+  return {
+    fuel: parseFloat(document.getElementById('dukeFuel').value),
+    tax: parseFloat(document.getElementById('dukeTax').value),
+    grt: parseFloat(document.getElementById('dukeGrt').value),
+    creditPerCab: parseFloat(document.getElementById('dukeCredit').value) || cfg.creditPerCab,
+  };
+}
 
 const PLM_RATES = {
   basic: 152.00,
@@ -1261,37 +1632,45 @@ function getAdders() {
   };
 }
 
-function calcProForma(ports, capex, rebate, dailyKwh, chargePrice, years, discRate, utilGrowth, adders, utilLevel) {
+function calcProForma(ports, grossCapex, rebate, dailyKwh, chargePrice, years, discRate, utilGrowth, adders, utilLevel) {
   const peak_kw = calcPeakDemand(ports, utilLevel);
   const tesla_fee = 0.10;
+  const rebateYear = 1; // credit reimbursed after installation (Year 1 inflow)
   const rows = [];
-  let cumCF = -capex;
+  let cumCF = -grossCapex; // full CAPEX paid upfront at Year 0
   let payback = null;
+
+  const isDuke = utility === 'duke';
+  const dukeCfg = isDuke ? currentDuke() : null;
 
   for (let yr = 1; yr <= years; yr++) {
     const util = dailyKwh * Math.pow(1 + utilGrowth / 100, yr - 1);
     const monthly_kwh = util * ports * 30;
     const annual_kwh = util * ports * 365;
-    const bdaf = getBDAF(yr);
-    const monthly_bill = calcFullBill(monthly_kwh, peak_kw, bdaf, adders);
+    const bdaf = isDuke ? 1.00 : getBDAF(yr);
+    const monthly_bill = isDuke
+      ? calcDukeBill(monthly_kwh, peak_kw, dukeCfg, adders)
+      : calcFullBill(monthly_kwh, peak_kw, bdaf, adders);
     const annual_elec = monthly_bill.total * 12;
     const tesla_cost = annual_kwh * tesla_fee;
     const revenue = annual_kwh * chargePrice;
     const total_cost = annual_elec + tesla_cost;
-    const net_cf = revenue - total_cost;
+    const reimbursement = yr === rebateYear ? rebate : 0; // Prep Credit / rebate arrives after install
+    const op_cf = revenue - total_cost;
+    const net_cf = op_cf + reimbursement;
     const eff_rate = annual_elec / annual_kwh;
     cumCF += net_cf;
     if (payback === null && cumCF >= 0) {
       const prev = cumCF - net_cf;
       payback = yr - 1 + (-prev / net_cf);
     }
-    rows.push({ yr, util: Math.round(util), annual_kwh: Math.round(annual_kwh), bdaf, eff_rate, monthly_bill, revenue, annual_elec, tesla_cost, total_cost, net_cf, cumCF });
+    rows.push({ yr, util: Math.round(util), annual_kwh: Math.round(annual_kwh), bdaf, eff_rate, monthly_bill, revenue, annual_elec, tesla_cost, total_cost, reimbursement, op_cf, net_cf, cumCF });
   }
 
-  const cashFlows = [-capex, ...rows.map(r => r.net_cf)];
+  const cashFlows = [-grossCapex, ...rows.map(r => r.net_cf)];
   const npv = cashFlows.reduce((s, cf, t) => s + cf / Math.pow(1 + discRate / 100, t), 0);
   const avgRev = rows.reduce((s, r) => s + r.revenue, 0) / years;
-  return { rows, npv, payback, avgRev, peak_kw, capex, rebate };
+  return { rows, npv, payback, avgRev, peak_kw, grossCapex, rebate };
 }
 
 function fmt$(v) {
@@ -1308,21 +1687,28 @@ function runProForma() {
   const years = parseInt(document.getElementById('projYears').value);
   const discRate = parseFloat(document.getElementById('discRate').value);
   const utilGrowth = parseFloat(document.getElementById('utilGrowth').value);
-  const capex = selectedPorts === 4
-    ? (parseFloat(document.getElementById('capex4').value) || 250000)
-    : (parseFloat(document.getElementById('capex8').value) || 500000);
-  const rebate = 30000;
+  const capexDefaults = { 4: 250000, 6: 375000, 8: 500000, 16: 1000000 };
+  const capexEl = document.getElementById('capex' + selectedPorts);
+  const capex = (capexEl && parseFloat(capexEl.value)) || capexDefaults[selectedPorts];
+
+  const isDuke = utility === 'duke';
+  const adders = isDuke ? getDukeAdders() : getAdders();
+  const cabinets = cabinetsFor(selectedPorts);
+  // GA: $30k Business Rebate. Duke: Charger Prep Credit fixed per 998 kW cabinet.
+  const rebate = isDuke ? adders.creditPerCab * cabinets : 30000;
   const netCapex = capex - rebate;
 
   currentResults = {
     address, siteType, chargePrice, years, discRate, utilGrowth,
-    capex, rebate, netCapex, utilMap: SITE_UTIL[siteType], selectedPorts,
-    adders: getAdders()
+    capex, rebate, netCapex, cabinets, utilMap: SITE_UTIL[siteType], selectedPorts,
+    isDuke, dukeKey: isDuke ? document.getElementById('dukeState').value : null,
+    adders
   };
 
+  const provLabel = isDuke ? currentDuke().short : 'Georgia Power';
   document.getElementById('raddr').textContent =
     address + '  /  ' + SITE_LABELS[siteType] + '  /  ' +
-    (selectedPorts === 4 ? '4-Port V4 Cabinet' : '8-Port V4 Cabinet');
+    configLabel(selectedPorts) + '  /  ' + provLabel;
   document.getElementById('results').classList.add('visible');
 
   renderUtil(currentUtil);
@@ -1337,47 +1723,82 @@ function switchUtil(btn, u) {
 }
 
 function renderUtil(u) {
-  const { chargePrice, years, discRate, utilGrowth, capex, rebate, netCapex, utilMap, selectedPorts, adders } = currentResults;
+  const { chargePrice, years, discRate, utilGrowth, capex, rebate, netCapex, cabinets, utilMap, selectedPorts, adders } = currentResults;
+  const isDuke = utility === 'duke';
+  const cfg = isDuke ? currentDuke() : null;
   const dailyKwh = utilMap[u];
-  const res = calcProForma(selectedPorts, netCapex, rebate, dailyKwh, chargePrice, years, discRate, utilGrowth, adders, u);
+  const res = calcProForma(selectedPorts, capex, rebate, dailyKwh, chargePrice, years, discRate, utilGrowth, adders, u);
 
+  const creditName = isDuke ? 'Charger Prep Credit' : 'GA Business Rebate';
+  const outlaySub = isDuke
+    ? cabinets + '× cabinet · paid upfront'
+    : 'Full installed cost · paid upfront';
+  const afterSub = 'After ' + fmt$(rebate) + ' ' + creditName + ' (reimbursed Yr 1)';
   const kpis = [
-    { label: 'Net CAPEX', val: fmt$(netCapex), sub: fmt$(capex) + ' gross - $30k rebate*', hi: false },
+    { label: 'Total Cash Outlay', val: fmt$(capex), sub: outlaySub, hi: false },
+    { label: 'CAPEX After Rebate', val: fmt$(netCapex), sub: afterSub, hi: false },
     { label: 'NPV (' + years + 'yr @ ' + discRate + '%)', val: fmt$(res.npv), sub: 'Net present value', hi: true },
     { label: 'Avg Annual Revenue', val: fmt$(res.avgRev), sub: UTIL_LABELS[u] + ' util. / ' + dailyKwh + ' kWh/day/port', hi: false },
-    { label: 'Payback Period', val: res.payback ? res.payback.toFixed(1) + ' yr' : 'N/A', sub: 'Years to recover CAPEX', hi: false },
+    { label: 'Payback Period', val: res.payback ? res.payback.toFixed(1) + ' yr' : 'N/A', sub: 'From full cash outlay', hi: false },
   ];
   document.getElementById('kpiGrid').innerHTML = kpis.map(k =>
     `<div class="kpi${k.hi ? ' highlight' : ''}"><div class="kpi-label">${k.label}</div><div class="kpi-val">${k.val}</div><div class="kpi-sub">${k.sub}</div></div>`
   ).join('');
 
   const fullYr = Math.min(4, res.rows.length - 1);
-  document.getElementById('tariffBox').innerHTML =
-    '<h3>Georgia Power Tariff Summary / ' + (res.peak_kw >= 500 ? 'PLL' : 'PLM') + ' + CIEV-1 Rider</h3>' +
-    '<div class="tariff-row"><span class="tl">Base tariff</span><span class="tv">' + (res.peak_kw >= 500 ? 'Power and Light Large (PLL)' : 'Power and Light Medium (PLM)') + '</span></div>' +
-    '<div class="tariff-row"><span class="tl">Peak billing demand (30-min)</span><span class="tv">' + res.peak_kw.toLocaleString() + ' kW &nbsp;<span style="font-size:10px;color:var(--text4)">(' + UTIL_LABELS[u].toLowerCase() + ' concurrency)</span></span></div>' +
-    '<div class="tariff-row"><span class="tl">Year 1 all-in rate (BDAF 0.20)</span><span class="tv">' + fmtR(res.rows[0].eff_rate) + '</span></div>' +
-    '<div class="tariff-row"><span class="tl">Year 2 all-in rate (BDAF 0.40)</span><span class="tv">' + fmtR(res.rows[1].eff_rate) + '</span></div>' +
-    '<div class="tariff-row"><span class="tl">Year 3 all-in rate (BDAF 0.60)</span><span class="tv">' + fmtR(res.rows[2].eff_rate) + '</span></div>' +
-    '<div class="tariff-row"><span class="tl">Year 5+ all-in rate (full)</span><span class="tv">' + fmtR(res.rows[fullYr].eff_rate) + '</span></div>' +
-    '<div class="tariff-row"><span class="tl">Tesla Services Fee</span><span class="tv">$0.10/kWh (all years)</span></div>' +
-    '<div class="tariff-row"><span class="tl">Charging price to drivers</span><span class="tv">$' + chargePrice.toFixed(2) + '/kWh</span></div>';
-
   const sample = res.rows[0].monthly_bill;
   const sampleKwh = res.rows[0].annual_kwh / 365 * 30;
-  document.getElementById('billPreview').innerHTML =
-    '<h3>Sample Monthly Bill / Year 1, ' + UTIL_LABELS[u] + ' Utilization</h3>' +
-    '<div class="bill-row"><span class="bl">Base charges (tariff + demand)</span><span class="bv">$' + sample.base.toFixed(2) + '</span></div>' +
-    '<div class="bill-row"><span class="bl">Fuel Cost Recovery</span><span class="bv">$' + sample.fuel.toFixed(2) + '</span></div>' +
-    '<div class="bill-row"><span class="bl">Environmental Compliance</span><span class="bv">$' + sample.env.toFixed(2) + '</span></div>' +
-    '<div class="bill-row"><span class="bl">Demand Side Management</span><span class="bv">$' + sample.dsm.toFixed(2) + '</span></div>' +
-    '<div class="bill-row"><span class="bl">Municipal Franchise Fee</span><span class="bv">$' + sample.mff.toFixed(2) + '</span></div>' +
-    '<div class="bill-row"><span class="bl">Excess Facilities Charge</span><span class="bv">$' + sample.excessFac.toFixed(2) + '</span></div>' +
-    '<div class="bill-row"><span class="bl">Sales Tax</span><span class="bv">$' + sample.tax.toFixed(2) + '</span></div>' +
-    '<div class="bill-row total"><span class="bl">Total (' + Math.round(sampleKwh).toLocaleString() + ' kWh)</span><span class="bv">$' + sample.total.toFixed(2) + '</span></div>';
 
-  document.getElementById('cievNote').innerHTML =
-    '<strong>CIEV-1 Rider Benefit:</strong> The Georgia Power Charge It EV Rider reduces billing demand charges during your ramp-up years. At ' + UTIL_LABELS[u].toLowerCase() + ' utilization, your all-in electricity cost drops from ' + fmtR(res.rows[fullYr].eff_rate) + ' (full rate) to ' + fmtR(res.rows[0].eff_rate) + ' in Year 1 and ' + fmtR(res.rows[1].eff_rate) + ' in Year 2. The rider applies until your site reaches a 15% rolling load factor or you complete Year 4, whichever comes first.';
+  if (isDuke) {
+    const demandDetail = '$' + cfg.demandRate.toFixed(2) + '/kW' + (cfg.freeKw ? ' (first ' + cfg.freeKw + ' free)' : '') + (cfg.demandAdder ? ' + $' + cfg.demandAdder.toFixed(2) + ' rider' : '');
+    document.getElementById('tariffBox').innerHTML =
+      '<h3>' + cfg.label + ' Tariff Summary / ' + cfg.schedule.split(' — ')[0] + '</h3>' +
+      '<div class="tariff-row"><span class="tl">Rate schedule</span><span class="tv">' + cfg.schedule + '</span></div>' +
+      '<div class="tariff-row"><span class="tl">Peak / billing demand (30-min)</span><span class="tv">' + res.peak_kw.toLocaleString() + ' kW &nbsp;<span style="font-size:10px;color:var(--text4)">(' + UTIL_LABELS[u].toLowerCase() + ' concurrency)</span></span></div>' +
+      '<div class="tariff-row"><span class="tl">Customer charge</span><span class="tv">$' + cfg.basic.toFixed(2) + '/mo</span></div>' +
+      '<div class="tariff-row"><span class="tl">Demand charge</span><span class="tv">' + demandDetail + '</span></div>' +
+      '<div class="tariff-row"><span class="tl">All-in rate (full demand, all years)</span><span class="tv">' + fmtR(res.rows[fullYr].eff_rate) + '</span></div>' +
+      '<div class="tariff-row"><span class="tl">Tesla Services Fee</span><span class="tv">$0.10/kWh (all years)</span></div>' +
+      '<div class="tariff-row"><span class="tl">Charging price to drivers</span><span class="tv">$' + chargePrice.toFixed(2) + '/kWh</span></div>';
+
+    document.getElementById('billPreview').innerHTML =
+      '<h3>Sample Monthly Bill / Year 1, ' + UTIL_LABELS[u] + ' Utilization</h3>' +
+      '<div class="bill-row"><span class="bl">Customer charge</span><span class="bv">$' + sample.basic.toFixed(2) + '</span></div>' +
+      '<div class="bill-row"><span class="bl">Demand charge (' + res.peak_kw.toLocaleString() + ' kW)</span><span class="bv">$' + sample.demand.toFixed(2) + '</span></div>' +
+      '<div class="bill-row"><span class="bl">Energy charge</span><span class="bv">$' + sample.energy.toFixed(2) + '</span></div>' +
+      '<div class="bill-row"><span class="bl">Fuel &amp; riders</span><span class="bv">$' + sample.fuel.toFixed(2) + '</span></div>' +
+      (sample.grt > 0 ? '<div class="bill-row"><span class="bl">Gross Receipts Tax</span><span class="bv">$' + sample.grt.toFixed(2) + '</span></div>' : '') +
+      '<div class="bill-row"><span class="bl">Sales Tax</span><span class="bv">$' + sample.tax.toFixed(2) + '</span></div>' +
+      '<div class="bill-row total"><span class="bl">Total (' + Math.round(sampleKwh).toLocaleString() + ' kWh)</span><span class="bv">$' + sample.total.toFixed(2) + '</span></div>';
+
+    document.getElementById('cievNote').innerHTML =
+      '<strong>No EV demand-charge phase-in on Duke.</strong> Unlike Georgia Power\'s CIEV-1 rider, ' + cfg.short + ' has no commercial EV rate that ramps demand charges. Your site pays the full ' + cfg.schedule.split(' — ')[0] + ' demand charge of ' + demandDetail + ' from Year 1. At ' + UTIL_LABELS[u].toLowerCase() + ' utilization the all-in electricity cost is ' + fmtR(res.rows[fullYr].eff_rate) + ', declining only as throughput grows and spreads fixed demand cost over more kWh. The main incentive is the one-time Charger Prep Credit of ' + fmt$(rebate) + ' (' + fmt$(adders.creditPerCab) + '/cabinet × ' + cabinets + '), reimbursed after installation.';
+  } else {
+    document.getElementById('tariffBox').innerHTML =
+      '<h3>Georgia Power Tariff Summary / ' + (res.peak_kw >= 500 ? 'PLL' : 'PLM') + ' + CIEV-1 Rider</h3>' +
+      '<div class="tariff-row"><span class="tl">Base tariff</span><span class="tv">' + (res.peak_kw >= 500 ? 'Power and Light Large (PLL)' : 'Power and Light Medium (PLM)') + '</span></div>' +
+      '<div class="tariff-row"><span class="tl">Peak billing demand (30-min)</span><span class="tv">' + res.peak_kw.toLocaleString() + ' kW &nbsp;<span style="font-size:10px;color:var(--text4)">(' + UTIL_LABELS[u].toLowerCase() + ' concurrency)</span></span></div>' +
+      '<div class="tariff-row"><span class="tl">Year 1 all-in rate (BDAF 0.20)</span><span class="tv">' + fmtR(res.rows[0].eff_rate) + '</span></div>' +
+      '<div class="tariff-row"><span class="tl">Year 2 all-in rate (BDAF 0.40)</span><span class="tv">' + fmtR(res.rows[1].eff_rate) + '</span></div>' +
+      '<div class="tariff-row"><span class="tl">Year 3 all-in rate (BDAF 0.60)</span><span class="tv">' + fmtR(res.rows[2].eff_rate) + '</span></div>' +
+      '<div class="tariff-row"><span class="tl">Year 5+ all-in rate (full)</span><span class="tv">' + fmtR(res.rows[fullYr].eff_rate) + '</span></div>' +
+      '<div class="tariff-row"><span class="tl">Tesla Services Fee</span><span class="tv">$0.10/kWh (all years)</span></div>' +
+      '<div class="tariff-row"><span class="tl">Charging price to drivers</span><span class="tv">$' + chargePrice.toFixed(2) + '/kWh</span></div>';
+
+    document.getElementById('billPreview').innerHTML =
+      '<h3>Sample Monthly Bill / Year 1, ' + UTIL_LABELS[u] + ' Utilization</h3>' +
+      '<div class="bill-row"><span class="bl">Base charges (tariff + demand)</span><span class="bv">$' + sample.base.toFixed(2) + '</span></div>' +
+      '<div class="bill-row"><span class="bl">Fuel Cost Recovery</span><span class="bv">$' + sample.fuel.toFixed(2) + '</span></div>' +
+      '<div class="bill-row"><span class="bl">Environmental Compliance</span><span class="bv">$' + sample.env.toFixed(2) + '</span></div>' +
+      '<div class="bill-row"><span class="bl">Demand Side Management</span><span class="bv">$' + sample.dsm.toFixed(2) + '</span></div>' +
+      '<div class="bill-row"><span class="bl">Municipal Franchise Fee</span><span class="bv">$' + sample.mff.toFixed(2) + '</span></div>' +
+      '<div class="bill-row"><span class="bl">Excess Facilities Charge</span><span class="bv">$' + sample.excessFac.toFixed(2) + '</span></div>' +
+      '<div class="bill-row"><span class="bl">Sales Tax</span><span class="bv">$' + sample.tax.toFixed(2) + '</span></div>' +
+      '<div class="bill-row total"><span class="bl">Total (' + Math.round(sampleKwh).toLocaleString() + ' kWh)</span><span class="bv">$' + sample.total.toFixed(2) + '</span></div>';
+
+    document.getElementById('cievNote').innerHTML =
+      '<strong>CIEV-1 Rider Benefit:</strong> The Georgia Power Charge It EV Rider reduces billing demand charges during your ramp-up years. At ' + UTIL_LABELS[u].toLowerCase() + ' utilization, your all-in electricity cost drops from ' + fmtR(res.rows[fullYr].eff_rate) + ' (full rate) to ' + fmtR(res.rows[0].eff_rate) + ' in Year 1 and ' + fmtR(res.rows[1].eff_rate) + ' in Year 2. The rider applies until your site reaches a 15% rolling load factor or you complete Year 4, whichever comes first.';
+  }
 
   const labels = res.rows.map(r => 'Yr ' + r.yr);
   const cumCFs = res.rows.map(r => Math.round(r.cumCF));
@@ -1427,15 +1848,19 @@ function renderUtil(u) {
       '<td class="pos">' + fmt$(r.revenue) + '</td>' +
       '<td class="neg">' + fmt$(-r.annual_elec) + '</td>' +
       '<td class="neg">' + fmt$(-r.tesla_cost) + '</td>' +
-      '<td class="' + (r.net_cf >= 0 ? 'pos' : 'neg') + '">' + fmt$(r.net_cf) + '</td>' +
+      '<td class="' + (r.net_cf >= 0 ? 'pos' : 'neg') + '">' + fmt$(r.net_cf) + (r.reimbursement > 0 ? ' <span class="bdaf-tag" style="background:var(--blue-dim);color:var(--blue)">+' + fmt$(r.reimbursement) + ' credit</span>' : '') + '</td>' +
       '<td class="' + (r.cumCF >= 0 ? 'pos' : 'neg') + '">' + fmt$(r.cumCF) + '</td>' +
     '</tr>'
   ).join('');
+  const elecHeader = isDuke ? cfg.short : 'GA Power';
+  const footnote = isDuke
+    ? '* Duke Commercial Charger Prep Credit of ' + fmt$(adders.creditPerCab) + '/998 kW cabinet × ' + cabinets + ' = ' + fmt$(rebate) + ', reimbursed after installation (modeled as a Year 1 cash inflow, not netted at Year 0); assumes Service Upgrades Required and subject to application approval. All-in Rate includes the customer charge, demand charge, energy charge, fuel &amp; riders, and applicable taxes for ' + cfg.label + ' (' + cfg.schedule.split(' — ')[0] + ', ' + cfg.effDate + ').' + (cfg.provisional ? ' Some values are provisional — see the Advanced panel.' : '')
+    : '* $30,000 Georgia Power Business Rebate, subject to application approval and paid after installation (modeled as a Year 1 cash inflow, not netted at Year 0). All-in Rate includes base charges, fuel recovery, environmental compliance, DSM, franchise fee, excess facilities, and sales tax.';
   document.getElementById('tableWrap').innerHTML =
     '<table class="yr-table"><thead><tr>' +
-    '<th>Year</th><th>Annual kWh</th><th>All-in Rate</th><th>Revenue</th><th>GA Power</th><th>Tesla Fee</th><th>Net CF</th><th>Cumulative</th>' +
+    '<th>Year</th><th>Annual kWh</th><th>All-in Rate</th><th>Revenue</th><th>' + elecHeader + '</th><th>Tesla Fee</th><th>Net CF</th><th>Cumulative</th>' +
     '</tr></thead><tbody>' + tableRows + '</tbody></table>' +
-    '<div style="font-size:10px; color:var(--text4); margin-top:8px;">* $30,000 Georgia Power Business Rebate deducted from CAPEX, subject to application approval. All-in Rate includes base charges, fuel recovery, environmental compliance, DSM, franchise fee, excess facilities, and sales tax.</div>';
+    '<div style="font-size:10px; color:var(--text4); margin-top:8px;">' + footnote + '</div>';
 }
 </script>
 </body>
