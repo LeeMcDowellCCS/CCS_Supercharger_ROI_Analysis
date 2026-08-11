@@ -807,14 +807,14 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); min-
               CAPEX (Installed)
               <button class="info-btn" onclick="toggleInfo('capex4Info')" style="margin-left: 4px;">?</button>
             </div>
-            <input type="number" id="capex4" value="250000" step="5000" min="100000" class="cprice-input" onclick="event.stopPropagation()" />
+            <input type="number" id="capex4" value="500000" step="5000" min="100000" class="cprice-input" onclick="event.stopPropagation()" />
             <div class="cprice-hint">Adjust if you have a specific quote</div>
           </div>
         </div>
         <div class="info-popup" id="capex4Info" style="left:0;right:0;top:auto;bottom:100%;margin-bottom:8px;margin-top:0;">
           <strong>Installed cost for a 4-port V4 site.</strong><br>
           Includes the Tesla V4 Cabinet, 4 V4 Posts, concrete pads, trenching, conduit, wiring, bollards, signage, engineering, permitting, labor, and project management.
-          <span class="why" id="capexWhy4">Default of <strong>$250,000</strong> reflects typical CCS project pricing for a standard single-cabinet site. Your actual number will depend on site conditions (trenching distance, pavement restoration, utility scope). If you have a firm quote, enter it here.</span>
+          <span class="why" id="capexWhy4">Default of <strong>$500,000</strong> is CCS advertised turnkey pricing: $250,000 equipment (Tesla MSRP) + $250,000 installation, plus applicable state sales tax on the equipment portion at invoicing.</span>
         </div>
       </div>
 
@@ -851,14 +851,14 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); min-
               CAPEX (Installed)
               <button class="info-btn" onclick="toggleInfo('capex8Info')" style="margin-left: 4px;">?</button>
             </div>
-            <input type="number" id="capex8" value="500000" step="5000" min="200000" class="cprice-input" onclick="event.stopPropagation()" />
+            <input type="number" id="capex8" value="950000" step="5000" min="200000" class="cprice-input" onclick="event.stopPropagation()" />
             <div class="cprice-hint">Adjust if you have a specific quote</div>
           </div>
         </div>
         <div class="info-popup" id="capex8Info" style="left:0;right:0;top:auto;bottom:100%;margin-bottom:8px;margin-top:0;">
           <strong>Installed cost for an 8-port V4 site.</strong><br>
           Includes everything in the 4-port package plus 4 additional V4 Posts and their associated trenching, conduit, concrete, bollards, and signage.
-          <span class="why" id="capexWhy8">Default of <strong>$500,000</strong> reflects typical CCS project pricing. The cabinet and service entrance are the same as the 4-port option; most of the extra cost is the additional posts and site work.</span>
+          <span class="why" id="capexWhy8">Default of <strong>$950,000</strong> is CCS advertised turnkey pricing: $500,000 equipment (Tesla MSRP) + $450,000 installation, plus applicable state sales tax on the equipment portion.</span>
         </div>
       </div>
 
@@ -895,14 +895,14 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); min-
               CAPEX (Installed)
               <button class="info-btn" onclick="toggleInfo('capex16Info')" style="margin-left: 4px;">?</button>
             </div>
-            <input type="number" id="capex16" value="1000000" step="5000" min="400000" class="cprice-input" onclick="event.stopPropagation()" />
+            <input type="number" id="capex16" value="1800000" step="5000" min="400000" class="cprice-input" onclick="event.stopPropagation()" />
             <div class="cprice-hint">Adjust if you have a specific quote</div>
           </div>
         </div>
         <div class="info-popup" id="capex16Info" style="left:0;right:0;top:auto;bottom:100%;margin-bottom:8px;margin-top:0;">
           <strong>Installed cost for a 16-port / 2-cabinet V4 site.</strong><br>
           Two full V4 cabinets, 16 posts, and the associated service entrances, trenching, concrete, bollards, and signage.
-          <span class="why" id="capexWhy16">Default of <strong>$1,000,000</strong> reflects typical CCS project pricing (~$62.5k/port). Larger service and utility scope may apply — adjust to a firm quote.</span>
+          <span class="why" id="capexWhy16">Default of <strong>$1,800,000</strong> is CCS advertised turnkey pricing: $1,000,000 equipment (Tesla MSRP) + $800,000 installation, plus applicable state sales tax on the equipment portion.</span>
         </div>
       </div>
     </div>
@@ -1362,10 +1362,10 @@ const CONFIG_KEYS = Object.keys(CONFIGS);
 // pre-tax; state sales tax applies to the equipment portion at invoicing.
 const PROVIDER_CARDS = {
   gapower: {
-    '4':  { capex: 250000,  why: 'Default of <strong>$250,000</strong> reflects typical CCS project pricing for a standard single-cabinet site. Your actual number will depend on site conditions (trenching distance, pavement restoration, utility scope). If you have a firm quote, enter it here.' },
+    '4':  { capex: 500000,  why: 'Default of <strong>$500,000</strong> is CCS advertised turnkey pricing: $250,000 equipment (Tesla MSRP) + $250,000 installation, plus applicable state sales tax on the equipment portion at invoicing.' },
     '6':  { capex: 725000,  why: 'Default of <strong>$725,000</strong> reflects CCS advertised turnkey pricing, interpolated between the 4-post and 8-post builds on the current V4 price ladder. Adjust to a firm quote if you have one.' },
-    '8':  { capex: 500000,  why: 'Default of <strong>$500,000</strong> reflects typical CCS project pricing. The cabinet and service entrance are the same as the 4-port option; most of the extra cost is the additional posts and site work.' },
-    '16': { capex: 1000000, why: 'Default of <strong>$1,000,000</strong> reflects typical CCS project pricing (~$62.5k/port). Larger service and utility scope may apply — adjust to a firm quote.' },
+    '8':  { capex: 950000,  why: 'Default of <strong>$950,000</strong> is CCS advertised turnkey pricing: $500,000 equipment (Tesla MSRP) + $450,000 installation, plus applicable state sales tax on the equipment portion.' },
+    '16': { capex: 1800000, why: 'Default of <strong>$1,800,000</strong> is CCS advertised turnkey pricing: $1,000,000 equipment (Tesla MSRP) + $800,000 installation, plus applicable state sales tax on the equipment portion.' },
   },
   duke: {
     '4':   { capex: 500000,  why: 'Default of <strong>$500,000</strong> is CCS advertised turnkey pricing: $250,000 equipment (Tesla MSRP) + $250,000 installation, plus applicable state sales tax on the equipment portion at invoicing.' },
