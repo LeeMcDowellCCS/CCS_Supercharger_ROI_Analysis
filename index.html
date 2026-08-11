@@ -796,7 +796,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); min-
     </div>
 
     <div class="config-cards">
-      <div class="config-card selected" id="card4" onclick="selectConfig(4)">
+      <div class="config-card selected" id="card4" onclick="selectConfig('4')">
         <div class="ctitle">V4 Cabinet / 4 Posts</div>
         <div class="cdetail">
           1 Tesla V4 Cabinet (998 kW) with 4 charging posts. Best for smaller properties or as an initial installation with room to expand. Nameplate <strong>~249.5 kW/port</strong> (998 ÷ 4).
@@ -814,11 +814,11 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); min-
         <div class="info-popup" id="capex4Info" style="left:0;right:0;top:auto;bottom:100%;margin-bottom:8px;margin-top:0;">
           <strong>Installed cost for a 4-port V4 site.</strong><br>
           Includes the Tesla V4 Cabinet, 4 V4 Posts, concrete pads, trenching, conduit, wiring, bollards, signage, engineering, permitting, labor, and project management.
-          <span class="why">Default of <strong>$250,000</strong> reflects typical CCS project pricing for a standard single-cabinet site. Your actual number will depend on site conditions (trenching distance, pavement restoration, utility scope). If you have a firm quote, enter it here.</span>
+          <span class="why" id="capexWhy4">Default of <strong>$250,000</strong> reflects typical CCS project pricing for a standard single-cabinet site. Your actual number will depend on site conditions (trenching distance, pavement restoration, utility scope). If you have a firm quote, enter it here.</span>
         </div>
       </div>
 
-      <div class="config-card" id="card6" onclick="selectConfig(6)">
+      <div class="config-card" id="card6" onclick="selectConfig('6')">
         <div class="ctitle">V4 Cabinet / 6 Posts</div>
         <div class="cdetail">
           1 Tesla V4 Cabinet (998 kW) with 6 charging posts. A middle option for busier sites still served by a single cabinet. Nameplate <strong>~166.3 kW/port</strong> (998 ÷ 6).
@@ -829,18 +829,18 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); min-
               CAPEX (Installed)
               <button class="info-btn" onclick="toggleInfo('capex6Info')" style="margin-left: 4px;">?</button>
             </div>
-            <input type="number" id="capex6" value="375000" step="5000" min="150000" class="cprice-input" onclick="event.stopPropagation()" />
+            <input type="number" id="capex6" value="725000" step="5000" min="150000" class="cprice-input" onclick="event.stopPropagation()" />
             <div class="cprice-hint">Adjust if you have a specific quote</div>
           </div>
         </div>
         <div class="info-popup" id="capex6Info" style="left:0;right:0;top:auto;bottom:100%;margin-bottom:8px;margin-top:0;">
           <strong>Installed cost for a 6-port V4 site.</strong><br>
           Same single V4 cabinet and service entrance as the 4-port option, plus 2 additional posts and their site work.
-          <span class="why">Default of <strong>$375,000</strong> reflects typical CCS project pricing (~$62.5k/port). Adjust to a firm quote if you have one.</span>
+          <span class="why" id="capexWhy6">Default of <strong>$725,000</strong> reflects CCS advertised turnkey pricing, interpolated between the 4-post and 8-post builds on the current V4 price ladder. Adjust to a firm quote if you have one.</span>
         </div>
       </div>
 
-      <div class="config-card" id="card8" onclick="selectConfig(8)">
+      <div class="config-card" id="card8" onclick="selectConfig('8')">
         <div class="ctitle">V4 Cabinet / 8 Posts</div>
         <div class="cdetail">
           1 Tesla V4 Cabinet (998 kW) with 8 charging posts. Best for high-traffic sites with many simultaneous sessions. Nameplate <strong>~124.75 kW/port</strong> (998 ÷ 8).
@@ -858,11 +858,33 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); min-
         <div class="info-popup" id="capex8Info" style="left:0;right:0;top:auto;bottom:100%;margin-bottom:8px;margin-top:0;">
           <strong>Installed cost for an 8-port V4 site.</strong><br>
           Includes everything in the 4-port package plus 4 additional V4 Posts and their associated trenching, conduit, concrete, bollards, and signage.
-          <span class="why">Default of <strong>$500,000</strong> reflects typical CCS project pricing. The cabinet and service entrance are the same as the 4-port option; most of the extra cost is the additional posts and site work.</span>
+          <span class="why" id="capexWhy8">Default of <strong>$500,000</strong> reflects typical CCS project pricing. The cabinet and service entrance are the same as the 4-port option; most of the extra cost is the additional posts and site work.</span>
         </div>
       </div>
 
-      <div class="config-card" id="card16" onclick="selectConfig(16)">
+      <div class="config-card" id="card8x2" onclick="selectConfig('8x2')" style="display:none;">
+        <div class="ctitle">2× V4 Cabinet / 8 Posts</div>
+        <div class="cdetail">
+          2 Tesla V4 Cabinets (1,996 kW total) with 8 charging posts, 4 per cabinet. Same equipment MSRP as the single-cabinet 8-post build, but every port keeps full nameplate <strong>~249.5 kW/port</strong> (998 ÷ 4) — and the Duke Charger Prep Credit doubles because Duke credits per cabinet.
+        </div>
+        <div class="cprice-row">
+          <div>
+            <div class="cprice-label">
+              CAPEX (Installed)
+              <button class="info-btn" onclick="toggleInfo('capex8x2Info')" style="margin-left: 4px;">?</button>
+            </div>
+            <input type="number" id="capex8x2" value="1000000" step="5000" min="400000" class="cprice-input" onclick="event.stopPropagation()" />
+            <div class="cprice-hint">Adjust if you have a specific quote</div>
+          </div>
+        </div>
+        <div class="info-popup" id="capex8x2Info" style="left:0;right:0;top:auto;bottom:100%;margin-bottom:8px;margin-top:0;">
+          <strong>Installed cost for an 8-post / 2-cabinet V4 site.</strong><br>
+          Two full V4 cabinets with 4 posts each, plus concrete pads, trenching, conduit, wiring, bollards, signage, engineering, permitting, labor, and project management for both cabinet positions.
+          <span class="why" id="capexWhy8x2">Default of <strong>$1,000,000</strong> is CCS advertised turnkey pricing.</span>
+        </div>
+      </div>
+
+      <div class="config-card" id="card16" onclick="selectConfig('16')">
         <div class="ctitle">2× V4 Cabinet / 16 Posts</div>
         <div class="cdetail">
           2 Tesla V4 Cabinets (1,996 kW total) with 16 charging posts. A full charging-hub build for the highest-traffic corridors. Nameplate <strong>~124.75 kW/port</strong> ((998 × 2) ÷ 16).
@@ -880,7 +902,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); min-
         <div class="info-popup" id="capex16Info" style="left:0;right:0;top:auto;bottom:100%;margin-bottom:8px;margin-top:0;">
           <strong>Installed cost for a 16-port / 2-cabinet V4 site.</strong><br>
           Two full V4 cabinets, 16 posts, and the associated service entrances, trenching, concrete, bollards, and signage.
-          <span class="why">Default of <strong>$1,000,000</strong> reflects typical CCS project pricing (~$62.5k/port). Larger service and utility scope may apply — adjust to a firm quote.</span>
+          <span class="why" id="capexWhy16">Default of <strong>$1,000,000</strong> reflects typical CCS project pricing (~$62.5k/port). Larger service and utility scope may apply — adjust to a firm quote.</span>
         </div>
       </div>
     </div>
@@ -1027,7 +1049,7 @@ If Georgia Power installs dedicated equipment that serves only your site, they m
       </div>
       <div class="source-note">
         <strong>Methodology validation:</strong> Rate structure, tier breakpoints, and adder percentages validated directly against Georgia Power's official Power and Light Calculator at georgiapower.com. Both PLM (Medium, 30-499 kW demand) and PLL (Large, 500+ kW demand) rate structures are implemented. Tariff selection is automatic based on actual peak demand (pre-BDAF). Results from this tool match the GA Power calculator to the penny across scenarios from 50 kW / 5,000 kWh up to 998 kW / 500,000 kWh.<br><br>
-<strong>Peak demand modeling:</strong> Tesla Model Y is used as the reference vehicle (peak ~250 kW brief, average ~150 kW sustained during the 30-minute billing demand window). Cabinet demand scales with how many cars charge simultaneously during peak hour, capped at the 998 kW cabinet rating.
+<strong>Peak demand modeling:</strong> Tesla Model Y is used as the reference vehicle (peak ~250 kW brief, average ~150 kW sustained during the 30-minute billing demand window). Cabinet demand scales with how many cars charge simultaneously during peak hour, capped at 998 kW per cabinet (1,996 kW for 2-cabinet sites).
       </div>
      </div>
 
@@ -1079,7 +1101,7 @@ If Georgia Power installs dedicated equipment that serves only your site, they m
           <div class="info-popup" id="dukeCreditInfo">
             <strong>Duke Commercial Charger Prep Credit, per V4 cabinet.</strong><br>
             Duke's make-ready credit is based on nameplate kW per charging port, which Duke measures as the cabinet's 998 kW divided by the number of ports it feeds. Because the make-ready serves the whole 998 kW cabinet, the total credit is effectively <strong>fixed per cabinet</strong> regardless of how many ports split it. This tool assumes Service Upgrades Required / New Service at a high-volume site.
-            <span class="why">Default of <strong>$117,716 per cabinet</strong> (≈$117.95/kW) is calibrated to Duke's calculator: a 4-port site (249.5 kW/port) = $29,429/port × 4 = $117,716. Total credit = this value × number of cabinets (1 for 4/6/8-port, 2 for 16-port). Covers make-ready electrical only; subject to approval, apply within 120 days of final invoice.</span>
+            <span class="why">Default of <strong>$117,716 per cabinet</strong> (≈$117.95/kW) is calibrated to Duke's calculator: a 4-port site (249.5 kW/port) = $29,429/port × 4 = $117,716. Total credit = this value × number of cabinets (1 for the 4-post and single-cabinet 8-post builds, 2 for the 2-cabinet 8-post and 16-post builds — a key reason to spec two cabinets on an 8-post site). Covers make-ready electrical only; subject to approval, apply within 120 days of final invoice.</span>
           </div>
           <input type="number" id="dukeCredit" value="117716" step="1000" min="0" />
         </div>
@@ -1302,7 +1324,7 @@ document.addEventListener('click', e => {
 });
 
 // ============== STATE ==============
-let selectedPorts = 4;
+let selectedConfig = '4';
 let cfChart, rcChart;
 let currentResults = null;
 let currentUtil = 'med';
@@ -1323,10 +1345,53 @@ const SITE_LABELS = {
 };
 const UTIL_LABELS = { low: 'Low', med: 'Medium', high: 'High', peak: 'Peak' };
 
-const PORT_CONFIGS = [4, 6, 8, 16];
-function selectConfig(n) {
-  selectedPorts = n;
-  PORT_CONFIGS.forEach(p => document.getElementById('card' + p).classList.toggle('selected', p === n));
+// Equipment configurations. Key = card/input suffix; 8-post exists in
+// single-cabinet (shared 998 kW) and dual-cabinet (full 249.5 kW/port) forms.
+const CONFIGS = {
+  '4':   { ports: 4,  cabinets: 1, label: '4-Port V4 Cabinet' },
+  '6':   { ports: 6,  cabinets: 1, label: '6-Port V4 Cabinet' },
+  '8':   { ports: 8,  cabinets: 1, label: '8-Port V4 Cabinet' },
+  '8x2': { ports: 8,  cabinets: 2, label: '8-Port V4 (2 Cabinets)' },
+  '16':  { ports: 16, cabinets: 2, label: '16-Port V4 (2 Cabinets)' },
+};
+const CONFIG_KEYS = Object.keys(CONFIGS);
+
+// Per-provider lineup: which configs are offered, their default installed
+// CAPEX, and the pricing note shown in each card's info popup.
+// Duke pricing = CCS advertised turnkey (equipment MSRP + installation),
+// pre-tax; state sales tax applies to the equipment portion at invoicing.
+const PROVIDER_CARDS = {
+  gapower: {
+    '4':  { capex: 250000,  why: 'Default of <strong>$250,000</strong> reflects typical CCS project pricing for a standard single-cabinet site. Your actual number will depend on site conditions (trenching distance, pavement restoration, utility scope). If you have a firm quote, enter it here.' },
+    '6':  { capex: 725000,  why: 'Default of <strong>$725,000</strong> reflects CCS advertised turnkey pricing, interpolated between the 4-post and 8-post builds on the current V4 price ladder. Adjust to a firm quote if you have one.' },
+    '8':  { capex: 500000,  why: 'Default of <strong>$500,000</strong> reflects typical CCS project pricing. The cabinet and service entrance are the same as the 4-port option; most of the extra cost is the additional posts and site work.' },
+    '16': { capex: 1000000, why: 'Default of <strong>$1,000,000</strong> reflects typical CCS project pricing (~$62.5k/port). Larger service and utility scope may apply — adjust to a firm quote.' },
+  },
+  duke: {
+    '4':   { capex: 500000,  why: 'Default of <strong>$500,000</strong> is CCS advertised turnkey pricing: $250,000 equipment (Tesla MSRP) + $250,000 installation, plus applicable state sales tax on the equipment portion at invoicing.' },
+    '8':   { capex: 950000,  why: 'Default of <strong>$950,000</strong> is CCS advertised turnkey pricing: $500,000 equipment (Tesla MSRP) + $450,000 installation, plus applicable state sales tax on the equipment portion. All 8 posts share one 998 kW cabinet (~124.75 kW/port nameplate); the Charger Prep Credit is earned on one cabinet.' },
+    '8x2': { capex: 1000000, why: 'Default of <strong>$1,000,000</strong> is CCS advertised turnkey pricing: $500,000 equipment (2× cabinet + 4 posts — same Tesla MSRP as the single-cabinet 8-post build) + $500,000 installation, plus applicable state sales tax on the equipment portion. The extra $50,000 over the single-cabinet build adds a second 998 kW cabinet, which doubles the Duke Charger Prep Credit (2 × $117,716 = $235,432) and keeps every port at full ~249.5 kW nameplate.' },
+    '16':  { capex: 1800000, why: 'Default of <strong>$1,800,000</strong> is CCS advertised turnkey pricing: $1,000,000 equipment (Tesla MSRP) + $800,000 installation, plus applicable state sales tax on the equipment portion.' },
+  },
+};
+
+function selectConfig(k) {
+  selectedConfig = k;
+  CONFIG_KEYS.forEach(key => document.getElementById('card' + key).classList.toggle('selected', key === k));
+}
+
+// Show the active provider's configs, reset CAPEX defaults and pricing notes.
+function applyProviderCards() {
+  const lineup = PROVIDER_CARDS[utility];
+  CONFIG_KEYS.forEach(k => {
+    const offered = lineup[k] !== undefined;
+    document.getElementById('card' + k).style.display = offered ? '' : 'none';
+    if (offered) {
+      document.getElementById('capex' + k).value = lineup[k].capex;
+      document.getElementById('capexWhy' + k).innerHTML = lineup[k].why;
+    }
+  });
+  if (!lineup[selectedConfig]) selectConfig(selectedConfig === '8x2' ? '8' : '4');
 }
 
 function toggleAdvanced(el) {
@@ -1338,10 +1403,10 @@ function toggleAdvanced(el) {
 const HERO_GA = "Estimate your site's profitability with real Georgia Power tariff data, Tesla Model Y charging curve modeling, and invoice-calibrated utility fees. Built for business owners considering their first EV charging investment.";
 const HERO_DUKE = "Estimate your site's profitability on Duke Energy's commercial rates across North Carolina, South Carolina, and Florida, with the Duke Charger Prep Credit applied and Tesla Model Y charging curve modeling. Built for business owners considering their first EV charging investment.";
 const DISC_GA = '<strong>ESTIMATE ONLY.</strong> Projections generated in good faith using published Georgia Power tariff schedules, real customer invoice data, and industry-standard assumptions. Results are not guaranteed or promised. Actual results vary based on site conditions, utility approval, equipment pricing, real-world utilization, and factors outside the control of Car Charger Specialists, LLC. This tool is for planning purposes only and does not constitute a contract, commitment, or formal proposal.';
-const DISC_DUKE = '<strong>ESTIMATE ONLY.</strong> Projections use published Duke Energy general-service tariff schedules and the Commercial Charger Prep Credit. Duke offers no commercial EV rate with a demand-charge phase-in, so full demand charges apply from Year 1. Some rider values are bundled or provisional (see the Advanced panel). Results are not guaranteed. Actual results vary based on site conditions, the utility and rate schedule you are ultimately assigned, service upgrades, equipment pricing, and real-world utilization. This tool is for planning purposes only and does not constitute a contract, commitment, or formal proposal.';
+const DISC_DUKE = '<strong>ESTIMATE ONLY.</strong> Projections use published Duke Energy general-service tariff schedules and the Commercial Charger Prep Credit. Duke offers no commercial EV rate with a demand-charge phase-in, so full demand charges apply from Year 1. Some rider values are bundled or provisional (see the Advanced panel). Default CAPEX values reflect CCS advertised turnkey pricing (equipment + installation), pre-tax; state sales tax applies to the equipment portion at invoicing. Results are not guaranteed. Actual results vary based on site conditions, the utility and rate schedule you are ultimately assigned, service upgrades, equipment pricing, and real-world utilization. This tool is for planning purposes only and does not constitute a contract, commitment, or formal proposal.';
 
 let GA_FOOTER_HTML = null;
-const FOOTER_DUKE = 'This pro forma uses published Duke Energy general-service tariff schedules (the schedule shown is auto-matched to the selected territory) and the Duke Commercial Charger Prep Credit. Duke does not offer a commercial EV rate with a demand-charge phase-in in North Carolina, South Carolina, or Florida — there is no equivalent to Georgia Power\'s CIEV-1 rider — so full demand charges apply from Year 1 on a standard general-service schedule. Billing demand is modeled as equal to measured peak demand; Duke schedules also carry demand ratchets (billing demand held at 50–80% of peak/contract) which are approximated by this assumption for a consistently-peaking site. Some rider and fuel components are bundled or provisional and are exposed as editable inputs in the Advanced panel. The Charger Prep Credit of $29,429 per charging port assumes a Public DC Fast Charger in the 241–290 kW nameplate range (one Tesla V4 post), a high-volume site, and Service Upgrades Required / New Service; it covers make-ready electrical only and is subject to application approval. Peak billing demand is modeled using Tesla Model Y as reference (150 kW avg during 30-min window) with concurrency scaling by site utilization. Tesla Services Fee of $0.10/kWh is applied to all energy throughput. This tool does not constitute a contract, guarantee, or formal proposal. © 2026 Car Charger Specialists, LLC &nbsp;/&nbsp; 404-520-7349 &nbsp;/&nbsp; commercial@carchargerspecialists.com';
+const FOOTER_DUKE = 'This pro forma uses published Duke Energy general-service tariff schedules (the schedule shown is auto-matched to the selected territory) and the Duke Commercial Charger Prep Credit. Duke does not offer a commercial EV rate with a demand-charge phase-in in North Carolina, South Carolina, or Florida — there is no equivalent to Georgia Power\'s CIEV-1 rider — so full demand charges apply from Year 1 on a standard general-service schedule. Billing demand is modeled as equal to measured peak demand; Duke schedules also carry demand ratchets (billing demand held at 50–80% of peak/contract) which are approximated by this assumption for a consistently-peaking site. Some rider and fuel components are bundled or provisional and are exposed as editable inputs in the Advanced panel. The Charger Prep Credit of $117,716 per 998 kW V4 cabinet (equivalent to $29,429 per port at 4 posts per cabinet) assumes a Public DC Fast Charger at a high-volume site with Service Upgrades Required / New Service; Duke bases the credit on nameplate kW per port (cabinet kW ÷ ports fed), so the total is effectively fixed per cabinet and doubles on 2-cabinet builds. It covers make-ready electrical only and is subject to application approval. Default CAPEX values are CCS advertised turnkey pricing (equipment MSRP + installation), pre-tax; state sales tax applies to the equipment portion at invoicing. Peak billing demand is modeled using Tesla Model Y as reference (150 kW avg during 30-min window) with concurrency scaling by site utilization. Tesla Services Fee of $0.10/kWh is applied to all energy throughput. This tool does not constitute a contract, guarantee, or formal proposal. © 2026 Car Charger Specialists, LLC &nbsp;/&nbsp; 404-520-7349 &nbsp;/&nbsp; commercial@carchargerspecialists.com';
 
 function setUtility(u) {
   utility = u;
@@ -1358,6 +1423,7 @@ function setUtility(u) {
   document.getElementById('advSectionTitle').textContent = isDuke ? 'Advanced: Duke Energy Rates' : 'Advanced: Georgia Power Rates';
   document.getElementById('advSectionSub').textContent = isDuke ? 'From published tariff schedules' : 'Calibrated from real invoices';
   footer.innerHTML = isDuke ? FOOTER_DUKE : GA_FOOTER_HTML;
+  applyProviderCards();
   if (isDuke) syncDukeDefaults();
   renderActiveUtil();
 }
@@ -1396,14 +1462,11 @@ function renderActiveUtil() {
 
 // ============== EQUIPMENT / DEMAND MODELING ==============
 const CABINET_KW = 998;                 // Tesla V4 cabinet rating
-function cabinetsFor(ports) { return Math.ceil(ports / 8); } // max 8 posts per cabinet
-function perPortNameplate(ports) { return CABINET_KW * cabinetsFor(ports) / ports; } // 998/ports-per-cabinet
-function configLabel(ports) {
-  const cabs = cabinetsFor(ports);
-  return ports + '-Port V4 ' + (cabs > 1 ? '(' + cabs + ' Cabinets)' : 'Cabinet');
-}
+function cabinetsFor(key) { return CONFIGS[key].cabinets; }
+function perPortNameplate(key) { return CABINET_KW * CONFIGS[key].cabinets / CONFIGS[key].ports; }
+function configLabel(key) { return CONFIGS[key].label; }
 
-function calcPeakDemand(ports, utilLevel) {
+function calcPeakDemand(key, utilLevel) {
   const AVG_PER_CAR = 150;
   const concurrency = {
     4:  { low: 1, med: 2, high: 3,  peak: 4 },
@@ -1411,8 +1474,10 @@ function calcPeakDemand(ports, utilLevel) {
     8:  { low: 2, med: 3, high: 5,  peak: 7 },
     16: { low: 3, med: 6, high: 10, peak: 14 }
   };
-  const cars = concurrency[ports][utilLevel];
-  return Math.min(cars * AVG_PER_CAR, CABINET_KW * cabinetsFor(ports));
+  const cars = concurrency[CONFIGS[key].ports][utilLevel];
+  // Site demand is clipped at total cabinet capacity: a single 998 kW cabinet
+  // power-shares past ~6 cars, while a 2-cabinet 8-post site can bill up to 1,996 kW.
+  return Math.min(cars * AVG_PER_CAR, CABINET_KW * CONFIGS[key].cabinets);
 }
 
 // ============== TARIFF CALCULATIONS ==============
@@ -1632,8 +1697,9 @@ function getAdders() {
   };
 }
 
-function calcProForma(ports, grossCapex, rebate, dailyKwh, chargePrice, years, discRate, utilGrowth, adders, utilLevel) {
-  const peak_kw = calcPeakDemand(ports, utilLevel);
+function calcProForma(cfgKey, grossCapex, rebate, dailyKwh, chargePrice, years, discRate, utilGrowth, adders, utilLevel) {
+  const ports = CONFIGS[cfgKey].ports;
+  const peak_kw = calcPeakDemand(cfgKey, utilLevel);
   const tesla_fee = 0.10;
   const rebateYear = 1; // credit reimbursed after installation (Year 1 inflow)
   const rows = [];
@@ -1687,20 +1753,19 @@ function runProForma() {
   const years = parseInt(document.getElementById('projYears').value);
   const discRate = parseFloat(document.getElementById('discRate').value);
   const utilGrowth = parseFloat(document.getElementById('utilGrowth').value);
-  const capexDefaults = { 4: 250000, 6: 375000, 8: 500000, 16: 1000000 };
-  const capexEl = document.getElementById('capex' + selectedPorts);
-  const capex = (capexEl && parseFloat(capexEl.value)) || capexDefaults[selectedPorts];
-
   const isDuke = utility === 'duke';
+  const capexEl = document.getElementById('capex' + selectedConfig);
+  const capex = (capexEl && parseFloat(capexEl.value)) || PROVIDER_CARDS[utility][selectedConfig].capex;
+
   const adders = isDuke ? getDukeAdders() : getAdders();
-  const cabinets = cabinetsFor(selectedPorts);
+  const cabinets = cabinetsFor(selectedConfig);
   // GA: $30k Business Rebate. Duke: Charger Prep Credit fixed per 998 kW cabinet.
   const rebate = isDuke ? adders.creditPerCab * cabinets : 30000;
   const netCapex = capex - rebate;
 
   currentResults = {
     address, siteType, chargePrice, years, discRate, utilGrowth,
-    capex, rebate, netCapex, cabinets, utilMap: SITE_UTIL[siteType], selectedPorts,
+    capex, rebate, netCapex, cabinets, utilMap: SITE_UTIL[siteType], selectedConfig,
     isDuke, dukeKey: isDuke ? document.getElementById('dukeState').value : null,
     adders
   };
@@ -1708,7 +1773,7 @@ function runProForma() {
   const provLabel = isDuke ? currentDuke().short : 'Georgia Power';
   document.getElementById('raddr').textContent =
     address + '  /  ' + SITE_LABELS[siteType] + '  /  ' +
-    configLabel(selectedPorts) + '  /  ' + provLabel;
+    configLabel(selectedConfig) + '  /  ' + provLabel;
   document.getElementById('results').classList.add('visible');
 
   renderUtil(currentUtil);
@@ -1723,11 +1788,11 @@ function switchUtil(btn, u) {
 }
 
 function renderUtil(u) {
-  const { chargePrice, years, discRate, utilGrowth, capex, rebate, netCapex, cabinets, utilMap, selectedPorts, adders } = currentResults;
+  const { chargePrice, years, discRate, utilGrowth, capex, rebate, netCapex, cabinets, utilMap, selectedConfig, adders } = currentResults;
   const isDuke = utility === 'duke';
   const cfg = isDuke ? currentDuke() : null;
   const dailyKwh = utilMap[u];
-  const res = calcProForma(selectedPorts, capex, rebate, dailyKwh, chargePrice, years, discRate, utilGrowth, adders, u);
+  const res = calcProForma(selectedConfig, capex, rebate, dailyKwh, chargePrice, years, discRate, utilGrowth, adders, u);
 
   const creditName = isDuke ? 'Charger Prep Credit' : 'GA Business Rebate';
   const outlaySub = isDuke
