@@ -891,7 +891,8 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); min-
       <div id="saMap"></div>
       <div class="sa-map-legend" id="saMapLegend" style="display:none">
         <span class="dot" style="background:#5dca8a; margin-left:0;"></span>Your site
-        <span class="dot" style="background:#d65555;"></span>Competing DC fast charger (number = DC ports) — click a pin for network, ports, speed, and distance
+        <span class="dot" style="background:#d65555;"></span>Counted competitor (major network · 4+ ports · 150 kW+ · within 2 mi)
+        <span class="dot" style="background:#5a5a5a;"></span>Not counted — click any pin for network, ports, speed, distance, and why
       </div>
     </div>
   </div>
@@ -1482,10 +1483,12 @@ loadGoogleMaps();
 
 // ============== SITE UTILIZATION ANALYSIS ==============
 // Composite score (0-100) from four signals:
-//   Competition  (0-25): DC fast chargers within 5 mi via NREL AFDC, port-
-//                        weighted by proximity; Tesla-network stations
-//                        ×1.5–2.1 (price-tier + no-services-fee advantage,
-//                        scaled by your posted price vs ~$0.48 Tesla-owned).
+//   Competition  (0-25): qualifying DC fast competitors via NREL AFDC —
+//                        major networks only, 4+ ports, 150 kW+, within
+//                        2 mi (full weight ≤1 mi, falloff to 0 at 2 mi);
+//                        Tesla-network stations ×1.5–2.1 (price-tier +
+//                        no-services-fee advantage, scaled by your posted
+//                        price vs ~$0.48 Tesla-owned).
 //   Amenities    (0-30): walkable POIs within 500 m via Google Places Nearby.
 //   EV adoption  (0-25): county tier (high-adoption metro counties = tier 1).
 //   Site type    (0-20): prior from the selected property type.
@@ -1504,6 +1507,24 @@ const METRO_TIER1 = {
   FL: ['Miami-Dade','Broward','Palm Beach','Orange','Hillsborough','Pinellas','Duval','Seminole','Lee','Sarasota']
 };
 const SITE_TYPE_PRIOR = { airport: 20, highway: 20, retail: 15, hotel: 12, parking: 12, office: 8 };
+
+// Only real competitors count against the score (Lee, 2026-08-12): major
+// networks, 4+ DC fast ports, 150 kW+ hardware, within 2 miles. Single-post
+// and legacy-speed sites don't pull meaningful traffic from a V4 site.
+const MAJOR_NETWORKS = ['tesla', 'ionna', 'chargepoint', 'electrify america', 'evgo'];
+function isMajorNetwork(s) {
+  const n = (s.ev_network || '').toLowerCase();
+  return MAJOR_NETWORKS.some(m => n.includes(m));
+}
+function isQualifyingCompetitor(s) {
+  const kw = stationKw(s);
+  // kW is missing from many AFDC records — a 4+ port major-network site is
+  // assumed modern (150 kW+) when the record doesn't say.
+  return isMajorNetwork(s)
+    && (s.ev_dc_fast_num || 0) >= 4
+    && (kw === 0 || kw >= 150)
+    && (s.distance || 99) <= 2;
+}
 
 async function fetchAfdcStations(lat, lng) {
   const url = 'https://developer.nlr.gov/api/alt-fuel-stations/v1/nearest.json' +
@@ -1557,24 +1578,24 @@ function renderSiteAnalysis() {
   const teslaWeight = 1.5 * Math.min(1.4, Math.max(1.0, priceNow / TESLA_OWNED_PRICE));
   let compPts = 15, compLabel = 'Data unavailable — using neutral score';
   if (siteData.afdc !== null && siteData.afdc !== undefined) {
-    let pressure = 0, totalPorts = 0, teslaPorts = 0, nearest = null;
+    let pressure = 0, totalPorts = 0, teslaPorts = 0, nearest = null, qualifying = 0;
     siteData.afdc.forEach(s => {
-      // AFDC field is ev_dc_fast_num; occasionally null — a listed DCFC
-      // station still counts as at least 1 port.
-      const ports = Math.max(1, s.ev_dc_fast_num || 0);
-      const dist = s.distance || 5;
+      if (!isQualifyingCompetitor(s)) return;
+      const ports = s.ev_dc_fast_num || 4;
+      const dist = s.distance || 2;
       const isTesla = (s.ev_network || '') === 'Tesla';
-      // Full competitive weight only within 1 mi; linear falloff to zero at 5 mi
-      const prox = dist <= 1 ? 1 : Math.max(0, (5 - dist) / 4);
+      // Full competitive weight only within 1 mi; linear falloff to zero at 2 mi
+      const prox = dist <= 1 ? 1 : Math.max(0, 2 - dist);
       pressure += ports * prox * (isTesla ? teslaWeight : 1);
+      qualifying++;
       totalPorts += ports;
       if (isTesla) teslaPorts += ports;
       if (nearest === null || dist < nearest) nearest = dist;
     });
     compPts = Math.round(Math.max(0, Math.min(25, 25 - pressure)));
-    compLabel = siteData.afdc.length === 0
-      ? 'No public DC fast charging within 5 mi — unserved demand'
-      : siteData.afdc.length + ' station' + (siteData.afdc.length > 1 ? 's' : '') + ' / ' + totalPorts + ' DC ports within 5 mi' +
+    compLabel = qualifying === 0
+      ? 'No qualifying competitors within 2 mi (major networks, 4+ ports, 150 kW+)'
+      : qualifying + ' qualifying competitor' + (qualifying > 1 ? 's' : '') + ' / ' + totalPorts + ' DC ports within 2 mi' +
         (teslaPorts ? ' (' + teslaPorts + ' Tesla)' : '') + ' · nearest ' + nearest.toFixed(1) + ' mi';
   }
   rows.push({ l: 'Charging competition', v: compLabel, p: compPts, max: 25 });
@@ -1603,7 +1624,7 @@ function renderSiteAnalysis() {
   document.getElementById('saBody').innerHTML =
     rows.map(r => '<div class="sa-row"><span class="sl">' + r.l + '</span><span class="sv">' + r.v + '<span class="pts">' + r.p + '/' + r.max + '</span></span></div>').join('') +
     '<div class="sa-rec"><strong>Recommended scenario: ' + UTIL_LABELS[rec].toUpperCase() + ' utilization</strong> (site score ' + score + '/100). The ' + UTIL_LABELS[rec] + ' tab is pre-selected in the results below — the other tabs remain available as best/worst-case bands.</div>' +
-    '<div class="sa-note">Directional estimate from live data: competing DC fast chargers (U.S. DOE Alternative Fuels Data Center), walkable points of interest (Google Places), and county EV-adoption tier. Tesla-network stations are weighted heavier (×' + teslaWeight.toFixed(2) + ' at your $' + priceNow.toFixed(2) + '/kWh posted price): Tesla-owned sites offer a lower price tier to Tesla drivers and pay no network services fee, so Autoroute steers price-sensitive traffic their way. Not a traffic guarantee — actual utilization depends on visibility, access, pricing, and network effects.</div>';
+    '<div class="sa-note">Directional estimate from live data: competing DC fast chargers (U.S. DOE Alternative Fuels Data Center), walkable points of interest (Google Places), and county EV-adoption tier. Competition counts only major networks (Tesla, IONNA, ChargePoint, Electrify America, EVgo) with 4+ DC fast ports at 150 kW+ within 2 miles — smaller and legacy-speed sites appear grayed on the map and are not scored. Tesla-network stations are weighted heavier (×' + teslaWeight.toFixed(2) + ' at your $' + priceNow.toFixed(2) + '/kWh posted price): Tesla-owned sites offer a lower price tier to Tesla drivers and pay no network services fee, so Autoroute steers price-sensitive traffic their way. Not a traffic guarantee — actual utilization depends on visibility, access, pricing, and network effects.</div>';
 
   applyRecommendedUtil(rec);
   renderSiteMap();
@@ -1660,21 +1681,35 @@ async function renderSiteMap() {
       if (!s.latitude || !s.longitude) return;
       const ports = Math.max(1, s.ev_dc_fast_num || 0);
       const kw = stationKw(s);
+      const counted = isQualifyingCompetitor(s);
       const pos = { lat: s.latitude, lng: s.longitude };
       const m = new Marker({
-        map, position: pos,
-        icon: { path: google.maps.SymbolPath.CIRCLE, scale: 9 + Math.min(6, ports / 3), fillColor: '#d65555', fillOpacity: 0.9, strokeColor: '#ffffff', strokeWeight: 1.5 },
-        label: { text: String(ports), color: '#ffffff', fontSize: '10px', fontWeight: '700' },
+        map, position: pos, zIndex: counted ? 50 : 10,
+        icon: {
+          path: google.maps.SymbolPath.CIRCLE,
+          scale: 9 + Math.min(6, ports / 3),
+          fillColor: counted ? '#d65555' : '#5a5a5a',
+          fillOpacity: counted ? 0.9 : 0.55,
+          strokeColor: counted ? '#ffffff' : '#8a8a8a',
+          strokeWeight: 1.5
+        },
+        label: { text: String(ports), color: counted ? '#ffffff' : '#c8c8c8', fontSize: '10px', fontWeight: '700' },
         title: s.station_name || 'DC fast charger'
       });
       m.addListener('click', () => {
+        const why = counted ? 'Yes' :
+          !isMajorNetwork(s) ? 'No — minor network' :
+          (s.ev_dc_fast_num || 0) < 4 ? 'No — under 4 DC ports' :
+          (kw > 0 && kw < 150) ? 'No — under 150 kW' :
+          'No — beyond 2 mi';
         info.setContent(
           '<div style="color:#1a1a1a; font-family:Barlow,sans-serif; font-size:12px; line-height:1.6; max-width:220px;">' +
           '<strong>' + (s.station_name || 'DC fast charger') + '</strong><br>' +
           'Network: ' + (s.ev_network || 'Unknown') + '<br>' +
           'DC fast ports: ' + ports + '<br>' +
           'Max speed: ' + (kw > 0 ? Math.round(kw) + ' kW' : 'n/a') + '<br>' +
-          'Distance: ' + (s.distance != null ? s.distance.toFixed(1) + ' mi' : 'n/a') +
+          'Distance: ' + (s.distance != null ? s.distance.toFixed(1) + ' mi' : 'n/a') + '<br>' +
+          'Counted as competition: ' + why +
           '</div>'
         );
         info.open(map, m);
@@ -2157,7 +2192,9 @@ function calcProForma(cfgKey, grossCapex, rebate, dailyKwh, chargePrice, years, 
       : calcFullBill(monthly_kwh, peak_kw, bdaf, adders);
     const annual_elec = monthly_bill.total * 12;
     const tesla_cost = annual_kwh * tesla_fee;
-    const revenue = annual_kwh * chargePrice / (1 + (adders.revTaxPct || 0) / 100);
+    const gross_rev = annual_kwh * chargePrice;
+    const revenue = gross_rev / (1 + (adders.revTaxPct || 0) / 100); // net of withheld sales tax
+    const rev_tax = gross_rev - revenue;
     // GA motor-fuel excise on public charging (SB 146 / HB 516): calendar 2027+
     const excise = (!isDuke && (adders.firstYear + yr - 1) >= 2027) ? annual_kwh * adders.gaExcise : 0;
     const total_cost = annual_elec + tesla_cost + excise;
@@ -2170,7 +2207,7 @@ function calcProForma(cfgKey, grossCapex, rebate, dailyKwh, chargePrice, years, 
       const prev = cumCF - net_cf;
       payback = yr - 1 + (-prev / net_cf);
     }
-    rows.push({ yr, util: Math.round(util), annual_kwh: Math.round(annual_kwh), bdaf, eff_rate, monthly_bill, revenue, annual_elec, tesla_cost, excise, total_cost, reimbursement, op_cf, net_cf, cumCF });
+    rows.push({ yr, util: Math.round(util), annual_kwh: Math.round(annual_kwh), bdaf, eff_rate, monthly_bill, gross_rev, rev_tax, revenue, annual_elec, tesla_cost, excise, total_cost, reimbursement, op_cf, net_cf, cumCF });
   }
 
   const cashFlows = [-grossCapex, ...rows.map(r => r.net_cf)];
@@ -2368,7 +2405,8 @@ function renderUtil(u) {
       '<td><button class="info-btn yr-info" onmouseenter="showYrTip(this,' + i + ')" onmouseleave="hideYrTip()" onclick="showYrTip(this,' + i + ');event.stopPropagation()">?</button>Yr ' + r.yr + (r.bdaf < 1 ? ' <span class="bdaf-tag">BDAF ' + r.bdaf + '</span>' : '') + '</td>' +
       '<td>' + r.annual_kwh.toLocaleString() + '</td>' +
       '<td>' + fmtR(r.eff_rate) + '</td>' +
-      '<td class="pos">' + fmt$(r.revenue) + '</td>' +
+      '<td class="pos">' + fmt$(r.gross_rev) + '</td>' +
+      '<td class="' + (r.rev_tax > 0 ? 'neg' : '') + '">' + (r.rev_tax > 0 ? fmt$(-r.rev_tax) : '—') + '</td>' +
       '<td class="neg">' + fmt$(-r.annual_elec) + '</td>' +
       '<td class="neg">' + fmt$(-r.tesla_cost) + '</td>' +
       (isDuke ? '' : '<td class="' + (r.excise > 0 ? 'neg' : '') + '">' + (r.excise > 0 ? fmt$(-r.excise) : '—') + '</td>') +
@@ -2381,12 +2419,12 @@ function renderUtil(u) {
     ? '* Duke Commercial Charger Prep Credit of ' + fmt$(adders.creditPerCab) + '/998 kW cabinet × ' + cabinets + ' = ' + fmt$(rebate) + ', reimbursed after installation (modeled as a Year 1 cash inflow, not netted at Year 0); assumes Service Upgrades Required and subject to application approval. All-in Rate includes the customer charge, demand charge, energy charge, fuel &amp; riders, and applicable taxes for ' + cfg.label + ' (' + cfg.schedule.split(' — ')[0] + ', ' + cfg.effDate + ').' + (cfg.provisional ? ' Some values are provisional — see the Advanced panel.' : '')
     : '* $30,000 Georgia Power Business Rebate, subject to application approval and paid after installation (modeled as a Year 1 cash inflow, not netted at Year 0). All-in Rate includes base charges, fuel recovery, environmental compliance, DSM, franchise fee, excess facilities, and sales tax. GA Excise is Georgia\'s motor-fuel tax on public EV charging (SB 146 / HB 516, effective Jan 1, 2027) at $' + adders.gaExcise.toFixed(3) + '/kWh (editable in Advanced); it applies to projection years falling in calendar 2027 or later based on the First Operating Year setting.';
   const revTaxNote = adders.revTaxPct
-    ? ' Revenue is shown net of ' + adders.revTaxPct.toFixed(1) + '% sales tax withheld from the tax-inclusive posted driver price — retail EV charging is a taxable sale of electricity (tangible personal property) and the charging network remits the tax from the gross. Set Driver Sales Tax Handling to gross to model otherwise.'
+    ? ' Revenue is gross driver billings at your posted price; the Sales Tax column is the ' + adders.revTaxPct.toFixed(1) + '% withheld from that tax-inclusive price — retail EV charging is a taxable sale of electricity (tangible personal property) and the charging network remits the tax from the gross. Set Driver Sales Tax Handling to gross to model otherwise.'
     : '';
   const portScaleNote = revTaxNote + ' Annual kWh assumes per-port daily volume scaled by port count (×1.00 at 4 posts, ×0.95 at 6, ×0.90 at 8, ×0.80 at 16) — larger sites split the same local charging demand, so each port sees fewer sessions. Hover the ? on each year for the per-port session breakdown (~' + Math.round(AVG_SESSION_KWH) + ' kWh average session, Tesla Model Y 20%→80% reference).';
   document.getElementById('tableWrap').innerHTML =
     '<table class="yr-table"><thead><tr>' +
-    '<th>Year</th><th>Annual kWh</th><th>All-in Rate</th><th>Revenue</th><th>' + elecHeader + '</th><th>Tesla Fee</th>' + (isDuke ? '' : '<th>GA Excise</th>') + '<th>Net CF</th><th>Cumulative</th>' +
+    '<th>Year</th><th>Annual kWh</th><th>All-in Rate</th><th>Revenue</th><th>Sales Tax</th><th>' + elecHeader + '</th><th>Tesla Fee</th>' + (isDuke ? '' : '<th>GA Excise</th>') + '<th>Net CF</th><th>Cumulative</th>' +
     '</tr></thead><tbody>' + tableRows + '</tbody></table>' +
     '<div style="font-size:10px; color:var(--text4); margin-top:8px;">' + footnote + portScaleNote + '</div>';
 }
