@@ -1481,7 +1481,9 @@ function renderSiteAnalysis() {
   if (siteData.afdc !== null && siteData.afdc !== undefined) {
     let pressure = 0, totalPorts = 0, teslaPorts = 0, nearest = null;
     siteData.afdc.forEach(s => {
-      const ports = s.ev_dcfc_count || 0;
+      // AFDC field is ev_dc_fast_num; occasionally null — a listed DCFC
+      // station still counts as at least 1 port.
+      const ports = Math.max(1, s.ev_dc_fast_num || 0);
       const dist = s.distance || 5;
       const isTesla = (s.ev_network || '') === 'Tesla';
       pressure += ports * Math.max(0, 1 - dist / 5) * (isTesla ? 1.5 : 1);
