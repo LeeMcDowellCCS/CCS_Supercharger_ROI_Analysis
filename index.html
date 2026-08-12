@@ -235,6 +235,40 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); min-
 }
 .info-popup.visible { display: block; }
 .info-popup strong { color: var(--blue); font-weight: 600; }
+
+/* YEAR ROW USAGE TOOLTIP */
+.yr-info {
+  display: inline-flex;
+  margin-right: 7px;
+  vertical-align: -2px;
+}
+#yrTip {
+  position: fixed;
+  width: 290px;
+  background: var(--surface3);
+  border: 1px solid var(--border2);
+  border-radius: 4px;
+  padding: 12px 14px;
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--text2);
+  z-index: 100;
+  display: none;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  pointer-events: none;
+  text-align: left;
+  font-variant-numeric: tabular-nums;
+}
+#yrTip strong { color: var(--blue); font-weight: 600; }
+#yrTip .big { color: var(--text); font-weight: 600; }
+#yrTip .why {
+  display: block;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+  color: var(--text3);
+  font-size: 11px;
+}
 .info-popup .why {
   display: block;
   margin-top: 8px;
@@ -340,6 +374,54 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); min-
 }
 .cprice-input:focus { border-color: var(--blue); }
 .cprice-hint { font-size: 10px; color: var(--text4); margin-top: 4px; }
+
+/* SITE UTILIZATION ANALYSIS */
+.site-analysis {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 18px 20px;
+  margin-top: 18px;
+}
+.site-analysis h3 {
+  font-family: var(--cond);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--blue);
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+.sa-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+}
+.sa-row:last-of-type { border-bottom: none; }
+.sa-row .sl { color: var(--text3); flex-shrink: 0; }
+.sa-row .sv { color: var(--text); font-weight: 500; text-align: right; }
+.sa-row .sv .pts { color: var(--text4); font-size: 10px; margin-left: 6px; font-variant-numeric: tabular-nums; }
+.sa-rec {
+  margin-top: 12px;
+  padding: 12px 14px;
+  background: var(--blue-dim);
+  border-left: 3px solid var(--blue);
+  border-radius: 0 4px 4px 0;
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--text2);
+}
+.sa-rec strong { color: var(--blue); }
+.sa-note { font-size: 10px; color: var(--text4); margin-top: 10px; line-height: 1.6; }
+.sa-loading { font-size: 12px; color: var(--text3); padding: 4px 0; }
+.util-tab .rec-star { color: var(--yellow); margin-left: 4px; }
+.util-tab.active .rec-star { color: var(--bg); }
 
 /* ADVANCED */
 .advanced-toggle {
@@ -785,6 +867,12 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); min-
         <input type="number" id="chargePrice" value="0.52" step="0.01" min="0.10" max="1.00" />
       </div>
     </div>
+
+    <!-- SITE UTILIZATION ANALYSIS -->
+    <div class="site-analysis" id="siteAnalysis" style="display:none">
+      <h3>Site Utilization Analysis</h3>
+      <div id="saBody"><div class="sa-loading">Analyzing site…</div></div>
+    </div>
   </div>
 
   <!-- SECTION 2: EQUIPMENT -->
@@ -1161,6 +1249,7 @@ If Georgia Power installs dedicated equipment that serves only your site, they m
 
     <div class="chart-title" style="margin-top: 2rem;">Annual Cash Flow Detail</div>
     <div id="tableWrap"></div>
+    <div id="yrTip"></div>
   </div>
 
   <!-- FOOTER -->
@@ -1261,7 +1350,7 @@ async function initGooglePlaces() {
               const idx = parseInt(opt.dataset.idx);
               const pred = suggestions[idx].placePrediction;
               const place = pred.toPlace();
-              await place.fetchFields({ fields: ['formattedAddress', 'types', 'location'] });
+              await place.fetchFields({ fields: ['formattedAddress', 'types', 'location', 'addressComponents'] });
 
               input.value = place.formattedAddress || pred.text.text;
               dropdown.style.display = 'none';
@@ -1274,6 +1363,20 @@ async function initGooglePlaces() {
                     break;
                   }
                 }
+              }
+
+              // Capture coordinates + county/state, then run the site analysis
+              if (place.location) {
+                const loc = place.location;
+                siteData.lat = typeof loc.lat === 'function' ? loc.lat() : loc.lat;
+                siteData.lng = typeof loc.lng === 'function' ? loc.lng() : loc.lng;
+                siteData.county = null;
+                siteData.state = null;
+                (place.addressComponents || []).forEach(c => {
+                  if (c.types.includes('administrative_area_level_2')) siteData.county = (c.longText || c.shortText || '').replace(/ County$/i, '');
+                  if (c.types.includes('administrative_area_level_1')) siteData.state = c.shortText || c.longText;
+                });
+                runSiteAnalysis();
               }
 
               // Start a new session token for billing purposes
@@ -1309,6 +1412,135 @@ function loadGoogleMaps() {
 }
 loadGoogleMaps();
 
+// ============== SITE UTILIZATION ANALYSIS ==============
+// Composite score (0-100) from four signals:
+//   Competition  (0-25): DC fast chargers within 5 mi via NREL AFDC, port-
+//                        weighted by proximity; Tesla Superchargers ×1.5.
+//   Amenities    (0-30): walkable POIs within 500 m via Google Places Nearby.
+//   EV adoption  (0-25): county tier (high-adoption metro counties = tier 1).
+//   Site type    (0-20): prior from the selected property type.
+// Score maps to a recommended utilization scenario tab. Directional only.
+// Free key from developer.nlr.gov (National Laboratory of the Rockies, formerly NREL —
+// the old developer.nrel.gov domain was retired May 29, 2026).
+const NREL_API_KEY = 'kAE99ekSunAZBKXTBk4vzRO637uDSeyPP1hqfnux';
+
+const siteData = { lat: null, lng: null, county: null, state: null, afdc: undefined, poiCount: undefined };
+
+// High-EV-adoption metro counties (tier 1). Everything else scores as tier 2 (average).
+const METRO_TIER1 = {
+  GA: ['Fulton','DeKalb','Cobb','Gwinnett','Forsyth','Cherokee'],
+  NC: ['Mecklenburg','Wake','Durham','Orange','Buncombe'],
+  SC: ['Charleston','Greenville','York','Richland'],
+  FL: ['Miami-Dade','Broward','Palm Beach','Orange','Hillsborough','Pinellas','Duval','Seminole','Lee','Sarasota']
+};
+const SITE_TYPE_PRIOR = { airport: 20, highway: 20, retail: 15, hotel: 12, parking: 12, office: 8 };
+
+async function fetchAfdcStations(lat, lng) {
+  const url = 'https://developer.nlr.gov/api/alt-fuel-stations/v1/nearest.json' +
+    '?api_key=' + NREL_API_KEY + '&latitude=' + lat + '&longitude=' + lng +
+    '&fuel_type=ELEC&ev_charging_level=dc_fast&status=E&access=public&radius=5.0&limit=all';
+  const r = await fetch(url);
+  if (!r.ok) throw new Error('AFDC HTTP ' + r.status);
+  return (await r.json()).fuel_stations || [];
+}
+
+async function fetchNearbyPois(lat, lng) {
+  const { Place } = await google.maps.importLibrary('places');
+  const { places } = await Place.searchNearby({
+    locationRestriction: { center: { lat, lng }, radius: 500 },
+    includedPrimaryTypes: ['restaurant','cafe','shopping_mall','supermarket','convenience_store','gym','movie_theater','department_store'],
+    maxResultCount: 20,
+    fields: ['id']
+  });
+  return (places || []).length;
+}
+
+async function runSiteAnalysis() {
+  if (!siteData.lat) return;
+  const panel = document.getElementById('siteAnalysis');
+  panel.style.display = 'block';
+  document.getElementById('saBody').innerHTML = '<div class="sa-loading">Analyzing site: nearby charging competition, walkable amenities, area EV adoption…</div>';
+
+  const [afdcRes, poiRes] = await Promise.allSettled([
+    fetchAfdcStations(siteData.lat, siteData.lng),
+    fetchNearbyPois(siteData.lat, siteData.lng)
+  ]);
+  siteData.afdc = afdcRes.status === 'fulfilled' ? afdcRes.value : null;
+  siteData.poiCount = poiRes.status === 'fulfilled' ? poiRes.value : null;
+  if (afdcRes.status === 'rejected') console.warn('AFDC lookup failed:', afdcRes.reason);
+  if (poiRes.status === 'rejected') console.warn('Places Nearby failed:', poiRes.reason);
+  renderSiteAnalysis();
+}
+
+function renderSiteAnalysis() {
+  if (siteData.afdc === undefined && siteData.poiCount === undefined) return;
+  const rows = [];
+
+  // Competition (0-25): pressure = Σ ports × (1 − dist/5mi), Tesla ×1.5
+  let compPts = 15, compLabel = 'Data unavailable — using neutral score';
+  if (siteData.afdc !== null && siteData.afdc !== undefined) {
+    let pressure = 0, totalPorts = 0, teslaPorts = 0, nearest = null;
+    siteData.afdc.forEach(s => {
+      const ports = s.ev_dcfc_count || 0;
+      const dist = s.distance || 5;
+      const isTesla = (s.ev_network || '') === 'Tesla';
+      pressure += ports * Math.max(0, 1 - dist / 5) * (isTesla ? 1.5 : 1);
+      totalPorts += ports;
+      if (isTesla) teslaPorts += ports;
+      if (nearest === null || dist < nearest) nearest = dist;
+    });
+    compPts = Math.round(Math.max(0, Math.min(25, 25 - pressure * 1.5)));
+    compLabel = siteData.afdc.length === 0
+      ? 'No public DC fast charging within 5 mi — unserved demand'
+      : siteData.afdc.length + ' station' + (siteData.afdc.length > 1 ? 's' : '') + ' / ' + totalPorts + ' DC ports within 5 mi' +
+        (teslaPorts ? ' (' + teslaPorts + ' Tesla)' : '') + ' · nearest ' + nearest.toFixed(1) + ' mi';
+  }
+  rows.push({ l: 'Charging competition', v: compLabel, p: compPts, max: 25 });
+
+  // Amenities (0-30)
+  let poiPts = 15, poiLabel = 'Data unavailable — using neutral score';
+  if (siteData.poiCount !== null && siteData.poiCount !== undefined) {
+    poiPts = Math.round(Math.min(siteData.poiCount, 20) / 20 * 30);
+    poiLabel = siteData.poiCount + ' walkable amenities within 500 m (restaurants, retail, gyms)';
+  }
+  rows.push({ l: 'Dwell-time amenities', v: poiLabel, p: poiPts, max: 30 });
+
+  // EV adoption tier (0-25)
+  const tier1 = (METRO_TIER1[siteData.state] || []).includes(siteData.county);
+  const evPts = tier1 ? 25 : 15;
+  rows.push({ l: 'Area EV adoption', v: (siteData.county ? siteData.county + ' County, ' + siteData.state : 'County unknown') + ' — ' + (tier1 ? 'high-adoption metro (Tier 1)' : 'average (Tier 2)'), p: evPts, max: 25 });
+
+  // Site type prior (0-20)
+  const st = document.getElementById('siteType').value;
+  const stPts = SITE_TYPE_PRIOR[st] || 12;
+  rows.push({ l: 'Site type', v: SITE_LABELS[st], p: stPts, max: 20 });
+
+  const score = rows.reduce((s, r) => s + r.p, 0);
+  const rec = score < 35 ? 'low' : score < 55 ? 'med' : score < 75 ? 'high' : 'peak';
+
+  document.getElementById('saBody').innerHTML =
+    rows.map(r => '<div class="sa-row"><span class="sl">' + r.l + '</span><span class="sv">' + r.v + '<span class="pts">' + r.p + '/' + r.max + '</span></span></div>').join('') +
+    '<div class="sa-rec"><strong>Recommended scenario: ' + UTIL_LABELS[rec].toUpperCase() + ' utilization</strong> (site score ' + score + '/100). The ' + UTIL_LABELS[rec] + ' tab is pre-selected in the results below — the other tabs remain available as best/worst-case bands.</div>' +
+    '<div class="sa-note">Directional estimate from live data: competing DC fast chargers (U.S. DOE Alternative Fuels Data Center), walkable points of interest (Google Places), and county EV-adoption tier. Not a traffic guarantee — actual utilization depends on visibility, access, pricing, and network effects.</div>';
+
+  applyRecommendedUtil(rec);
+}
+
+function applyRecommendedUtil(rec) {
+  currentUtil = rec;
+  document.querySelectorAll('.util-tab').forEach(t => {
+    const u = t.dataset.u;
+    t.classList.toggle('active', u === rec);
+    t.innerHTML = UTIL_LABELS[u] + (u === rec ? '<span class="rec-star">★</span>' : '');
+  });
+  if (currentResults && document.getElementById('results').classList.contains('visible')) renderUtil(rec);
+}
+
+// Re-score when the user overrides the detected site type
+document.getElementById('siteType').addEventListener('change', () => {
+  if (siteData.afdc !== undefined || siteData.poiCount !== undefined) renderSiteAnalysis();
+});
+
 // ============== INFO POPUPS ==============
 function toggleInfo(id) {
   const popup = document.getElementById(id);
@@ -1321,7 +1553,29 @@ document.addEventListener('click', e => {
   if (!e.target.closest('.info-btn') && !e.target.closest('.info-popup')) {
     document.querySelectorAll('.info-popup').forEach(p => p.classList.remove('visible'));
   }
+  if (!e.target.closest('.yr-info')) hideYrTip();
 });
+
+// ============== YEAR ROW USAGE TOOLTIP ==============
+let yrTipData = [];
+function showYrTip(el, i) {
+  const tip = document.getElementById('yrTip');
+  if (!yrTipData[i]) return;
+  tip.innerHTML = yrTipData[i];
+  tip.style.display = 'block';
+  const r = el.getBoundingClientRect();
+  // Prefer right of the button; flip left if it would overflow the viewport
+  let left = r.right + 10;
+  if (left + tip.offsetWidth > window.innerWidth - 8) left = Math.max(8, r.left - tip.offsetWidth - 10);
+  let top = r.top + r.height / 2 - tip.offsetHeight / 2;
+  top = Math.max(8, Math.min(top, window.innerHeight - tip.offsetHeight - 8));
+  tip.style.left = left + 'px';
+  tip.style.top = top + 'px';
+}
+function hideYrTip() {
+  document.getElementById('yrTip').style.display = 'none';
+}
+window.addEventListener('scroll', hideYrTip, true);
 
 // ============== STATE ==============
 let selectedConfig = '4';
@@ -1355,6 +1609,16 @@ const CONFIGS = {
   '16':  { ports: 16, cabinets: 2, label: '16-Port V4 (2 Cabinets)' },
 };
 const CONFIG_KEYS = Object.keys(CONFIGS);
+
+// Per-port utilization discount by port count: more ports at one site split
+// the same local charging demand, so each port sees fewer sessions per day.
+// SITE_UTIL kWh/day/port values are the 4-post baseline.
+const PORT_UTIL_FACTOR = { 4: 1.00, 6: 0.95, 8: 0.90, 16: 0.80 };
+function portFactor(key) { return PORT_UTIL_FACTOR[CONFIGS[key].ports]; }
+
+// Reference charge session: Tesla Model Y (~81 kWh usable pack), typical
+// 20%→80% DCFC session ≈ 49 kWh delivered.
+const AVG_SESSION_KWH = 48.6;
 
 // Per-provider lineup: which configs are offered, their default installed
 // CAPEX, and the pricing note shown in each card's info popup.
@@ -1709,8 +1973,9 @@ function calcProForma(cfgKey, grossCapex, rebate, dailyKwh, chargePrice, years, 
   const isDuke = utility === 'duke';
   const dukeCfg = isDuke ? currentDuke() : null;
 
+  const effDailyKwh = dailyKwh * portFactor(cfgKey); // port-count utilization discount
   for (let yr = 1; yr <= years; yr++) {
-    const util = dailyKwh * Math.pow(1 + utilGrowth / 100, yr - 1);
+    const util = effDailyKwh * Math.pow(1 + utilGrowth / 100, yr - 1);
     const monthly_kwh = util * ports * 30;
     const annual_kwh = util * ports * 365;
     const bdaf = isDuke ? 1.00 : getBDAF(yr);
@@ -1803,7 +2068,7 @@ function renderUtil(u) {
     { label: 'Total Cash Outlay', val: fmt$(capex), sub: outlaySub, hi: false },
     { label: 'CAPEX After Rebate', val: fmt$(netCapex), sub: afterSub, hi: false },
     { label: 'NPV (' + years + 'yr @ ' + discRate + '%)', val: fmt$(res.npv), sub: 'Net present value', hi: true },
-    { label: 'Avg Annual Revenue', val: fmt$(res.avgRev), sub: UTIL_LABELS[u] + ' util. / ' + dailyKwh + ' kWh/day/port', hi: false },
+    { label: 'Avg Annual Revenue', val: fmt$(res.avgRev), sub: UTIL_LABELS[u] + ' util. / ~' + Math.round(dailyKwh * portFactor(selectedConfig)) + ' kWh/day/port', hi: false },
     { label: 'Payback Period', val: res.payback ? res.payback.toFixed(1) + ' yr' : 'N/A', sub: 'From full cash outlay', hi: false },
   ];
   document.getElementById('kpiGrid').innerHTML = kpis.map(k =>
@@ -1905,9 +2170,24 @@ function renderUtil(u) {
     }
   });
 
-  const tableRows = res.rows.map(r =>
+  const portsN = CONFIGS[selectedConfig].ports;
+  const pf = portFactor(selectedConfig);
+  yrTipData = res.rows.map(r => {
+    const sessPort = r.util / AVG_SESSION_KWH;
+    const sessSite = sessPort * portsN;
+    const factorNote = pf < 1
+      ? 'Per-port volume is scaled ×' + pf.toFixed(2) + ' for ' + (portsN === 8 ? 'an' : 'a') + ' ' + portsN + '-post site: more ports split the same local charging demand, so each port sees fewer sessions than a 4-post site.'
+      : '4-post baseline — no port-count utilization discount applied.';
+    return '<strong>Year ' + r.yr + ' — Expected Daily Usage Per Port</strong><br>' +
+      '<span class="big">~' + r.util.toLocaleString() + ' kWh/day/port</span> (' + UTIL_LABELS[u] + ' utilization' + (r.yr > 1 ? ' +' + utilGrowth + '%/yr growth' : '') + ')<br>' +
+      'Avg charge session: ~' + Math.round(AVG_SESSION_KWH) + ' kWh (Model Y, 20%→80%)<br>' +
+      '≈ <span class="big">' + sessPort.toFixed(1) + ' sessions/port/day</span><br>' +
+      '≈ ' + Math.round(sessSite).toLocaleString() + ' sessions/day site-wide (' + portsN + ' ports · ' + Math.round(sessSite * 365).toLocaleString() + '/yr)' +
+      '<span class="why">' + factorNote + '</span>';
+  });
+  const tableRows = res.rows.map((r, i) =>
     '<tr>' +
-      '<td>Yr ' + r.yr + (r.bdaf < 1 ? ' <span class="bdaf-tag">BDAF ' + r.bdaf + '</span>' : '') + '</td>' +
+      '<td><button class="info-btn yr-info" onmouseenter="showYrTip(this,' + i + ')" onmouseleave="hideYrTip()" onclick="showYrTip(this,' + i + ');event.stopPropagation()">?</button>Yr ' + r.yr + (r.bdaf < 1 ? ' <span class="bdaf-tag">BDAF ' + r.bdaf + '</span>' : '') + '</td>' +
       '<td>' + r.annual_kwh.toLocaleString() + '</td>' +
       '<td>' + fmtR(r.eff_rate) + '</td>' +
       '<td class="pos">' + fmt$(r.revenue) + '</td>' +
@@ -1921,11 +2201,12 @@ function renderUtil(u) {
   const footnote = isDuke
     ? '* Duke Commercial Charger Prep Credit of ' + fmt$(adders.creditPerCab) + '/998 kW cabinet × ' + cabinets + ' = ' + fmt$(rebate) + ', reimbursed after installation (modeled as a Year 1 cash inflow, not netted at Year 0); assumes Service Upgrades Required and subject to application approval. All-in Rate includes the customer charge, demand charge, energy charge, fuel &amp; riders, and applicable taxes for ' + cfg.label + ' (' + cfg.schedule.split(' — ')[0] + ', ' + cfg.effDate + ').' + (cfg.provisional ? ' Some values are provisional — see the Advanced panel.' : '')
     : '* $30,000 Georgia Power Business Rebate, subject to application approval and paid after installation (modeled as a Year 1 cash inflow, not netted at Year 0). All-in Rate includes base charges, fuel recovery, environmental compliance, DSM, franchise fee, excess facilities, and sales tax.';
+  const portScaleNote = ' Annual kWh assumes per-port daily volume scaled by port count (×1.00 at 4 posts, ×0.95 at 6, ×0.90 at 8, ×0.80 at 16) — larger sites split the same local charging demand, so each port sees fewer sessions. Hover the ? on each year for the per-port session breakdown (~' + Math.round(AVG_SESSION_KWH) + ' kWh average session, Tesla Model Y 20%→80% reference).';
   document.getElementById('tableWrap').innerHTML =
     '<table class="yr-table"><thead><tr>' +
     '<th>Year</th><th>Annual kWh</th><th>All-in Rate</th><th>Revenue</th><th>' + elecHeader + '</th><th>Tesla Fee</th><th>Net CF</th><th>Cumulative</th>' +
     '</tr></thead><tbody>' + tableRows + '</tbody></table>' +
-    '<div style="font-size:10px; color:var(--text4); margin-top:8px;">' + footnote + '</div>';
+    '<div style="font-size:10px; color:var(--text4); margin-top:8px;">' + footnote + portScaleNote + '</div>';
 }
 </script>
 </body>
