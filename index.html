@@ -420,6 +420,22 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); min-
 .sa-rec strong { color: var(--blue); }
 .sa-note { font-size: 10px; color: var(--text4); margin-top: 10px; line-height: 1.6; }
 .sa-loading { font-size: 12px; color: var(--text3); padding: 4px 0; }
+#saMap {
+  height: 340px;
+  border-radius: 4px;
+  margin-top: 14px;
+  border: 1px solid var(--border);
+  display: none;
+}
+.sa-map-legend { font-size: 10px; color: var(--text4); margin-top: 8px; }
+.sa-map-legend .dot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  margin: 0 4px 0 10px;
+  vertical-align: -1px;
+}
 .util-tab .rec-star { color: var(--yellow); margin-left: 4px; }
 .util-tab.active .rec-star { color: var(--bg); }
 
@@ -872,6 +888,11 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); min-
     <div class="site-analysis" id="siteAnalysis" style="display:none">
       <h3>Site Utilization Analysis</h3>
       <div id="saBody"><div class="sa-loading">Analyzing site…</div></div>
+      <div id="saMap"></div>
+      <div class="sa-map-legend" id="saMapLegend" style="display:none">
+        <span class="dot" style="background:#5dca8a; margin-left:0;"></span>Your site
+        <span class="dot" style="background:#d65555;"></span>Competing DC fast charger (number = DC ports) — click a pin for network, ports, speed, and distance
+      </div>
     </div>
   </div>
 
@@ -895,14 +916,14 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); min-
               CAPEX (Installed)
               <button class="info-btn" onclick="toggleInfo('capex4Info')" style="margin-left: 4px;">?</button>
             </div>
-            <input type="number" id="capex4" value="500000" step="5000" min="100000" class="cprice-input" onclick="event.stopPropagation()" />
+            <input type="number" id="capex4" value="250000" step="5000" min="100000" class="cprice-input" onclick="event.stopPropagation()" />
             <div class="cprice-hint">Adjust if you have a specific quote</div>
           </div>
         </div>
         <div class="info-popup" id="capex4Info" style="left:0;right:0;top:auto;bottom:100%;margin-bottom:8px;margin-top:0;">
           <strong>Installed cost for a 4-port V4 site.</strong><br>
           Includes the Tesla V4 Cabinet, 4 V4 Posts, concrete pads, trenching, conduit, wiring, bollards, signage, engineering, permitting, labor, and project management.
-          <span class="why" id="capexWhy4">Default of <strong>$500,000</strong> is CCS advertised turnkey pricing: $250,000 equipment (Tesla MSRP) + $250,000 installation, plus applicable state sales tax on the equipment portion at invoicing.</span>
+          <span class="why" id="capexWhy4">Default of <strong>$250,000</strong> is your expected out-of-pocket for a Georgia Power site: CCS pricing with Make Ready program coverage applied (GA Power funds make-ready infrastructure up to $300,000 per job, subject to application approval). Shown before the $30,000 Business Rebate.</span>
         </div>
       </div>
 
@@ -917,14 +938,14 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); min-
               CAPEX (Installed)
               <button class="info-btn" onclick="toggleInfo('capex6Info')" style="margin-left: 4px;">?</button>
             </div>
-            <input type="number" id="capex6" value="725000" step="5000" min="150000" class="cprice-input" onclick="event.stopPropagation()" />
+            <input type="number" id="capex6" value="375000" step="5000" min="150000" class="cprice-input" onclick="event.stopPropagation()" />
             <div class="cprice-hint">Adjust if you have a specific quote</div>
           </div>
         </div>
         <div class="info-popup" id="capex6Info" style="left:0;right:0;top:auto;bottom:100%;margin-bottom:8px;margin-top:0;">
           <strong>Installed cost for a 6-port V4 site.</strong><br>
           Same single V4 cabinet and service entrance as the 4-port option, plus 2 additional posts and their site work.
-          <span class="why" id="capexWhy6">Default of <strong>$725,000</strong> reflects CCS advertised turnkey pricing, interpolated between the 4-post and 8-post builds on the current V4 price ladder. Adjust to a firm quote if you have one.</span>
+          <span class="why" id="capexWhy6">Default of <strong>$375,000</strong> is your expected out-of-pocket for a Georgia Power site with Make Ready program coverage applied, interpolated between the 4-post and 8-post builds. Shown before the $30,000 Business Rebate. Adjust to a firm quote if you have one.</span>
         </div>
       </div>
 
@@ -939,14 +960,14 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); min-
               CAPEX (Installed)
               <button class="info-btn" onclick="toggleInfo('capex8Info')" style="margin-left: 4px;">?</button>
             </div>
-            <input type="number" id="capex8" value="950000" step="5000" min="200000" class="cprice-input" onclick="event.stopPropagation()" />
+            <input type="number" id="capex8" value="500000" step="5000" min="200000" class="cprice-input" onclick="event.stopPropagation()" />
             <div class="cprice-hint">Adjust if you have a specific quote</div>
           </div>
         </div>
         <div class="info-popup" id="capex8Info" style="left:0;right:0;top:auto;bottom:100%;margin-bottom:8px;margin-top:0;">
           <strong>Installed cost for an 8-port V4 site.</strong><br>
           Includes everything in the 4-port package plus 4 additional V4 Posts and their associated trenching, conduit, concrete, bollards, and signage.
-          <span class="why" id="capexWhy8">Default of <strong>$950,000</strong> is CCS advertised turnkey pricing: $500,000 equipment (Tesla MSRP) + $450,000 installation, plus applicable state sales tax on the equipment portion.</span>
+          <span class="why" id="capexWhy8">Default of <strong>$500,000</strong> is your expected out-of-pocket for a Georgia Power site: CCS pricing with Make Ready program coverage applied (up to $300,000 per job, subject to application approval). Shown before the $30,000 Business Rebate.</span>
         </div>
       </div>
 
@@ -983,14 +1004,14 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); min-
               CAPEX (Installed)
               <button class="info-btn" onclick="toggleInfo('capex16Info')" style="margin-left: 4px;">?</button>
             </div>
-            <input type="number" id="capex16" value="1800000" step="5000" min="400000" class="cprice-input" onclick="event.stopPropagation()" />
+            <input type="number" id="capex16" value="1400000" step="5000" min="400000" class="cprice-input" onclick="event.stopPropagation()" />
             <div class="cprice-hint">Adjust if you have a specific quote</div>
           </div>
         </div>
         <div class="info-popup" id="capex16Info" style="left:0;right:0;top:auto;bottom:100%;margin-bottom:8px;margin-top:0;">
           <strong>Installed cost for a 16-port / 2-cabinet V4 site.</strong><br>
           Two full V4 cabinets, 16 posts, and the associated service entrances, trenching, concrete, bollards, and signage.
-          <span class="why" id="capexWhy16">Default of <strong>$1,800,000</strong> is CCS advertised turnkey pricing: $1,000,000 equipment (Tesla MSRP) + $800,000 installation, plus applicable state sales tax on the equipment portion.</span>
+          <span class="why" id="capexWhy16">Default of <strong>$1,400,000</strong> is your expected out-of-pocket for a 2-cabinet, 16-post Georgia Power site with Make Ready program coverage applied (up to $300,000 per job, subject to application approval). Shown before the $30,000 Business Rebate.</span>
         </div>
       </div>
     </div>
@@ -1497,7 +1518,7 @@ async function fetchNearbyPois(lat, lng) {
   const { Place } = await google.maps.importLibrary('places');
   const { places } = await Place.searchNearby({
     locationRestriction: { center: { lat, lng }, radius: 500 },
-    includedPrimaryTypes: ['restaurant','cafe','shopping_mall','supermarket','convenience_store','gym','movie_theater','department_store'],
+    includedPrimaryTypes: ['restaurant','fast_food_restaurant','meal_takeaway','cafe','shopping_mall','supermarket','convenience_store','gas_station','gym','movie_theater','department_store'],
     maxResultCount: 20,
     fields: ['id']
   });
@@ -1543,12 +1564,14 @@ function renderSiteAnalysis() {
       const ports = Math.max(1, s.ev_dc_fast_num || 0);
       const dist = s.distance || 5;
       const isTesla = (s.ev_network || '') === 'Tesla';
-      pressure += ports * Math.max(0, 1 - dist / 5) * (isTesla ? teslaWeight : 1);
+      // Full competitive weight only within 1 mi; linear falloff to zero at 5 mi
+      const prox = dist <= 1 ? 1 : Math.max(0, (5 - dist) / 4);
+      pressure += ports * prox * (isTesla ? teslaWeight : 1);
       totalPorts += ports;
       if (isTesla) teslaPorts += ports;
       if (nearest === null || dist < nearest) nearest = dist;
     });
-    compPts = Math.round(Math.max(0, Math.min(25, 25 - pressure * 1.5)));
+    compPts = Math.round(Math.max(0, Math.min(25, 25 - pressure)));
     compLabel = siteData.afdc.length === 0
       ? 'No public DC fast charging within 5 mi — unserved demand'
       : siteData.afdc.length + ' station' + (siteData.afdc.length > 1 ? 's' : '') + ' / ' + totalPorts + ' DC ports within 5 mi' +
@@ -1560,7 +1583,7 @@ function renderSiteAnalysis() {
   let poiPts = 15, poiLabel = 'Data unavailable — using neutral score';
   if (siteData.poiCount !== null && siteData.poiCount !== undefined) {
     poiPts = Math.round(Math.min(siteData.poiCount, 20) / 20 * 30);
-    poiLabel = siteData.poiCount + ' walkable amenities within 500 m (restaurants, retail, gyms)';
+    poiLabel = siteData.poiCount + ' walkable amenities within 500 m (restaurants, retail, gas/convenience, gyms)';
   }
   rows.push({ l: 'Dwell-time amenities', v: poiLabel, p: poiPts, max: 30 });
 
@@ -1583,6 +1606,88 @@ function renderSiteAnalysis() {
     '<div class="sa-note">Directional estimate from live data: competing DC fast chargers (U.S. DOE Alternative Fuels Data Center), walkable points of interest (Google Places), and county EV-adoption tier. Tesla-network stations are weighted heavier (×' + teslaWeight.toFixed(2) + ' at your $' + priceNow.toFixed(2) + '/kWh posted price): Tesla-owned sites offer a lower price tier to Tesla drivers and pay no network services fee, so Autoroute steers price-sensitive traffic their way. Not a traffic guarantee — actual utilization depends on visibility, access, pricing, and network effects.</div>';
 
   applyRecommendedUtil(rec);
+  renderSiteMap();
+}
+
+// Best-effort max charger speed (kW) from AFDC's ev_charging_units detail
+function stationKw(s) {
+  let kw = 0;
+  (s.ev_charging_units || []).forEach(u => {
+    const p = parseFloat(u.power_kw ?? u.charger_power_kw ?? u.charging_power_kw ?? 0);
+    if (p > kw) kw = p;
+  });
+  return kw;
+}
+
+// Map: green pin = your site, red pins = competing DCFC (label = DC port count)
+async function renderSiteMap() {
+  const mapDiv = document.getElementById('saMap');
+  const legend = document.getElementById('saMapLegend');
+  if (!siteData.lat) return;
+  try {
+    const { Map, InfoWindow } = await google.maps.importLibrary('maps');
+    const { Marker } = await google.maps.importLibrary('marker');
+    mapDiv.style.display = 'block';
+    legend.style.display = 'block';
+    const map = new Map(mapDiv, {
+      center: { lat: siteData.lat, lng: siteData.lng },
+      zoom: 12,
+      disableDefaultUI: true,
+      zoomControl: true,
+      styles: [
+        { elementType: 'geometry', stylers: [{ color: '#212121' }] },
+        { elementType: 'labels.text.fill', stylers: [{ color: '#8a8a8a' }] },
+        { elementType: 'labels.text.stroke', stylers: [{ color: '#212121' }] },
+        { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#383838' }] },
+        { featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: '#4a4a4a' }] },
+        { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#000000' }] },
+        { featureType: 'poi', stylers: [{ visibility: 'off' }] },
+        { featureType: 'transit', stylers: [{ visibility: 'off' }] }
+      ]
+    });
+    const bounds = new google.maps.LatLngBounds();
+    const info = new InfoWindow();
+
+    const sitePos = { lat: siteData.lat, lng: siteData.lng };
+    new Marker({
+      map, position: sitePos, zIndex: 100,
+      icon: { path: google.maps.SymbolPath.CIRCLE, scale: 11, fillColor: '#5dca8a', fillOpacity: 1, strokeColor: '#ffffff', strokeWeight: 2 },
+      title: 'Your site'
+    });
+    bounds.extend(sitePos);
+
+    (siteData.afdc || []).forEach(s => {
+      if (!s.latitude || !s.longitude) return;
+      const ports = Math.max(1, s.ev_dc_fast_num || 0);
+      const kw = stationKw(s);
+      const pos = { lat: s.latitude, lng: s.longitude };
+      const m = new Marker({
+        map, position: pos,
+        icon: { path: google.maps.SymbolPath.CIRCLE, scale: 9 + Math.min(6, ports / 3), fillColor: '#d65555', fillOpacity: 0.9, strokeColor: '#ffffff', strokeWeight: 1.5 },
+        label: { text: String(ports), color: '#ffffff', fontSize: '10px', fontWeight: '700' },
+        title: s.station_name || 'DC fast charger'
+      });
+      m.addListener('click', () => {
+        info.setContent(
+          '<div style="color:#1a1a1a; font-family:Barlow,sans-serif; font-size:12px; line-height:1.6; max-width:220px;">' +
+          '<strong>' + (s.station_name || 'DC fast charger') + '</strong><br>' +
+          'Network: ' + (s.ev_network || 'Unknown') + '<br>' +
+          'DC fast ports: ' + ports + '<br>' +
+          'Max speed: ' + (kw > 0 ? Math.round(kw) + ' kW' : 'n/a') + '<br>' +
+          'Distance: ' + (s.distance != null ? s.distance.toFixed(1) + ' mi' : 'n/a') +
+          '</div>'
+        );
+        info.open(map, m);
+      });
+      bounds.extend(pos);
+    });
+
+    if (siteData.afdc && siteData.afdc.length) map.fitBounds(bounds, 40);
+  } catch (err) {
+    console.warn('Site map unavailable:', err);
+    mapDiv.style.display = 'none';
+    legend.style.display = 'none';
+  }
 }
 
 function applyRecommendedUtil(rec) {
@@ -1688,11 +1793,14 @@ const AVG_SESSION_KWH = 48.6;
 // Duke pricing = CCS advertised turnkey (equipment MSRP + installation),
 // pre-tax; state sales tax applies to the equipment portion at invoicing.
 const PROVIDER_CARDS = {
+  // GA defaults are net of expected Georgia Power Make Ready program coverage
+  // (make-ready infrastructure funded up to $300,000 per job, subject to
+  // application approval), shown before the $30,000 Business Rebate.
   gapower: {
-    '4':  { capex: 500000,  why: 'Default of <strong>$500,000</strong> is CCS advertised turnkey pricing: $250,000 equipment (Tesla MSRP) + $250,000 installation, plus applicable state sales tax on the equipment portion at invoicing.' },
-    '6':  { capex: 725000,  why: 'Default of <strong>$725,000</strong> reflects CCS advertised turnkey pricing, interpolated between the 4-post and 8-post builds on the current V4 price ladder. Adjust to a firm quote if you have one.' },
-    '8':  { capex: 950000,  why: 'Default of <strong>$950,000</strong> is CCS advertised turnkey pricing: $500,000 equipment (Tesla MSRP) + $450,000 installation, plus applicable state sales tax on the equipment portion.' },
-    '16': { capex: 1800000, why: 'Default of <strong>$1,800,000</strong> is CCS advertised turnkey pricing: $1,000,000 equipment (Tesla MSRP) + $800,000 installation, plus applicable state sales tax on the equipment portion.' },
+    '4':  { capex: 250000,  why: 'Default of <strong>$250,000</strong> is your expected out-of-pocket for a Georgia Power site: CCS pricing with Make Ready program coverage applied (GA Power funds make-ready infrastructure up to $300,000 per job, subject to application approval). Shown before the $30,000 Business Rebate.' },
+    '6':  { capex: 375000,  why: 'Default of <strong>$375,000</strong> is your expected out-of-pocket for a Georgia Power site with Make Ready program coverage applied, interpolated between the 4-post and 8-post builds. Shown before the $30,000 Business Rebate. Adjust to a firm quote if you have one.' },
+    '8':  { capex: 500000,  why: 'Default of <strong>$500,000</strong> is your expected out-of-pocket for a Georgia Power site: CCS pricing with Make Ready program coverage applied (up to $300,000 per job, subject to application approval). Shown before the $30,000 Business Rebate.' },
+    '16': { capex: 1400000, why: 'Default of <strong>$1,400,000</strong> is your expected out-of-pocket for a 2-cabinet, 16-post Georgia Power site with Make Ready program coverage applied (up to $300,000 per job, subject to application approval). Shown before the $30,000 Business Rebate.' },
   },
   duke: {
     '4':   { capex: 500000,  why: 'Default of <strong>$500,000</strong> is CCS advertised turnkey pricing: $250,000 equipment (Tesla MSRP) + $250,000 installation, plus applicable state sales tax on the equipment portion at invoicing.' },
