@@ -1071,9 +1071,9 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); min-
           <button class="info-btn" onclick="toggleInfo('growthInfo')">?</button>
         </div>
         <div class="info-popup" id="growthInfo">
-          <strong>How fast will charging volume grow year over year?</strong><br>
-          EV adoption is still accelerating in the US. As more EVs hit the road, a busy charging site will see growing demand. This setting assumes your daily charging volume grows by this percentage each year.
-          <span class="why">Default of <strong>7%</strong> is a moderate assumption reflecting current EV market growth forecasts. Use 4-5% for a conservative case, 10%+ if you believe in aggressive adoption.</span>
+          <strong>Starting growth rate for charging volume — it tapers automatically.</strong><br>
+          EV adoption keeps growing, but charging supply is growing with it (US DC fast ports grew ~30%/yr through 2026 while network utilization stayed flat, per Paren industry data) — new stations split your local demand. So this rate applies early and fades linearly to roughly zero by Year 15, and volume caps at a ~70% annual-average utilization ceiling (stalls empty out overnight with human drivers).
+          <span class="why">Default of <strong>7%</strong> starting rate is moderate for a well-sited host. Use 4-5% to be conservative, 10%+ only for underserved corridors. Autonomous vehicles charging off-peak could someday raise the ceiling — not modeled until real data exists.</span>
         </div>
         <input type="number" id="utilGrowth" value="7" step="0.5" min="0" max="20" />
       </div>
@@ -1317,7 +1317,7 @@ If Georgia Power installs dedicated equipment that serves only your site, they m
       <button class="util-tab" data-u="high" onclick="switchUtil(this,'high')">High</button>
       <button class="util-tab" data-u="peak" onclick="switchUtil(this,'peak')">Peak</button>
     </div>
-    <div class="util-def"><strong>Utilization Rate</strong> = the share of each port's day occupied by a charging vehicle. 100% ≈ 765 kWh/day/port, calibrated to real Atlanta site data (359 kWh/day/port ≈ 47%). Utilization is not linear — stalls empty out overnight — so projected growth saturates at 85%. Hover each tab for its rate.</div>
+    <div class="util-def"><strong>Utilization Rate</strong> = the share of each port's day occupied by a charging vehicle. 100% ≈ 765 kWh/day/port, calibrated to real Atlanta site data (359 kWh/day/port ≈ 47%). Growth tapers to ~zero by Year 15 (new stations split local demand) and caps at a 70% annual average — overnight hours are near-dead with human drivers; robotaxis charging off-peak could eventually change that. Hover each tab for its rate.</div>
 
     <div class="kpi-grid" id="kpiGrid"></div>
 
@@ -1828,13 +1828,18 @@ let currentResults = null;
 let currentUtil = 'med';
 let utility = 'gapower'; // 'gapower' | 'duke'
 
+// kWh/day/port bands ≈ utilization % × 765 (see UTIL_100_KWH). Rescaled
+// 2026-08-12 so Peak = 52-65% annual average — real anchors: ChargedEV
+// Norcross at 47% (≈ High retail), Tesla's flagship Atlanta corridor site at
+// 65% in its best month (≈ Peak annual). Industry network-wide average is
+// only ~16% (Paren Q1 2026); top urban markets >35%.
 const SITE_UTIL = {
-  retail:  { low: 150, med: 300, high: 500, peak: 650 },
-  airport: { low: 200, med: 400, high: 600, peak: 750 },
-  hotel:   { low: 120, med: 250, high: 420, peak: 550 },
-  office:  { low: 80,  med: 180, high: 320, peak: 450 },
-  parking: { low: 100, med: 220, high: 380, peak: 500 },
-  highway: { low: 180, med: 350, high: 550, peak: 700 },
+  retail:  { low: 130, med: 260, high: 360, peak: 460 },
+  airport: { low: 170, med: 320, high: 430, peak: 500 },
+  hotel:   { low: 110, med: 220, high: 330, peak: 430 },
+  office:  { low: 75,  med: 150, high: 250, peak: 350 },
+  parking: { low: 100, med: 200, high: 300, peak: 400 },
+  highway: { low: 150, med: 310, high: 420, peak: 490 },
 };
 const SITE_LABELS = {
   retail: 'Retail / Shopping Center', airport: 'Airport Adjacent',
@@ -1866,10 +1871,12 @@ const AVG_SESSION_KWH = 28.5;
 
 // Utilization calibration from the same site: 359 kWh/day/port ↔ 47%
 // reported utilization → 100% occupancy ≈ 765 kWh/day/port. Utilization is
-// not linear — stalls can't stay full around the clock (overnight dwindle),
-// so growth saturates at 85% (≈650 kWh/day/port).
+// not linear — overnight hours are near-dead with human drivers, so a
+// realistic ANNUAL-average ceiling is ~70% (≈536 kWh/day/port). Autonomous
+// vehicles / robotaxis charging off-peak could eventually lift this toward
+// 85-90%, but that isn't modeled until it shows up in real data.
 const UTIL_100_KWH = 765;
-const UTIL_CAP_KWH = Math.round(UTIL_100_KWH * 0.85); // 650 kWh/day/port
+const UTIL_CAP_KWH = Math.round(UTIL_100_KWH * 0.70); // 536 kWh/day/port
 function utilPctOf(dailyKwhPerPort) { return Math.min(100, dailyKwhPerPort / UTIL_100_KWH * 100); }
 
 // Per-provider lineup: which configs are offered, their default installed
@@ -2231,10 +2238,15 @@ function calcProForma(cfgKey, grossCapex, rebate, dailyKwh, chargePrice, years, 
   const dukeCfg = isDuke ? currentDuke() : null;
 
   const effDailyKwh = dailyKwh * portFactor(cfgKey); // port-count utilization discount
+  let growthMult = 1;
   for (let yr = 1; yr <= years; yr++) {
-    // Growth saturates at UTIL_CAP_KWH (85% occupancy) — stalls never stay
-    // full around the clock, so volume flattens instead of compounding forever.
-    const util = Math.min(effDailyKwh * Math.pow(1 + utilGrowth / 100, yr - 1), UTIL_CAP_KWH);
+    // Utilization growth tapers linearly to ~zero across the 15-year horizon:
+    // EV adoption keeps growing, but charging supply grows ~30%/yr with it
+    // (Paren Q1 2026 — network utilization has been flat-to-declining), so a
+    // site's per-port growth erodes as new stations split local demand.
+    // Volume also hard-caps at UTIL_CAP_KWH (~70% annual-average occupancy).
+    if (yr > 1) growthMult *= 1 + (utilGrowth / 100) * Math.max(0, (16 - yr) / 15);
+    const util = Math.min(effDailyKwh * growthMult, UTIL_CAP_KWH);
     const utilPct = utilPctOf(util);
     const monthly_kwh = util * ports * 30;
     const annual_kwh = util * ports * 365;
@@ -2458,7 +2470,7 @@ function renderUtil(u) {
       ? 'Per-port volume is scaled ×' + pf.toFixed(2) + ' for ' + (portsN === 8 ? 'an' : 'a') + ' ' + portsN + '-post site: more ports split the same local charging demand, so each port sees fewer sessions than a 4-post site.'
       : '4-post baseline — no port-count utilization discount applied.';
     return '<strong>Year ' + r.yr + ' — Expected Daily Usage Per Port</strong><br>' +
-      '<span class="big">~' + r.util.toLocaleString() + ' kWh/day/port · ' + r.utilPct.toFixed(0) + '% utilization</span> (' + UTIL_LABELS[u] + (r.yr > 1 ? ' +' + utilGrowth + '%/yr growth' : '') + (r.util >= UTIL_CAP_KWH ? ', saturated at 85%' : '') + ')<br>' +
+      '<span class="big">~' + r.util.toLocaleString() + ' kWh/day/port · ' + r.utilPct.toFixed(0) + '% utilization</span> (' + UTIL_LABELS[u] + (r.yr > 1 ? ', tapered growth from ' + utilGrowth + '%/yr' : '') + (r.util >= UTIL_CAP_KWH ? ', saturated at 70% ceiling' : '') + ')<br>' +
       'Avg charge session: ~' + Math.round(AVG_SESSION_KWH) + ' kWh (real Atlanta site data)<br>' +
       '≈ <span class="big">' + sessPort.toFixed(1) + ' sessions/port/day</span><br>' +
       '≈ ' + Math.round(sessSite).toLocaleString() + ' sessions/day site-wide (' + portsN + ' ports · ' + Math.round(sessSite * 365).toLocaleString() + '/yr)' +
@@ -2486,7 +2498,7 @@ function renderUtil(u) {
   const revTaxNote = adders.revTaxPct
     ? ' Revenue is gross driver billings at your posted price; the Sales Tax column is the ' + adders.revTaxPct.toFixed(1) + '% withheld from that tax-inclusive price plus the same rate charged on the Tesla service fee itself (effective fee $' + (0.10 * (1 + adders.revTaxPct / 100)).toFixed(3) + '/kWh) — both remitted by the network from the gross, per actual payout statements. Set Driver Sales Tax Handling to gross to model otherwise.'
     : '';
-  const portScaleNote = revTaxNote + ' Annual kWh assumes per-port daily volume scaled by port count (×1.00 at 4 posts, ×0.95 at 6, ×0.90 at 8, ×0.80 at 16) — larger sites split the same local charging demand, so each port sees fewer sessions. Hover the ? on each year for the per-port session breakdown (~' + Math.round(AVG_SESSION_KWH) + ' kWh average session, from real Atlanta site data: 3,118 sessions / 89,010 kWh, July 2026). Util % is the share of each port\'s day occupied (100% ≈ ' + UTIL_100_KWH + ' kWh/day/port, same calibration); growth saturates at 85% because stalls empty out overnight. On Georgia Power, the CIEV BDAF phase-in applies only while the rolling load factor stays under 15% — busy sites exceed it immediately and pay full demand charges.';
+  const portScaleNote = revTaxNote + ' Annual kWh assumes per-port daily volume scaled by port count (×1.00 at 4 posts, ×0.95 at 6, ×0.90 at 8, ×0.80 at 16) — larger sites split the same local charging demand, so each port sees fewer sessions. Hover the ? on each year for the per-port session breakdown (~' + Math.round(AVG_SESSION_KWH) + ' kWh average session, from real Atlanta site data: 3,118 sessions / 89,010 kWh, July 2026). Util % is the share of each port\'s day occupied (100% ≈ ' + UTIL_100_KWH + ' kWh/day/port, same calibration). The entered growth rate tapers linearly to ~zero by Year 15 — US fast-charging supply has grown ~30%/yr while network utilization stayed flat (Paren, Q1 2026), so new stations erode per-port growth — and volume caps at a 70% annual-average ceiling (overnight hours are near-dead with human drivers). On Georgia Power, the CIEV BDAF phase-in applies only while the rolling load factor stays under 15% — busy sites exceed it immediately and pay full demand charges.';
   document.getElementById('tableWrap').innerHTML =
     '<table class="yr-table"><thead><tr>' +
     '<th>Year</th><th>Annual kWh</th><th>Util %</th><th>All-in Rate</th><th>Revenue</th><th>Sales Tax</th><th>' + elecHeader + '</th><th>Tesla Fee</th>' + (isDuke ? '' : '<th>GA Excise</th>') + '<th>Net CF</th><th>Cumulative</th>' +
