@@ -502,6 +502,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); min-
   border-top: 2px solid var(--blue);
   padding-top: 1.5rem;
   margin-bottom: 2rem;
+  text-align: center;
 }
 .results-title {
   font-family: var(--cond);
@@ -517,7 +518,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); min-
 .util-tabs {
   display: flex;
   gap: 6px;
-  margin-bottom: 1.5rem;
+  margin: 0 auto 1.25rem;
   padding: 4px;
   background: var(--surface);
   border: 1px solid var(--border);
@@ -542,13 +543,16 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); min-
 .util-tab.active { background: var(--blue); color: var(--bg); }
 .util-tab .tab-pct { font-weight: 400; opacity: 0.75; margin-left: 5px; font-variant-numeric: tabular-nums; }
 .util-def {
-  font-size: 10px;
-  color: var(--text4);
-  line-height: 1.6;
-  max-width: 760px;
-  margin: -14px 0 1.5rem;
+  background: var(--blue-dim);
+  border-left: 3px solid var(--blue);
+  padding: 14px 18px;
+  font-size: 12px;
+  line-height: 1.75;
+  color: var(--text2);
+  margin-bottom: 1.5rem;
+  border-radius: 0 4px 4px 0;
 }
-.util-def strong { color: var(--text3); }
+.util-def strong { color: var(--blue); }
 
 /* PROVIDER TOGGLE */
 .provider-bar {
@@ -597,6 +601,8 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); min-
 .provider-btn.active span { color: rgba(10,10,10,0.7); }
 .duke-state-field { display: none; }
 .duke-state-field.visible { display: flex; }
+.ga-plan-field { display: none; }
+.ga-plan-field.visible { display: flex; }
 
 /* KPIs */
 .kpi-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 2rem; }
@@ -813,6 +819,22 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); min-
       <button class="provider-btn" id="provDuke" onclick="setUtility('duke')">
         Duke Energy<span>Charger Prep Credit &nbsp;·&nbsp; NC / SC / FL</span>
       </button>
+    </div>
+    <div class="field ga-plan-field visible" id="gaPlanField">
+      <div class="field-label">
+        Georgia Power Rate Plan
+        <button class="info-btn" onclick="toggleInfo('gaPlanInfo')">?</button>
+      </div>
+      <div class="info-popup" id="gaPlanInfo">
+        <strong>Which Georgia Power rate should the pro forma use?</strong><br>
+        Two paths for a dedicated EV charging site: <strong>PLM/PLL + CIEV-1 rider</strong> (demand charges phased in via BDAF, but the rider terminates once the rolling 12-month load factor exceeds 15%) or the dedicated <strong>TOU-EVC-4</strong> EV charging schedule ($152/mo + $5.25/kW + 24.4¢ on-peak / 6.1¢ off-peak, on-peak only 2-7pm weekdays Jun-Sep). TOU-EVC-4 is typically cheaper than full-rate PLM/PLL at high volume; the CIEV rider is cheaper while it lasts.
+        <span class="why"><strong>Auto (default)</strong> starts on PLM/PLL + CIEV while the load factor stays under 15%, then switches permanently to TOU-EVC-4 — operators report the transition works in that direction only (start on the rider, move to TOU later; not the reverse). Not verified in the published tariff — confirm sequencing with your Georgia Power rep before committing. TOU-EVC-4 engine is validated against a real July 2026 commercial EV charging bill (ECCR, franchise fee, and sales tax lines reproduce to the penny).</span>
+      </div>
+      <select id="gaPlan" onchange="renderActiveUtil()">
+        <option value="auto" selected>Auto — CIEV-1 rider while eligible, then TOU-EVC-4</option>
+        <option value="plm">PLM / PLL + CIEV-1 Rider (all years)</option>
+        <option value="tou">TOU-EVC-4 dedicated EV schedule (all years)</option>
+      </select>
     </div>
     <div class="field duke-state-field" id="dukeStateField">
       <div class="field-label">
@@ -1067,7 +1089,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); min-
 
       <div class="field">
         <div class="field-label">
-          Annual Utilization Growth
+          Utilization Growth (Yr 1, Tapers)
           <button class="info-btn" onclick="toggleInfo('growthInfo')">?</button>
         </div>
         <div class="info-popup" id="growthInfo">
@@ -1227,7 +1249,7 @@ If Georgia Power installs dedicated equipment that serves only your site, they m
         </div>
       </div>
       <div class="source-note">
-        <strong>Methodology validation:</strong> Rate structure, tier breakpoints, and adder percentages validated directly against Georgia Power's official Power and Light Calculator at georgiapower.com. Both PLM (Medium, 30-499 kW demand) and PLL (Large, 500+ kW demand) rate structures are implemented. Tariff selection is automatic based on actual peak demand (pre-BDAF). Results from this tool match the GA Power calculator to the penny across scenarios from 50 kW / 5,000 kWh up to 998 kW / 500,000 kWh.<br><br>
+        <strong>Methodology validation:</strong> Rate structure, tier breakpoints, and adder percentages validated directly against Georgia Power's official Power and Light Calculator at georgiapower.com. Both PLM (Medium, 30-499 kW demand) and PLL (Large, 500+ kW demand) rate structures are implemented. Tariff selection is automatic based on actual peak demand (pre-BDAF). Results from this tool match the GA Power calculator to the penny across scenarios from 50 kW / 5,000 kWh up to 998 kW / 500,000 kWh. The <strong>TOU-EVC-4</strong> dedicated EV charging schedule ($152/mo · $5.25/kW · 24.4008¢ on-peak 2-7pm weekdays Jun-Sep · 6.1002¢ off-peak) is also implemented and validated against a real July 2026 commercial EV charging bill — ECCR, franchise fee, and sales tax lines reproduce to the penny. The Rate Plan selector picks between PLM/PLL + CIEV and TOU-EVC-4 (Auto rides the rider until the 15% load-factor ceiling, then switches one-way to TOU — operator-reported sequencing; confirm with Georgia Power).<br><br>
 <strong>Peak demand modeling:</strong> Tesla Model Y is used as the 2026 reference vehicle (peak ~250 kW brief, average ~150 kW sustained during the 30-minute billing demand window). As 800V / 500 kW-class vehicles penetrate the fleet, the sustained average is modeled rising ~6%/yr to a ~240 kW plateau by the mid-2030s — 500 kW itself is a fleeting peak (a Cybertruck's full V4 session still averages ~150 kW). Cabinet demand scales with how many cars charge simultaneously during peak hour, capped at 998 kW per cabinet (1,996 kW for 2-cabinet sites). Rising fleet speeds also lift the utilization kWh ceiling, at half strength — charge time shrinks but dwell time doesn't.
       </div>
      </div>
@@ -1942,6 +1964,7 @@ function setUtility(u) {
   document.getElementById('provGa').classList.toggle('active', !isDuke);
   document.getElementById('provDuke').classList.toggle('active', isDuke);
   document.getElementById('dukeStateField').classList.toggle('visible', isDuke);
+  document.getElementById('gaPlanField').classList.toggle('visible', !isDuke);
   document.getElementById('gaRatesPanel').style.display = isDuke ? 'none' : 'block';
   document.getElementById('dukeRatesPanel').style.display = isDuke ? 'block' : 'none';
   document.getElementById('heroText').textContent = isDuke ? HERO_DUKE : HERO_GA;
@@ -2161,6 +2184,37 @@ function selectTariff(actual_peak_kw) {
   return actual_peak_kw >= 500 ? PLL_RATES : PLM_RATES;
 }
 
+// ============== TOU-EVC-4: DEDICATED EV CHARGING SCHEDULE ==============
+// Georgia Power "Time Of Use - Electric Vehicle Charging" (eff. Jan 2025,
+// tariff page 4.30). On-peak exists ONLY 2-7pm Mon-Fri, Jun-Sep; everything
+// else (nights, weekends, all of Oct-May) is off-peak. Engine validated
+// against a real July 2026 commercial EV charging bill: base charges, ECCR,
+// franchise fee, and sales tax lines reproduce to the penny.
+const TOU_EVC4 = { basic: 152.00, demand: 5.25, onPeak: 0.244008, offPeak: 0.061002 };
+// Share of a summer month's kWh landing in the 2-7pm weekday window —
+// calibrated to the same real bill (20,080 of 90,320 kWh = 22.2%).
+const TOU_SUMMER_ONPEAK_SHARE = 0.222;
+
+function calcTouEvcBill(monthly_kwh, peak_kw, onShare, adders) {
+  const onKwh = monthly_kwh * onShare;
+  const demand = peak_kw * TOU_EVC4.demand;
+  const base = TOU_EVC4.basic + onKwh * TOU_EVC4.onPeak + (monthly_kwh - onKwh) * TOU_EVC4.offPeak + demand;
+  const fuel = monthly_kwh * adders.fuelRate;
+  const env = base * (adders.envPct / 100);
+  const dsm = base * (adders.dsmPct / 100);
+  const mff = (base + fuel + env + dsm) * (adders.mffPct / 100);
+  const subtotal = base + fuel + env + dsm + mff + adders.excessFac;
+  const tax = subtotal * (adders.taxPct / 100);
+  return { base, onKwh, offKwh: monthly_kwh - onKwh, demand, fuel, env, dsm, mff, excessFac: adders.excessFac, subtotal, tax, total: subtotal + tax };
+}
+
+// Annual TOU-EVC cost = 4 summer months (with on-peak) + 8 winter months (all off-peak)
+function calcTouEvcAnnual(monthly_kwh, peak_kw, adders) {
+  const summer = calcTouEvcBill(monthly_kwh, peak_kw, TOU_SUMMER_ONPEAK_SHARE, adders);
+  const winter = calcTouEvcBill(monthly_kwh, peak_kw, 0, adders);
+  return { summer, winter, annual: summer.total * 4 + winter.total * 8 };
+}
+
 function calcBaseCharges(monthly_kwh, peak_kw, bdaf) {
   const rates = selectTariff(peak_kw);
   const billing_demand = peak_kw * bdaf;
@@ -2231,6 +2285,7 @@ function getAdders() {
     excessFac: parseFloat(document.getElementById('excessFac').value) || 0,
     gaExcise: parseFloat(document.getElementById('gaExcise').value) || 0,
     firstYear: parseInt(document.getElementById('firstYear').value) || 2027,
+    gaPlan: document.getElementById('gaPlan').value,
   };
 }
 
@@ -2248,6 +2303,7 @@ function calcProForma(cfgKey, grossCapex, rebate, dailyKwh, chargePrice, years, 
 
   const effDailyKwh = dailyKwh * portFactor(cfgKey); // port-count utilization discount
   let growthMult = 1;
+  let onTou = false; // sticky: once on TOU-EVC-4, stays (one-way transition)
   for (let yr = 1; yr <= years; yr++) {
     // Utilization growth tapers linearly to ~zero across the 15-year horizon:
     // EV adoption keeps growing, but charging supply grows ~30%/yr with it
@@ -2271,11 +2327,24 @@ function calcProForma(cfgKey, grossCapex, rebate, dailyKwh, chargePrice, years, 
     // (monthly kWh ÷ (peak kW × 730 h)). Real Atlanta host data (July 2026:
     // 90,320 kWh @ 559 kW peak = 21.7%) shows busy sites exceed it immediately.
     const load_factor = monthly_kwh / (peak_kw * 730);
-    const bdaf = isDuke ? 1.00 : (load_factor > 0.15 ? 1.00 : getBDAF(yr));
-    const monthly_bill = isDuke
-      ? calcDukeBill(monthly_kwh, peak_kw, dukeCfg, adders)
-      : calcFullBill(monthly_kwh, peak_kw, bdaf, adders);
-    const annual_elec = monthly_bill.total * 12;
+    // GA rate plan: 'auto' rides the CIEV rider while the load factor stays
+    // under 15%, then switches permanently to TOU-EVC-4 (one-way, per
+    // operator-reported GA Power practice). 'plm'/'tou' force one plan.
+    if (!isDuke && (adders.gaPlan === 'tou' || (adders.gaPlan === 'auto' && load_factor > 0.15))) onTou = true;
+    const plan = isDuke ? 'duke' : (onTou ? 'TOU' : 'PLM');
+    const bdaf = (isDuke || plan === 'TOU') ? 1.00 : (load_factor > 0.15 ? 1.00 : getBDAF(yr));
+    let monthly_bill, annual_elec;
+    if (isDuke) {
+      monthly_bill = calcDukeBill(monthly_kwh, peak_kw, dukeCfg, adders);
+      annual_elec = monthly_bill.total * 12;
+    } else if (plan === 'TOU') {
+      const tou = calcTouEvcAnnual(monthly_kwh, peak_kw, adders);
+      monthly_bill = tou.summer; // sample month shown = summer (worst case)
+      annual_elec = tou.annual;
+    } else {
+      monthly_bill = calcFullBill(monthly_kwh, peak_kw, bdaf, adders);
+      annual_elec = monthly_bill.total * 12;
+    }
     const tesla_cost = annual_kwh * tesla_fee;
     // Sales tax is also charged on the Tesla service fee itself (statement
     // shows 6% on the fee — effectively $0.106/kWh). Shown in the Sales Tax
@@ -2296,13 +2365,14 @@ function calcProForma(cfgKey, grossCapex, rebate, dailyKwh, chargePrice, years, 
       const prev = cumCF - net_cf;
       payback = yr - 1 + (-prev / net_cf);
     }
-    rows.push({ yr, util: Math.round(util), utilPct, capped, peak_kw, load_factor, annual_kwh: Math.round(annual_kwh), bdaf, eff_rate, monthly_bill, gross_rev, rev_tax: rev_tax + fee_tax, revenue, annual_elec, tesla_cost, excise, total_cost, reimbursement, op_cf, net_cf, cumCF });
+    rows.push({ yr, util: Math.round(util), utilPct, capped, peak_kw, load_factor, plan, annual_kwh: Math.round(annual_kwh), bdaf, eff_rate, monthly_bill, gross_rev, rev_tax: rev_tax + fee_tax, revenue, annual_elec, tesla_cost, excise, total_cost, reimbursement, op_cf, net_cf, cumCF });
   }
 
   const cashFlows = [-grossCapex, ...rows.map(r => r.net_cf)];
   const npv = cashFlows.reduce((s, cf, t) => s + cf / Math.pow(1 + discRate / 100, t), 0);
   const avgRev = rows.reduce((s, r) => s + r.revenue, 0) / years;
-  return { rows, npv, payback, avgRev, peak_kw: rows[0].peak_kw, peak_kw_end: rows[rows.length - 1].peak_kw, grossCapex, rebate };
+  const firstTou = rows.find(r => r.plan === 'TOU');
+  return { rows, npv, payback, avgRev, peak_kw: rows[0].peak_kw, peak_kw_end: rows[rows.length - 1].peak_kw, firstTouYear: firstTou ? firstTou.yr : null, grossCapex, rebate };
 }
 
 function fmt$(v) {
@@ -2410,32 +2480,67 @@ function renderUtil(u) {
     document.getElementById('cievNote').innerHTML =
       '<strong>No EV demand-charge phase-in on Duke.</strong> Unlike Georgia Power\'s CIEV-1 rider, ' + cfg.short + ' has no commercial EV rate that ramps demand charges. Your site pays the full ' + cfg.schedule.split(' — ')[0] + ' demand charge of ' + demandDetail + ' from Year 1. At ' + UTIL_LABELS[u].toLowerCase() + ' utilization the all-in electricity cost is ' + fmtR(res.rows[fullYr].eff_rate) + ', declining only as throughput grows and spreads fixed demand cost over more kWh. The main incentive is the one-time Charger Prep Credit of ' + fmt$(rebate) + ' (' + fmt$(adders.creditPerCab) + '/cabinet × ' + cabinets + '), reimbursed after installation.';
   } else {
-    document.getElementById('tariffBox').innerHTML =
-      '<h3>Georgia Power Tariff Summary / ' + (res.peak_kw >= 500 ? 'PLL' : 'PLM') + ' + CIEV-1 Rider</h3>' +
-      '<div class="tariff-row"><span class="tl">Base tariff</span><span class="tv">' + (res.peak_kw >= 500 ? 'Power and Light Large (PLL)' : 'Power and Light Medium (PLM)') + '</span></div>' +
-      '<div class="tariff-row"><span class="tl">Peak billing demand (30-min)</span><span class="tv">' + res.peak_kw.toLocaleString() + ' kW Yr 1 → ' + res.peak_kw_end.toLocaleString() + ' kW Yr ' + years + ' &nbsp;<span style="font-size:10px;color:var(--text4)">(' + UTIL_LABELS[u].toLowerCase() + ' concurrency · fleet charge speeds rising)</span></span></div>' +
-      '<div class="tariff-row"><span class="tl">Year 1 all-in rate (BDAF ' + res.rows[0].bdaf.toFixed(2) + ')</span><span class="tv">' + fmtR(res.rows[0].eff_rate) + '</span></div>' +
-      '<div class="tariff-row"><span class="tl">Year 2 all-in rate (BDAF ' + res.rows[1].bdaf.toFixed(2) + ')</span><span class="tv">' + fmtR(res.rows[1].eff_rate) + '</span></div>' +
-      '<div class="tariff-row"><span class="tl">Year 3 all-in rate (BDAF ' + res.rows[2].bdaf.toFixed(2) + ')</span><span class="tv">' + fmtR(res.rows[2].eff_rate) + '</span></div>' +
-      '<div class="tariff-row"><span class="tl">Year 5+ all-in rate (full)</span><span class="tv">' + fmtR(res.rows[fullYr].eff_rate) + '</span></div>' +
+    const yr1Tou = res.rows[0].plan === 'TOU';
+    const switchYr = !yr1Tou ? res.firstTouYear : null; // mid-projection switch (auto mode)
+    const peakRow = '<div class="tariff-row"><span class="tl">Peak billing demand (30-min)</span><span class="tv">' + res.peak_kw.toLocaleString() + ' kW Yr 1 → ' + res.peak_kw_end.toLocaleString() + ' kW Yr ' + years + ' &nbsp;<span style="font-size:10px;color:var(--text4)">(' + UTIL_LABELS[u].toLowerCase() + ' concurrency · fleet charge speeds rising)</span></span></div>';
+    const commonRows =
       '<div class="tariff-row"><span class="tl">Tesla Services Fee</span><span class="tv">$0.10/kWh (all years)</span></div>' +
       '<div class="tariff-row"><span class="tl">Charging price to drivers</span><span class="tv">$' + chargePrice.toFixed(2) + '/kWh</span></div>';
 
-    document.getElementById('billPreview').innerHTML =
-      '<h3>Sample Monthly Bill / Year 1, ' + UTIL_LABELS[u] + ' Utilization</h3>' +
-      '<div class="bill-row"><span class="bl">Base charges (tariff + demand)</span><span class="bv">$' + sample.base.toFixed(2) + '</span></div>' +
-      '<div class="bill-row"><span class="bl">Fuel Cost Recovery</span><span class="bv">$' + sample.fuel.toFixed(2) + '</span></div>' +
-      '<div class="bill-row"><span class="bl">Environmental Compliance</span><span class="bv">$' + sample.env.toFixed(2) + '</span></div>' +
-      '<div class="bill-row"><span class="bl">Demand Side Management</span><span class="bv">$' + sample.dsm.toFixed(2) + '</span></div>' +
-      '<div class="bill-row"><span class="bl">Municipal Franchise Fee</span><span class="bv">$' + sample.mff.toFixed(2) + '</span></div>' +
-      '<div class="bill-row"><span class="bl">Excess Facilities Charge</span><span class="bv">$' + sample.excessFac.toFixed(2) + '</span></div>' +
-      '<div class="bill-row"><span class="bl">Sales Tax</span><span class="bv">$' + sample.tax.toFixed(2) + '</span></div>' +
-      '<div class="bill-row total"><span class="bl">Total (' + Math.round(sampleKwh).toLocaleString() + ' kWh)</span><span class="bv">$' + sample.total.toFixed(2) + '</span></div>';
+    document.getElementById('tariffBox').innerHTML = yr1Tou
+      ? '<h3>Georgia Power Tariff Summary / TOU-EVC-4 Dedicated EV Schedule</h3>' +
+        '<div class="tariff-row"><span class="tl">Rate schedule</span><span class="tv">Time Of Use — Electric Vehicle Charging (TOU-EVC-4)</span></div>' +
+        peakRow +
+        '<div class="tariff-row"><span class="tl">Basic service charge</span><span class="tv">$' + TOU_EVC4.basic.toFixed(2) + '/mo</span></div>' +
+        '<div class="tariff-row"><span class="tl">Demand charge (max 30-min kW)</span><span class="tv">$' + TOU_EVC4.demand.toFixed(2) + '/kW</span></div>' +
+        '<div class="tariff-row"><span class="tl">On-peak energy (2-7pm M-F, Jun-Sep)</span><span class="tv">' + (TOU_EVC4.onPeak * 100).toFixed(4) + '¢/kWh</span></div>' +
+        '<div class="tariff-row"><span class="tl">Off-peak energy (all other hours + Oct-May)</span><span class="tv">' + (TOU_EVC4.offPeak * 100).toFixed(4) + '¢/kWh</span></div>' +
+        '<div class="tariff-row"><span class="tl">Year 1 all-in rate</span><span class="tv">' + fmtR(res.rows[0].eff_rate) + '</span></div>' +
+        '<div class="tariff-row"><span class="tl">Year ' + Math.min(5, years) + '+ all-in rate</span><span class="tv">' + fmtR(res.rows[fullYr].eff_rate) + '</span></div>' +
+        commonRows
+      : '<h3>Georgia Power Tariff Summary / ' + (res.peak_kw >= 500 ? 'PLL' : 'PLM') + ' + CIEV-1 Rider</h3>' +
+        '<div class="tariff-row"><span class="tl">Base tariff</span><span class="tv">' + (res.peak_kw >= 500 ? 'Power and Light Large (PLL)' : 'Power and Light Medium (PLM)') + '</span></div>' +
+        peakRow +
+        '<div class="tariff-row"><span class="tl">Year 1 all-in rate (BDAF ' + res.rows[0].bdaf.toFixed(2) + ')</span><span class="tv">' + fmtR(res.rows[0].eff_rate) + '</span></div>' +
+        '<div class="tariff-row"><span class="tl">Year 2 all-in rate (BDAF ' + res.rows[1].bdaf.toFixed(2) + ')</span><span class="tv">' + fmtR(res.rows[1].eff_rate) + '</span></div>' +
+        '<div class="tariff-row"><span class="tl">Year 3 all-in rate (BDAF ' + res.rows[2].bdaf.toFixed(2) + ')</span><span class="tv">' + fmtR(res.rows[2].eff_rate) + '</span></div>' +
+        '<div class="tariff-row"><span class="tl">Year ' + Math.min(5, years) + '+ all-in rate' + (switchYr ? '' : ' (full)') + '</span><span class="tv">' + fmtR(res.rows[fullYr].eff_rate) + '</span></div>' +
+        (switchYr ? '<div class="tariff-row"><span class="tl">Switches to TOU-EVC-4</span><span class="tv">Year ' + switchYr + ' (15% load factor exceeded)</span></div>' : '') +
+        commonRows;
+
+    document.getElementById('billPreview').innerHTML = yr1Tou
+      ? '<h3>Sample Monthly Bill / Year 1 Summer Month (Jun-Sep), ' + UTIL_LABELS[u] + ' Utilization</h3>' +
+        '<div class="bill-row"><span class="bl">Basic service charge</span><span class="bv">$' + TOU_EVC4.basic.toFixed(2) + '</span></div>' +
+        '<div class="bill-row"><span class="bl">On-peak energy (' + Math.round(sample.onKwh).toLocaleString() + ' kWh @ 24.4¢)</span><span class="bv">$' + (sample.onKwh * TOU_EVC4.onPeak).toFixed(2) + '</span></div>' +
+        '<div class="bill-row"><span class="bl">Off-peak energy (' + Math.round(sample.offKwh).toLocaleString() + ' kWh @ 6.1¢)</span><span class="bv">$' + (sample.offKwh * TOU_EVC4.offPeak).toFixed(2) + '</span></div>' +
+        '<div class="bill-row"><span class="bl">Demand charge (' + res.peak_kw.toLocaleString() + ' kW @ $5.25)</span><span class="bv">$' + sample.demand.toFixed(2) + '</span></div>' +
+        '<div class="bill-row"><span class="bl">Fuel Cost Recovery</span><span class="bv">$' + sample.fuel.toFixed(2) + '</span></div>' +
+        '<div class="bill-row"><span class="bl">Environmental Compliance</span><span class="bv">$' + sample.env.toFixed(2) + '</span></div>' +
+        '<div class="bill-row"><span class="bl">Demand Side Management</span><span class="bv">$' + sample.dsm.toFixed(2) + '</span></div>' +
+        '<div class="bill-row"><span class="bl">Municipal Franchise Fee</span><span class="bv">$' + sample.mff.toFixed(2) + '</span></div>' +
+        '<div class="bill-row"><span class="bl">Sales Tax</span><span class="bv">$' + sample.tax.toFixed(2) + '</span></div>' +
+        '<div class="bill-row total"><span class="bl">Total (' + Math.round(sampleKwh).toLocaleString() + ' kWh)</span><span class="bv">$' + sample.total.toFixed(2) + '</span></div>' +
+        '<div style="font-size:10px;color:var(--text4);margin-top:8px;">Winter months (Oct-May) bill lower — every kWh is off-peak at 6.1¢. The annual model uses 4 summer + 8 winter months.</div>'
+      : '<h3>Sample Monthly Bill / Year 1, ' + UTIL_LABELS[u] + ' Utilization</h3>' +
+        '<div class="bill-row"><span class="bl">Base charges (tariff + demand)</span><span class="bv">$' + sample.base.toFixed(2) + '</span></div>' +
+        '<div class="bill-row"><span class="bl">Fuel Cost Recovery</span><span class="bv">$' + sample.fuel.toFixed(2) + '</span></div>' +
+        '<div class="bill-row"><span class="bl">Environmental Compliance</span><span class="bv">$' + sample.env.toFixed(2) + '</span></div>' +
+        '<div class="bill-row"><span class="bl">Demand Side Management</span><span class="bv">$' + sample.dsm.toFixed(2) + '</span></div>' +
+        '<div class="bill-row"><span class="bl">Municipal Franchise Fee</span><span class="bv">$' + sample.mff.toFixed(2) + '</span></div>' +
+        '<div class="bill-row"><span class="bl">Excess Facilities Charge</span><span class="bv">$' + sample.excessFac.toFixed(2) + '</span></div>' +
+        '<div class="bill-row"><span class="bl">Sales Tax</span><span class="bv">$' + sample.tax.toFixed(2) + '</span></div>' +
+        '<div class="bill-row total"><span class="bl">Total (' + Math.round(sampleKwh).toLocaleString() + ' kWh)</span><span class="bv">$' + sample.total.toFixed(2) + '</span></div>';
 
     const lf1 = res.rows[0].load_factor * 100;
-    document.getElementById('cievNote').innerHTML = res.rows[0].bdaf >= 1
-      ? '<strong>CIEV-1 Rider not available at this volume.</strong> This scenario\'s load factor is ' + lf1.toFixed(1) + '% in Year 1 — above the 15% eligibility ceiling, so the BDAF demand-charge phase-in terminates immediately and full demand charges apply from the start. (Real Atlanta example: 90,320 kWh at 559 kW peak = 21.7% — ineligible from day one.) At this usage level Georgia Power\'s dedicated <strong>TOU-EVC-4</strong> Electric Vehicle Charging schedule is typically the better rate — ask CCS about a tariff comparison for your site.'
-      : '<strong>CIEV-1 Rider Benefit:</strong> The Georgia Power Charge It EV Rider reduces billing demand charges during your ramp-up years. At ' + UTIL_LABELS[u].toLowerCase() + ' utilization (Year 1 load factor ' + lf1.toFixed(1) + '%, under the 15% ceiling), your all-in electricity cost drops from ' + fmtR(res.rows[fullYr].eff_rate) + ' (full rate) to ' + fmtR(res.rows[0].eff_rate) + ' in Year 1 and ' + fmtR(res.rows[1].eff_rate) + ' in Year 2. The rider applies until your site reaches a 15% rolling load factor or you complete Year 4, whichever comes first — as volume grows, expect to graduate off the rider early.';
+    document.getElementById('cievNote').innerHTML = yr1Tou
+      ? '<strong>Modeled on TOU-EVC-4 from Year 1.</strong>' +
+        (adders.gaPlan === 'auto' ? ' This scenario\'s load factor is ' + lf1.toFixed(1) + '% — above the CIEV rider\'s 15% eligibility ceiling — so Auto selected Georgia Power\'s dedicated EV charging schedule instead.' : ' (Selected manually.)') +
+        ' TOU-EVC-4: $152/mo, $5.25/kW, 24.4¢ on-peak (only 2-7pm weekdays Jun-Sep) and 6.1¢ off-peak. All-in cost at this utilization: ' + fmtR(res.rows[0].eff_rate) + ' Year 1. Engine validated against a real July 2026 commercial charging bill (ECCR, franchise fee, and sales tax reproduce to the penny).'
+      : (switchYr
+        ? '<strong>CIEV-1 Rider first, TOU-EVC-4 later.</strong> This scenario starts under the 15% load-factor ceiling (Year 1: ' + lf1.toFixed(1) + '%), so the BDAF phase-in applies (' + fmtR(res.rows[0].eff_rate) + ' Year 1), then the site crosses 15% and the model switches permanently to TOU-EVC-4 in <strong>Year ' + switchYr + '</strong> — operators report this transition works one way only (rider first, TOU later). Confirm sequencing with your Georgia Power rep.'
+        : (res.rows[0].bdaf >= 1
+          ? '<strong>CIEV-1 Rider not available at this volume.</strong> Load factor is ' + lf1.toFixed(1) + '% in Year 1 — above the 15% ceiling — and the PLM/PLL plan is forced, so full demand charges apply from the start. Consider the TOU-EVC-4 option (or Auto) in the Georgia Power Rate Plan selector: it is typically cheaper at this volume.'
+          : '<strong>CIEV-1 Rider Benefit:</strong> The Georgia Power Charge It EV Rider reduces billing demand charges during your ramp-up years. At ' + UTIL_LABELS[u].toLowerCase() + ' utilization (Year 1 load factor ' + lf1.toFixed(1) + '%, under the 15% ceiling), your all-in electricity cost drops from ' + fmtR(res.rows[fullYr].eff_rate) + ' (full rate) to ' + fmtR(res.rows[0].eff_rate) + ' in Year 1 and ' + fmtR(res.rows[1].eff_rate) + ' in Year 2. The rider applies until your site reaches a 15% rolling load factor or you complete Year 4, whichever comes first.'));
   }
 
   const labels = res.rows.map(r => 'Yr ' + r.yr);
@@ -2495,7 +2600,7 @@ function renderUtil(u) {
   });
   const tableRows = res.rows.map((r, i) =>
     '<tr>' +
-      '<td><button class="info-btn yr-info" onmouseenter="showYrTip(this,' + i + ')" onmouseleave="hideYrTip()" onclick="showYrTip(this,' + i + ');event.stopPropagation()">?</button>Yr ' + r.yr + (r.bdaf < 1 ? ' <span class="bdaf-tag">BDAF ' + r.bdaf + '</span>' : '') + '</td>' +
+      '<td><button class="info-btn yr-info" onmouseenter="showYrTip(this,' + i + ')" onmouseleave="hideYrTip()" onclick="showYrTip(this,' + i + ');event.stopPropagation()">?</button>Yr ' + r.yr + (r.bdaf < 1 ? ' <span class="bdaf-tag">BDAF ' + r.bdaf + '</span>' : '') + (r.plan === 'TOU' ? ' <span class="bdaf-tag" style="background:var(--blue-dim);color:var(--blue)">TOU</span>' : '') + '</td>' +
       '<td>' + r.annual_kwh.toLocaleString() + '</td>' +
       '<td>' + r.utilPct.toFixed(0) + '%' + (r.capped ? ' <span class="bdaf-tag">MAX</span>' : '') + '</td>' +
       '<td>' + fmtR(r.eff_rate) + '</td>' +
