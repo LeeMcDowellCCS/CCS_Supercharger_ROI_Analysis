@@ -1107,8 +1107,8 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); min-
         </div>
         <div class="info-popup" id="firstYearInfo">
           <strong>The calendar year your site starts selling electricity.</strong><br>
-          Used to time year-specific costs — most importantly Georgia's motor-fuel excise tax on public EV charging (~$0.028/kWh), currently scheduled for January 1, 2028 under SB 146 (delayed again in the 2026 session). Projection years falling in 2028 or later include it automatically on the Georgia Power side.
-          <span class="why">Default of <strong>2027</strong> reflects a realistic install timeline for V4 equipment ordered now (equipment lead time + utility service work + permitting).</span>
+          Used to time year-dependent modeling — chiefly the fleet charge-speed ramp: average sustained draw per vehicle rises from ~150 kW toward ~240 kW as 800V / 500 kW-class vehicles penetrate the fleet, which raises peak billing demand and the utilization ceiling in later projection years.
+          <span class="why">Default of <strong>2027</strong> reflects a realistic install timeline for V4 equipment ordered now (equipment lead time + utility service work + permitting). Note: Georgia's oft-delayed EV charging excise tax (~$0.028/kWh, SB 146) is not modeled — see the note under the cash flow table.</span>
         </div>
         <select id="firstYear">
           <option value="2026">2026</option>
@@ -1127,7 +1127,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); min-
         <div class="info-popup" id="revTaxInfo">
           <strong>Sales tax comes out of your charging revenue.</strong><br>
           Electricity sold to drivers is a taxable retail sale of tangible personal property (in Georgia: O.C.G.A. § 48-8-30; SB 146 § 46-2-20.1(b) expressly calls it "a sale at retail"). Networks like Tesla post <strong>tax-inclusive</strong> prices and remit the sales tax out of the gross — so a $0.52 posted price at 7% tax nets you about $0.486/kWh. Florida and South Carolina treat charging revenue as taxable retail sales as well.
-          <span class="why">Default withholds the sales tax rate from the active utility panel (Sales Tax %) from all revenue. Switch to gross only if you will collect tax on top of your posted price. Post-2027 Georgia treatment (motor-fuel exemption interplay) is modeled conservatively — sales tax stays applied alongside the excise.</span>
+          <span class="why">Default withholds the sales tax rate from the active utility panel (Sales Tax %) from all revenue. Switch to gross only if you will collect tax on top of your posted price. Sales tax is modeled as applying in all projection years — conservative, since Georgia's future motor-fuel treatment of charging could change the mix.</span>
         </div>
         <select id="revTaxMode">
           <option value="gross" selected>Withheld from posted price (net revenue)</option>
@@ -1234,18 +1234,6 @@ If Georgia Power installs dedicated equipment that serves only your site, they m
 <span class="why">Default of <strong>$0/month</strong> reflects the typical case. Only populate this field if Georgia Power has specifically told you your site will be assessed an Excess Facilities charge.</span>
           </div>
           <input type="number" id="excessFac" value="0" step="5" min="0" />
-        </div>
-        <div class="field">
-          <div class="field-label">
-            GA EV Excise Tax ($/kWh, 2028+)
-            <button class="info-btn" onclick="toggleInfo('gaExciseInfo')">?</button>
-          </div>
-          <div class="info-popup" id="gaExciseInfo">
-            <strong>Georgia's motor-fuel excise tax on public EV charging.</strong><br>
-            Under SB 146, electricity sold at public charging stations is taxed like motor fuel. Implementation has been delayed repeatedly (2025 → 2026 → 2027 → most recently to <strong>January 1, 2028</strong> in the 2026 session). The rate derives from Georgia's per-gallon gasoline excise with one gallon equivalent capped at 11 kWh — roughly $0.028/kWh today, adjusted annually. Applied automatically to projection years falling in 2028 or later (see First Operating Year).
-            <span class="why">Default of <strong>$0.028/kWh</strong> ≈ current gasoline excise ÷ 11 kWh/GGE. Home and non-public charging are not taxed. This is separate from — and in addition to — sales tax.</span>
-          </div>
-          <input type="number" id="gaExcise" value="0.028" step="0.001" min="0" />
         </div>
       </div>
       <div class="source-note">
@@ -2283,7 +2271,6 @@ function getAdders() {
     mffPct: parseFloat(document.getElementById('mffPct').value) || 3.0843,
     taxPct: parseFloat(document.getElementById('taxPct').value) || 6.0,
     excessFac: parseFloat(document.getElementById('excessFac').value) || 0,
-    gaExcise: parseFloat(document.getElementById('gaExcise').value) || 0,
     firstYear: parseInt(document.getElementById('firstYear').value) || 2027,
     gaPlan: document.getElementById('gaPlan').value,
   };
@@ -2353,9 +2340,7 @@ function calcProForma(cfgKey, grossCapex, rebate, dailyKwh, chargePrice, years, 
     const gross_rev = annual_kwh * chargePrice;
     const revenue = gross_rev / (1 + (adders.revTaxPct || 0) / 100); // net of withheld sales tax
     const rev_tax = gross_rev - revenue;
-    // GA motor-fuel excise on public charging (SB 146; delayed again in 2026): calendar 2028+
-    const excise = (!isDuke && (adders.firstYear + yr - 1) >= 2028) ? annual_kwh * adders.gaExcise : 0;
-    const total_cost = annual_elec + tesla_cost + fee_tax + excise;
+    const total_cost = annual_elec + tesla_cost + fee_tax;
     const reimbursement = yr === rebateYear ? rebate : 0; // Prep Credit / rebate arrives after install
     const op_cf = revenue - total_cost;
     const net_cf = op_cf + reimbursement;
@@ -2365,7 +2350,7 @@ function calcProForma(cfgKey, grossCapex, rebate, dailyKwh, chargePrice, years, 
       const prev = cumCF - net_cf;
       payback = yr - 1 + (-prev / net_cf);
     }
-    rows.push({ yr, util: Math.round(util), utilPct, capped, peak_kw, load_factor, plan, annual_kwh: Math.round(annual_kwh), bdaf, eff_rate, monthly_bill, gross_rev, rev_tax: rev_tax + fee_tax, revenue, annual_elec, tesla_cost, excise, total_cost, reimbursement, op_cf, net_cf, cumCF });
+    rows.push({ yr, util: Math.round(util), utilPct, capped, peak_kw, load_factor, plan, annual_kwh: Math.round(annual_kwh), bdaf, eff_rate, monthly_bill, gross_rev, rev_tax: rev_tax + fee_tax, revenue, annual_elec, tesla_cost, total_cost, reimbursement, op_cf, net_cf, cumCF });
   }
 
   const cashFlows = [-grossCapex, ...rows.map(r => r.net_cf)];
@@ -2608,7 +2593,6 @@ function renderUtil(u) {
       '<td class="' + (r.rev_tax > 0 ? 'neg' : '') + '">' + (r.rev_tax > 0 ? fmt$(-r.rev_tax) : '—') + '</td>' +
       '<td class="neg">' + fmt$(-r.annual_elec) + '</td>' +
       '<td class="neg">' + fmt$(-r.tesla_cost) + '</td>' +
-      (isDuke ? '' : '<td class="' + (r.excise > 0 ? 'neg' : '') + '">' + (r.excise > 0 ? fmt$(-r.excise) : '—') + '</td>') +
       '<td class="' + (r.net_cf >= 0 ? 'pos' : 'neg') + '">' + fmt$(r.net_cf) + (r.reimbursement > 0 ? ' <span class="bdaf-tag" style="background:var(--blue-dim);color:var(--blue)">+' + fmt$(r.reimbursement) + ' credit</span>' : '') + '</td>' +
       '<td class="' + (r.cumCF >= 0 ? 'pos' : 'neg') + '">' + fmt$(r.cumCF) + '</td>' +
     '</tr>'
@@ -2616,14 +2600,14 @@ function renderUtil(u) {
   const elecHeader = isDuke ? cfg.short : 'GA Power';
   const footnote = isDuke
     ? '* Duke Commercial Charger Prep Credit of ' + fmt$(adders.creditPerCab) + '/998 kW cabinet × ' + cabinets + ' = ' + fmt$(rebate) + ', reimbursed after installation (modeled as a Year 1 cash inflow, not netted at Year 0); assumes Service Upgrades Required and subject to application approval. All-in Rate includes the customer charge, demand charge, energy charge, fuel &amp; riders, and applicable taxes for ' + cfg.label + ' (' + cfg.schedule.split(' — ')[0] + ', ' + cfg.effDate + ').' + (cfg.provisional ? ' Some values are provisional — see the Advanced panel.' : '')
-    : '* $30,000 Georgia Power Business Rebate, subject to application approval and paid after installation (modeled as a Year 1 cash inflow, not netted at Year 0). All-in Rate includes base charges, fuel recovery, environmental compliance, DSM, franchise fee, excess facilities, and sales tax. GA Excise is Georgia\'s motor-fuel tax on public EV charging (SB 146, delayed to Jan 1, 2028 in the 2026 session) at $' + adders.gaExcise.toFixed(3) + '/kWh (editable in Advanced); it applies to projection years falling in calendar 2028 or later based on the First Operating Year setting.';
+    : '* $30,000 Georgia Power Business Rebate, subject to application approval and paid after installation (modeled as a Year 1 cash inflow, not netted at Year 0). All-in Rate includes base charges, fuel recovery, environmental compliance, DSM, franchise fee, excess facilities, and sales tax. Georgia\'s motor-fuel excise on public EV charging (SB 146, ~$0.028/kWh) is NOT included in this projection: implementation has been delayed year after year (2025 → 2026 → 2027 → 2028) and remains unimplemented. If it eventually takes effect, expect roughly 2.8¢/kWh of additional operating cost from that date forward.';
   const revTaxNote = adders.revTaxPct
     ? ' Revenue is gross driver billings at your posted price; the Sales Tax column is the ' + adders.revTaxPct.toFixed(1) + '% withheld from that tax-inclusive price plus the same rate charged on the Tesla service fee itself (effective fee $' + (0.10 * (1 + adders.revTaxPct / 100)).toFixed(3) + '/kWh) — both remitted by the network from the gross, per actual payout statements. Set Driver Sales Tax Handling to gross to model otherwise.'
     : '';
   const portScaleNote = revTaxNote + ' Annual kWh assumes per-port daily volume scaled by port count (×1.00 at 4 posts, ×0.95 at 6, ×0.90 at 8, ×0.80 at 16) — larger sites split the same local charging demand, so each port sees fewer sessions. Hover the ? on each year for the per-port session breakdown (~' + Math.round(AVG_SESSION_KWH) + ' kWh average session, from real Atlanta site data: 3,118 sessions / 89,010 kWh, July 2026). Util % is the share of each port\'s day occupied (100% ≈ ' + UTIL_100_KWH + ' kWh/day/port, same calibration). The entered growth rate tapers linearly to ~zero by Year 15 — US fast-charging supply has grown ~30%/yr while network utilization stayed flat (Paren, Q1 2026), so new stations erode per-port growth — and volume caps at a 70% annual-average ceiling (overnight hours are near-dead with human drivers). That kWh ceiling rises ~30% by the mid-2030s as fleet charge acceptance climbs toward 500 kW-class hardware — modeled at half the speed gain, since dwell time doesn\'t shrink with the charge curve — and peak billing demand rises with it. On Georgia Power, the CIEV BDAF phase-in applies only while the rolling load factor stays under 15% — busy sites exceed it immediately and pay full demand charges.';
   document.getElementById('tableWrap').innerHTML =
     '<table class="yr-table"><thead><tr>' +
-    '<th>Year</th><th>Annual kWh</th><th>Util %</th><th>All-in Rate</th><th>Revenue</th><th>Sales Tax</th><th>' + elecHeader + '</th><th>Tesla Fee</th>' + (isDuke ? '' : '<th>GA Excise</th>') + '<th>Net CF</th><th>Cumulative</th>' +
+    '<th>Year</th><th>Annual kWh</th><th>Util %</th><th>All-in Rate</th><th>Revenue</th><th>Sales Tax</th><th>' + elecHeader + '</th><th>Tesla Fee</th><th>Net CF</th><th>Cumulative</th>' +
     '</tr></thead><tbody>' + tableRows + '</tbody></table>' +
     '<div style="font-size:10px; color:var(--text4); margin-top:8px;">' + footnote + portScaleNote + '</div>';
 }
