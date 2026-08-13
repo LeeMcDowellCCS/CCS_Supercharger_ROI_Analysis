@@ -1120,7 +1120,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); min-
         </div>
         <div class="info-popup" id="revTaxRateInfo">
           <strong>The sales tax rate carved out of driver payments.</strong><br>
-          Separate from the sales tax on your utility bill. Real July 2026 Tesla payout statements from an Atlanta host show 6% applied against the tax-inclusive posted price (blending slightly lower, ~5.5% of gross, because free and network-internal sessions carry no tax).
+          Separate from the sales tax on your utility bill. Real July 2026 Tesla payout statements from an Atlanta host show 6% applied against the tax-inclusive posted price (blending slightly lower, ~5.5% of gross, because free and network-internal sessions carry no tax). The same rate is also charged on the Tesla service fee itself — making the fee effectively $0.106/kWh — and both withholdings appear together in the Sales Tax column.
           <span class="why">Default of <strong>6%</strong> matches actual Georgia payout statements. Adjust for your county or state if you have a statement showing otherwise.</span>
         </div>
         <input type="number" id="revTaxRate" value="6.0" step="0.1" min="0" max="15" />
@@ -2248,12 +2248,16 @@ function calcProForma(cfgKey, grossCapex, rebate, dailyKwh, chargePrice, years, 
       : calcFullBill(monthly_kwh, peak_kw, bdaf, adders);
     const annual_elec = monthly_bill.total * 12;
     const tesla_cost = annual_kwh * tesla_fee;
+    // Sales tax is also charged on the Tesla service fee itself (statement
+    // shows 6% on the fee — effectively $0.106/kWh). Shown in the Sales Tax
+    // column; the Tesla Fee column stays at the clean $0.10.
+    const fee_tax = tesla_cost * (adders.revTaxPct || 0) / 100;
     const gross_rev = annual_kwh * chargePrice;
     const revenue = gross_rev / (1 + (adders.revTaxPct || 0) / 100); // net of withheld sales tax
     const rev_tax = gross_rev - revenue;
     // GA motor-fuel excise on public charging (SB 146; delayed again in 2026): calendar 2028+
     const excise = (!isDuke && (adders.firstYear + yr - 1) >= 2028) ? annual_kwh * adders.gaExcise : 0;
-    const total_cost = annual_elec + tesla_cost + excise;
+    const total_cost = annual_elec + tesla_cost + fee_tax + excise;
     const reimbursement = yr === rebateYear ? rebate : 0; // Prep Credit / rebate arrives after install
     const op_cf = revenue - total_cost;
     const net_cf = op_cf + reimbursement;
@@ -2263,7 +2267,7 @@ function calcProForma(cfgKey, grossCapex, rebate, dailyKwh, chargePrice, years, 
       const prev = cumCF - net_cf;
       payback = yr - 1 + (-prev / net_cf);
     }
-    rows.push({ yr, util: Math.round(util), utilPct, load_factor, annual_kwh: Math.round(annual_kwh), bdaf, eff_rate, monthly_bill, gross_rev, rev_tax, revenue, annual_elec, tesla_cost, excise, total_cost, reimbursement, op_cf, net_cf, cumCF });
+    rows.push({ yr, util: Math.round(util), utilPct, load_factor, annual_kwh: Math.round(annual_kwh), bdaf, eff_rate, monthly_bill, gross_rev, rev_tax: rev_tax + fee_tax, revenue, annual_elec, tesla_cost, excise, total_cost, reimbursement, op_cf, net_cf, cumCF });
   }
 
   const cashFlows = [-grossCapex, ...rows.map(r => r.net_cf)];
@@ -2480,7 +2484,7 @@ function renderUtil(u) {
     ? '* Duke Commercial Charger Prep Credit of ' + fmt$(adders.creditPerCab) + '/998 kW cabinet × ' + cabinets + ' = ' + fmt$(rebate) + ', reimbursed after installation (modeled as a Year 1 cash inflow, not netted at Year 0); assumes Service Upgrades Required and subject to application approval. All-in Rate includes the customer charge, demand charge, energy charge, fuel &amp; riders, and applicable taxes for ' + cfg.label + ' (' + cfg.schedule.split(' — ')[0] + ', ' + cfg.effDate + ').' + (cfg.provisional ? ' Some values are provisional — see the Advanced panel.' : '')
     : '* $30,000 Georgia Power Business Rebate, subject to application approval and paid after installation (modeled as a Year 1 cash inflow, not netted at Year 0). All-in Rate includes base charges, fuel recovery, environmental compliance, DSM, franchise fee, excess facilities, and sales tax. GA Excise is Georgia\'s motor-fuel tax on public EV charging (SB 146, delayed to Jan 1, 2028 in the 2026 session) at $' + adders.gaExcise.toFixed(3) + '/kWh (editable in Advanced); it applies to projection years falling in calendar 2028 or later based on the First Operating Year setting.';
   const revTaxNote = adders.revTaxPct
-    ? ' Revenue is gross driver billings at your posted price; the Sales Tax column is the ' + adders.revTaxPct.toFixed(1) + '% withheld from that tax-inclusive price — retail EV charging is a taxable sale of electricity (tangible personal property) and the charging network remits the tax from the gross. Set Driver Sales Tax Handling to gross to model otherwise.'
+    ? ' Revenue is gross driver billings at your posted price; the Sales Tax column is the ' + adders.revTaxPct.toFixed(1) + '% withheld from that tax-inclusive price plus the same rate charged on the Tesla service fee itself (effective fee $' + (0.10 * (1 + adders.revTaxPct / 100)).toFixed(3) + '/kWh) — both remitted by the network from the gross, per actual payout statements. Set Driver Sales Tax Handling to gross to model otherwise.'
     : '';
   const portScaleNote = revTaxNote + ' Annual kWh assumes per-port daily volume scaled by port count (×1.00 at 4 posts, ×0.95 at 6, ×0.90 at 8, ×0.80 at 16) — larger sites split the same local charging demand, so each port sees fewer sessions. Hover the ? on each year for the per-port session breakdown (~' + Math.round(AVG_SESSION_KWH) + ' kWh average session, from real Atlanta site data: 3,118 sessions / 89,010 kWh, July 2026). Util % is the share of each port\'s day occupied (100% ≈ ' + UTIL_100_KWH + ' kWh/day/port, same calibration); growth saturates at 85% because stalls empty out overnight. On Georgia Power, the CIEV BDAF phase-in applies only while the rolling load factor stays under 15% — busy sites exceed it immediately and pay full demand charges.';
   document.getElementById('tableWrap').innerHTML =
