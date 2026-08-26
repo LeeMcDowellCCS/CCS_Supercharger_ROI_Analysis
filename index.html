@@ -1094,7 +1094,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); min-
         </div>
         <div class="info-popup" id="growthInfo">
           <strong>Starting growth rate for charging volume — it tapers automatically.</strong><br>
-          EV adoption keeps growing, but charging supply is growing with it (US DC fast ports grew ~30%/yr through 2026 while network utilization stayed flat, per Paren industry data) — new stations split your local demand. So this rate applies early and fades linearly to roughly zero by Year 15, and volume caps at a ~70% annual-average utilization ceiling (stalls empty out overnight with human drivers).
+          EV adoption keeps growing, but charging supply is growing with it (US DC fast ports grew ~30%/yr through 2026 while network utilization stayed flat, per Paren industry data) — new stations split your local demand. So this rate applies early and fades linearly to roughly zero by Year 15, and volume caps at a ~50% annual-average utilization ceiling (the best Tesla-owned metro site observed runs ~47%, and stalls empty out overnight with human drivers).
           <span class="why">Default of <strong>7%</strong> starting rate is moderate for a well-sited host. Use 4-5% to be conservative, 10%+ only for underserved corridors. Autonomous vehicles charging off-peak could someday raise the ceiling — not modeled until real data exists.</span>
         </div>
         <input type="number" id="utilGrowth" value="7" step="0.5" min="0" max="20" />
@@ -1327,7 +1327,7 @@ If Georgia Power installs dedicated equipment that serves only your site, they m
       <button class="util-tab" data-u="high" onclick="switchUtil(this,'high')">High</button>
       <button class="util-tab" data-u="peak" onclick="switchUtil(this,'peak')">Peak</button>
     </div>
-    <div class="util-def"><strong>Utilization Rate</strong> = the share of each port's day occupied by a charging vehicle. 100% ≈ 765 kWh/day/port, calibrated to real Atlanta site data (359 kWh/day/port ≈ 47%). Growth tapers to ~zero by Year 15 (new stations split local demand) and caps at a 70% annual average — overnight hours are near-dead with human drivers; robotaxis charging off-peak could eventually change that. Hover each tab for its rate.</div>
+    <div class="util-def"><strong>Utilization Rate</strong> = the share of each port's day occupied by a charging vehicle. 100% ≈ 1,330 kWh/day/port, calibrated to real Atlanta host-site data (359 kWh/day/port ≈ 27%: ~12.6 sessions/day/port at a ~31-minute average session). Growth tapers to ~zero by Year 15 (new stations split local demand) and caps at a 50% annual average — the best Tesla-owned metro site observed runs ~47%, and overnight hours are near-dead with human drivers; robotaxis charging off-peak could eventually change that. Hover each tab for its rate.</div>
 
     <div class="kpi-grid" id="kpiGrid"></div>
 
@@ -1775,7 +1775,7 @@ function updateUtilTabs() {
     t.innerHTML = UTIL_LABELS[u] + '<span class="tab-pct">' + pct + '%</span>' + (u === recommendedUtil ? '<span class="rec-star">★</span>' : '');
     t.title = UTIL_LABELS[u] + ' scenario: each port occupied ~' + pct + '% of the day (~' +
       Math.round(SITE_UTIL[st][u] * portFactor(selectedConfig)) + ' kWh/day/port in Year 1). ' +
-      'Utilization Rate = share of each port\'s day a vehicle is charging; 100% ≈ 765 kWh/day/port.';
+      'Utilization Rate = share of each port\'s day a vehicle is charging; 100% ≈ ' + UTIL_100_KWH.toLocaleString() + ' kWh/day/port.';
   });
 }
 
@@ -1838,18 +1838,22 @@ let currentResults = null;
 let currentUtil = 'med';
 let utility = 'gapower'; // 'gapower' | 'duke'
 
-// kWh/day/port bands ≈ utilization % × 765 (see UTIL_100_KWH). Rescaled
-// 2026-08-12 so Peak = 52-65% annual average — real anchors: ChargedEV
-// Norcross at 47% (≈ High retail), Tesla's flagship Atlanta corridor site at
-// 65% in its best month (≈ Peak annual). Industry network-wide average is
-// only ~16% (Paren Q1 2026); top urban markets >35%.
+// kWh/day/port bands ≈ utilization % × 1,330 (see UTIL_100_KWH). Recalibrated
+// 2026-08-26 against real anchors: ChargedEV Norcross (host-owned 8-stall)
+// at 27% = 359 kWh/day/port (≈ High retail), Tesla-owned metro Atlanta at
+// ~47% (≈ host ceiling — Tesla-owned sites out-earn host sites ~1.7x in the
+// same trade area via member pricing + Autoroute steering). Tesla find-us
+// busy-times histograms across 19 GA sites (2026-08) back the segment
+// spread: metro retail sites cluster mid-band; corridor sites run weaker
+// than metro except Buc-ee's-class destinations, so highway bands were cut
+// ~20-25%. Industry network-wide average is only ~16% (Paren Q1 2026).
 const SITE_UTIL = {
   retail:  { low: 130, med: 260, high: 360, peak: 460 },
   airport: { low: 170, med: 320, high: 430, peak: 500 },
   hotel:   { low: 110, med: 220, high: 330, peak: 430 },
   office:  { low: 75,  med: 150, high: 250, peak: 350 },
   parking: { low: 100, med: 200, high: 300, peak: 400 },
-  highway: { low: 150, med: 310, high: 420, peak: 490 },
+  highway: { low: 120, med: 240, high: 340, peak: 460 },
 };
 const SITE_LABELS = {
   retail: 'Retail / Shopping Center', airport: 'Airport Adjacent',
@@ -1879,14 +1883,18 @@ function portFactor(key) { return PORT_UTIL_FACTOR[CONFIGS[key].ports]; }
 // (ChargedEV Norcross, July 2026: 3,118 sessions / 89,010 kWh dispensed).
 const AVG_SESSION_KWH = 28.5;
 
-// Utilization calibration from the same site: 359 kWh/day/port ↔ 47%
-// reported utilization → 100% occupancy ≈ 765 kWh/day/port. Utilization is
-// not linear — overnight hours are near-dead with human drivers, so a
-// realistic ANNUAL-average ceiling is ~70% (≈536 kWh/day/port). Autonomous
-// vehicles / robotaxis charging off-peak could eventually lift this toward
-// 85-90%, but that isn't modeled until it shows up in real data.
-const UTIL_100_KWH = 765;
-const UTIL_CAP_KWH = Math.round(UTIL_100_KWH * 0.70); // 536 kWh/day/port
+// Utilization calibration from the same site: 359 kWh/day/port ↔ 27%
+// reported utilization (corrected 2026-08-26 — earlier 47% was misheard) →
+// 100% occupancy ≈ 1,330 kWh/day/port. Cross-checks: 12.6 sessions/day/port
+// (July payout statement) × ~31-min average session = 27% of the day
+// occupied, and 1,330/24h = 55 kW sustained = back-to-back 28.5 kWh
+// sessions. Ceiling: best observed site is Tesla-owned metro Atlanta at
+// ~47% annual-pace; host-owned sites are capped at a 50% annual average
+// (overnight hours are near-dead with human drivers). Robotaxis charging
+// off-peak could eventually lift this, but that isn't modeled until it
+// shows up in real data.
+const UTIL_100_KWH = 1330;
+const UTIL_CAP_KWH = Math.round(UTIL_100_KWH * 0.50); // 665 kWh/day/port
 function utilPctOf(dailyKwhPerPort) { return Math.min(100, dailyKwhPerPort / UTIL_100_KWH * 100); }
 
 // Per-provider lineup: which configs are offered, their default installed
@@ -2296,7 +2304,7 @@ function calcProForma(cfgKey, grossCapex, rebate, dailyKwh, chargePrice, years, 
     // EV adoption keeps growing, but charging supply grows ~30%/yr with it
     // (Paren Q1 2026 — network utilization has been flat-to-declining), so a
     // site's per-port growth erodes as new stations split local demand.
-    // Volume also hard-caps at UTIL_CAP_KWH (~70% annual-average occupancy).
+    // Volume also hard-caps at UTIL_CAP_KWH (~50% annual-average occupancy).
     if (yr > 1) growthMult *= 1 + (utilGrowth / 100) * Math.max(0, (16 - yr) / 15);
     // Fleet charge speeds rise over the projection (fleetPowerRamp): peak
     // billing demand climbs with them, and the kWh ceiling rises too — but
@@ -2577,7 +2585,7 @@ function renderUtil(u) {
       ? 'Per-port volume is scaled ×' + pf.toFixed(2) + ' for ' + (portsN === 8 ? 'an' : 'a') + ' ' + portsN + '-post site: more ports split the same local charging demand, so each port sees fewer sessions than a 4-post site.'
       : '4-post baseline — no port-count utilization discount applied.';
     return '<strong>Year ' + r.yr + ' — Expected Daily Usage Per Port</strong><br>' +
-      '<span class="big">~' + r.util.toLocaleString() + ' kWh/day/port · ' + r.utilPct.toFixed(0) + '% utilization</span> (' + UTIL_LABELS[u] + (r.yr > 1 ? ', tapered growth from ' + utilGrowth + '%/yr' : '') + (r.capped ? ', saturated at 70% ceiling' : '') + ')<br>' +
+      '<span class="big">~' + r.util.toLocaleString() + ' kWh/day/port · ' + r.utilPct.toFixed(0) + '% utilization</span> (' + UTIL_LABELS[u] + (r.yr > 1 ? ', tapered growth from ' + utilGrowth + '%/yr' : '') + (r.capped ? ', saturated at 50% ceiling' : '') + ')<br>' +
       'Avg charge session: ~' + Math.round(AVG_SESSION_KWH) + ' kWh (real Atlanta site data)<br>' +
       '≈ <span class="big">' + sessPort.toFixed(1) + ' sessions/port/day</span><br>' +
       '≈ ' + Math.round(sessSite).toLocaleString() + ' sessions/day site-wide (' + portsN + ' ports · ' + Math.round(sessSite * 365).toLocaleString() + '/yr)' +
@@ -2604,7 +2612,7 @@ function renderUtil(u) {
   const revTaxNote = adders.revTaxPct
     ? ' Revenue is gross driver billings at your posted price; the Sales Tax column is the ' + adders.revTaxPct.toFixed(1) + '% withheld from that tax-inclusive price plus the same rate charged on the Tesla service fee itself (effective fee $' + (0.10 * (1 + adders.revTaxPct / 100)).toFixed(3) + '/kWh) — both remitted by the network from the gross, per actual payout statements. Set Driver Sales Tax Handling to gross to model otherwise.'
     : '';
-  const portScaleNote = revTaxNote + ' Annual kWh assumes per-port daily volume scaled by port count (×1.00 at 4 posts, ×0.95 at 6, ×0.90 at 8, ×0.80 at 16) — larger sites split the same local charging demand, so each port sees fewer sessions. Hover the ? on each year for the per-port session breakdown (~' + Math.round(AVG_SESSION_KWH) + ' kWh average session, from real Atlanta site data: 3,118 sessions / 89,010 kWh, July 2026). Util % is the share of each port\'s day occupied (100% ≈ ' + UTIL_100_KWH + ' kWh/day/port, same calibration). The entered growth rate tapers linearly to ~zero by Year 15 — US fast-charging supply has grown ~30%/yr while network utilization stayed flat (Paren, Q1 2026), so new stations erode per-port growth — and volume caps at a 70% annual-average ceiling (overnight hours are near-dead with human drivers). That kWh ceiling rises ~30% by the mid-2030s as fleet charge acceptance climbs toward 500 kW-class hardware — modeled at half the speed gain, since dwell time doesn\'t shrink with the charge curve — and peak billing demand rises with it. On Georgia Power, the CIEV BDAF phase-in applies only while the rolling load factor stays under 15% — busy sites exceed it immediately and pay full demand charges.';
+  const portScaleNote = revTaxNote + ' Annual kWh assumes per-port daily volume scaled by port count (×1.00 at 4 posts, ×0.95 at 6, ×0.90 at 8, ×0.80 at 16) — larger sites split the same local charging demand, so each port sees fewer sessions. Hover the ? on each year for the per-port session breakdown (~' + Math.round(AVG_SESSION_KWH) + ' kWh average session, from real Atlanta site data: 3,118 sessions / 89,010 kWh, July 2026). Util % is the share of each port\'s day occupied (100% ≈ ' + UTIL_100_KWH.toLocaleString() + ' kWh/day/port ≈ a ~31-minute session starting every half hour around the clock, same calibration — a real host site metered at 359 kWh/day/port ≈ 27%). The entered growth rate tapers linearly to ~zero by Year 15 — US fast-charging supply has grown ~30%/yr while network utilization stayed flat (Paren, Q1 2026), so new stations erode per-port growth — and volume caps at a 50% annual-average ceiling (the best Tesla-owned metro site observed runs ~47%; overnight hours are near-dead with human drivers). That kWh ceiling rises ~30% by the mid-2030s as fleet charge acceptance climbs toward 500 kW-class hardware — modeled at half the speed gain, since dwell time doesn\'t shrink with the charge curve — and peak billing demand rises with it. On Georgia Power, the CIEV BDAF phase-in applies only while the rolling load factor stays under 15% — busy sites exceed it immediately and pay full demand charges.';
   document.getElementById('tableWrap').innerHTML =
     '<table class="yr-table"><thead><tr>' +
     '<th>Year</th><th>Annual kWh</th><th>Util %</th><th>All-in Rate</th><th>Revenue</th><th>Sales Tax</th><th>' + elecHeader + '</th><th>Tesla Fee</th><th>Net CF</th><th>Cumulative</th>' +
