@@ -206,6 +206,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); min-
 .input-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
 .input-grid.three { grid-template-columns: 1fr 1fr 1fr; }
 .input-grid.two-one { grid-template-columns: 2fr 1fr; }
+.input-grid.four { grid-template-columns: 1fr 1fr 1fr 1fr; }
 .span-2 { grid-column: 1 / -1; }
 
 .field { display: flex; flex-direction: column; gap: 8px; position: relative; }
@@ -762,6 +763,11 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); min-
 .yr-table td:first-child { text-align: left; color: var(--text2); }
 .yr-table .neg { color: var(--red); }
 .yr-table .pos { color: var(--green); }
+.mo-bar { display: flex; align-items: center; gap: 14px; margin: 14px 0 10px; font-family: var(--cond); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text3); }
+.mo-bar .field { max-width: 260px; flex: 1; }
+.yr-table.mo-table td { padding: 7px 14px; font-size: 11.5px; }
+.yr-table.mo-table tr.summer td { background: rgba(214,85,85,0.06); }
+.yr-table.mo-table td.mo-name { color: var(--text2); white-space: nowrap; }
 .yr-table .bdaf-tag {
   display: inline-block;
   font-size: 9px;
@@ -803,14 +809,14 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); min-
 }
 
 @media (max-width: 720px) {
-  .input-grid, .input-grid.three, .input-grid.two-one, .config-cards, .kpi-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .input-grid, .input-grid.three, .input-grid.four, .input-grid.two-one, .config-cards, .kpi-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
   .kpi-grid { grid-template-columns: 1fr 1fr; }
   .brand { flex-direction: column; align-items: flex-start; gap: 10px; }
   .brand-contact { text-align: left; }
   .hero h1 { font-size: 32px; }
 }
 @media (max-width: 480px) {
-  .input-grid, .input-grid.three, .input-grid.two-one, .config-cards { grid-template-columns: 1fr; }
+  .input-grid, .input-grid.three, .input-grid.four, .input-grid.two-one, .config-cards { grid-template-columns: 1fr; }
 }
 </style>
 </head>
@@ -853,12 +859,15 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); min-
       <div class="info-popup" id="gaPlanInfo">
         <strong>Which Georgia Power rate should the pro forma use?</strong><br>
         Two paths for a dedicated EV charging site: <strong>PLM/PLL + CIEV-1 rider</strong> (demand charges phased in via BDAF, but the rider terminates once the rolling 12-month load factor exceeds 15%) or the dedicated <strong>TOU-EVC-4</strong> EV charging schedule ($152/mo + $5.25/kW + 24.4¢ on-peak / 6.1¢ off-peak, on-peak only 2-7pm weekdays Jun-Sep). TOU-EVC-4 is typically cheaper than full-rate PLM/PLL at high volume; the CIEV rider is cheaper while it lasts.
-        <span class="why"><strong>Auto (default)</strong> starts on PLM/PLL + CIEV while the load factor stays under 15%, then switches permanently to TOU-EVC-4 — operators report the transition works in that direction only (start on the rider, move to TOU later; not the reverse). Not verified in the published tariff — confirm sequencing with your Georgia Power rep before committing. TOU-EVC-4 engine is validated against a real July 2026 commercial EV charging bill (ECCR, franchise fee, and sales tax lines reproduce to the penny).</span>
+        <span class="why"><strong>Auto (default)</strong> selects RTP-DA whenever the modeled 30-minute peak clears the 250 kW minimum — on Georgia Power's Savannah data it undercuts every conventional schedule, including CIEV Year 1 — and assumes the low baseline set in the Advanced panel. Sites under 250 kW start on PLM/PLL + CIEV while the load factor stays under 15%, then switch permanently to TOU-EVC-4 — operators report that transition works in one direction only (start on the rider, move to TOU later; not the reverse). Not verified in the published tariff — confirm sequencing with your Georgia Power rep before committing. TOU-EVC-4 engine is validated against a real July 2026 commercial EV charging bill (ECCR, franchise fee, and sales tax lines reproduce to the penny).</span>
+        <span class="why"><strong>RTP-DA</strong> (Real Time Pricing, Day Ahead) bills a Standard Bill on a Customer Baseline Load (CBL) at PLM/PLL rates, then every kWh above the CBL at Georgia Power's hourly day-ahead price. With a low CBL nearly all charging load rides the hourly price. Georgia Power (Kevin Deo, Sep 2026) cites an existing ~700 kW Tesla site in Savannah paying ≈$112k/yr (≈$0.103/kWh all-in) on RTP versus ≈$164k/yr on Power and Light, and advises modeling a flat 7.5–8.6¢/kWh average with summer months well above it. Requires a ≥250 kW peak every month and a 5-year term. <strong>TOU-SC MAC</strong> bills 100% of kWh at the RTP-DA hourly price plus a customer-specific fixed Monthly Access Charge with no baseline; available to new load meeting the Territorial Act large-load exception (a 998 kW V4 cabinet qualifies), 3-year term. Both need a Georgia Power quote for the CBL or MAC — set them in the Advanced panel.</span>
       </div>
       <select id="gaPlan" onchange="renderActiveUtil()">
-        <option value="auto" selected>Auto — CIEV-1 rider while eligible, then TOU-EVC-4</option>
+        <option value="auto" selected>Auto — RTP-DA when peak ≥ 250 kW, else CIEV-1 rider then TOU-EVC-4</option>
         <option value="plm">PLM / PLL + CIEV-1 Rider (all years)</option>
         <option value="tou">TOU-EVC-4 dedicated EV schedule (all years)</option>
+        <option value="rtp">RTP-DA — hourly Real Time Pricing on load above a low baseline (5-yr term)</option>
+        <option value="mac">TOU-SC MAC — every kWh at hourly RTP price + fixed Monthly Access Charge (3-yr term)</option>
       </select>
     </div>
     <div class="field duke-state-field" id="dukeStateField">
@@ -1261,8 +1270,58 @@ If Georgia Power installs dedicated equipment that serves only your site, they m
           <input type="number" id="excessFac" value="0" step="5" min="0" />
         </div>
       </div>
+      <div class="input-grid four" style="margin-top:14px;">
+        <div class="field">
+          <div class="field-label">
+            RTP-DA Avg Price ($/kWh)
+            <button class="info-btn" onclick="toggleInfo('rtpPriceInfo')">?</button>
+          </div>
+          <div class="info-popup" id="rtpPriceInfo">
+            <strong>Annual average hourly RTP-DA price applied to load above the CBL (and to all kWh under TOU-SC MAC).</strong><br>
+            Georgia Power posts day-ahead hourly prices by 4 pm for the next day; history is not published.
+            <span class="why">Default <strong>$0.080/kWh</strong> is the midpoint of the 7.5–8.6¢ flat-average guidance from Georgia Power (Kevin Deo, Sep 2026). The Savannah Tesla site Georgia Power cites realizes ≈$0.103/kWh all-in including its Standard Bill, admin charge, franchise fee and tax; this model lands within a cent of that at the default CBL. Replace with 24 months of hourly prices from your rep when you have them.</span>
+          </div>
+          <input type="number" id="rtpPrice" value="0.080" step="0.005" min="0" />
+        </div>
+        <div class="field">
+          <div class="field-label">
+            RTP Summer Premium (Jun–Sep ×)
+            <button class="info-btn" onclick="toggleInfo('rtpSummerInfo')">?</button>
+          </div>
+          <div class="info-popup" id="rtpSummerInfo">
+            <strong>Seasonal shape of the hourly price.</strong><br>
+            Summer afternoons carry Georgia Power's marginal generation and capacity cost, so June–September prices run well above the annual average — the months Georgia Power says cause sticker shock. Winter months are scaled down automatically so the 12-month average still equals the RTP-DA Avg Price.
+            <span class="why">Default <strong>1.35×</strong> (winter ≈0.83×) is an assumption pending Georgia Power's monthly price history. Use the month dropdown under Annual Cash Flow Detail to see the effect.</span>
+          </div>
+          <input type="number" id="rtpSummerMult" value="1.35" step="0.05" min="1" max="3" />
+        </div>
+        <div class="field">
+          <div class="field-label">
+            RTP Baseline / CBL (% of load)
+            <button class="info-btn" onclick="toggleInfo('rtpCblInfo')">?</button>
+          </div>
+          <div class="info-popup" id="rtpCblInfo">
+            <strong>Customer Baseline Load billed at conventional PLM/PLL rates.</strong><br>
+            Only kWh above the CBL ride the hourly price. The tariff's default for new commercial load is 100% of projected load, which makes RTP-DA pointless; Georgia Power can set a low baseline for EV charging sites (the Savannah Tesla site has one).
+            <span class="why">Default <strong>10%</strong> reproduces the Savannah all-in cost cited by Georgia Power. The CBL is negotiated once, cannot be lowered for price response or weather, and only resets after 24 months off RTP — get the offered CBL in writing before committing to the 5-year term.</span>
+          </div>
+          <input type="number" id="rtpCblPct" value="10" step="5" min="0" max="100" />
+        </div>
+        <div class="field">
+          <div class="field-label">
+            TOU-SC Monthly Access Charge ($/mo)
+            <button class="info-btn" onclick="toggleInfo('macInfo')">?</button>
+          </div>
+          <div class="info-popup" id="macInfo">
+            <strong>Fixed monthly charge under the TOU-SC-16 Monthly Access Charge option.</strong><br>
+            Georgia Power computes the MAC from the cost to serve the location; it is uplifted by ECCR, DSM and franchise fee, carries a $155/mo administrative charge, cannot be lowered, and can rise if added investment is needed. All kWh are billed at the RTP-DA hourly price (no separate fuel rider).
+            <span class="why">Default <strong>$1,500/mo</strong> is a placeholder that puts TOU-SC MAC roughly level with RTP-DA at a Norcross-scale site — Georgia Power indicated it "could be even lower." Replace with the quoted MAC. Eligibility: new load meeting the Territorial Act large-load exception (≥900 kW connected; a 998 kW V4 cabinet qualifies), 3-year term.</span>
+          </div>
+          <input type="number" id="macFee" value="1500" step="100" min="0" />
+        </div>
+      </div>
       <div class="source-note">
-        <strong>Methodology validation:</strong> Rate structure, tier breakpoints, and adder percentages validated directly against Georgia Power's official Power and Light Calculator at georgiapower.com. Both PLM (Medium, 30-499 kW demand) and PLL (Large, 500+ kW demand) rate structures are implemented. Tariff selection is automatic based on actual peak demand (pre-BDAF). Results from this tool match the GA Power calculator to the penny across scenarios from 50 kW / 5,000 kWh up to 998 kW / 500,000 kWh. The <strong>TOU-EVC-4</strong> dedicated EV charging schedule ($152/mo · $5.25/kW · 24.4008¢ on-peak 2-7pm weekdays Jun-Sep · 6.1002¢ off-peak) is also implemented and validated against a real July 2026 commercial EV charging bill — ECCR, franchise fee, and sales tax lines reproduce to the penny. The Rate Plan selector picks between PLM/PLL + CIEV and TOU-EVC-4 (Auto rides the rider until the 15% load-factor ceiling, then switches one-way to TOU — operator-reported sequencing; confirm with Georgia Power).<br><br>
+        <strong>Methodology validation:</strong> Rate structure, tier breakpoints, and adder percentages validated directly against Georgia Power's official Power and Light Calculator at georgiapower.com. Both PLM (Medium, 30-499 kW demand) and PLL (Large, 500+ kW demand) rate structures are implemented. Tariff selection is automatic based on actual peak demand (pre-BDAF). Results from this tool match the GA Power calculator to the penny across scenarios from 50 kW / 5,000 kWh up to 998 kW / 500,000 kWh. The <strong>TOU-EVC-4</strong> dedicated EV charging schedule ($152/mo · $5.25/kW · 24.4008¢ on-peak 2-7pm weekdays Jun-Sep · 6.1002¢ off-peak) is also implemented and validated against a real July 2026 commercial EV charging bill — ECCR, franchise fee, and sales tax lines reproduce to the penny. The Rate Plan selector offers PLM/PLL + CIEV, TOU-EVC-4, RTP-DA and TOU-SC MAC; Auto selects RTP-DA whenever the modeled peak clears 250 kW and otherwise rides the CIEV rider until the 15% load-factor ceiling, then switches one-way to TOU (operator-reported sequencing; confirm with Georgia Power). <strong>RTP-DA</strong> and <strong>TOU-SC MAC</strong> follow the published RTP-DA-13 and TOU-SC-16 schedules using a flat annual hourly price with a Jun–Sep premium, calibrated to the Savannah Tesla site Georgia Power cites (≈$0.103/kWh all-in on RTP, Sep 2026); Georgia Power does not publish hourly price history, so treat both as indicative until your rep supplies 24 months of prices and a CBL or MAC quote.<br><br>
 <strong>Peak demand modeling:</strong> Tesla Model Y is used as the 2026 reference vehicle (peak ~250 kW brief, average ~150 kW sustained during the 30-minute billing demand window). As 800V / 500 kW-class vehicles penetrate the fleet, the sustained average is modeled rising ~6%/yr to a ~240 kW plateau by the mid-2030s — 500 kW itself is a fleeting peak (a Cybertruck's full V4 session still averages ~150 kW). Cabinet demand scales with how many cars charge simultaneously during peak hour, capped at 998 kW per cabinet (1,996 kW for 2-cabinet sites). Rising fleet speeds also lift the utilization kWh ceiling, at half strength — charge time shrinks but dwell time doesn't.
       </div>
      </div>
@@ -1384,7 +1443,7 @@ If Georgia Power installs dedicated equipment that serves only your site, they m
     <div class="footer-left">
       <div class="footer-brand">Car Charger Specialists, LLC &nbsp;/&nbsp; EN217495</div>
       <div class="footer-disclaimer" id="footerDisc">
-This pro forma uses Georgia Power PLM and PLL tariff rates (tariff automatically selected based on peak demand: PLM for 30-499 kW, PLL for 500+ kW) and the CIEV-1 Charge It Electric Vehicle Charger Rider Schedule. Rate structure and adder percentages are validated directly against Georgia Power's official Power and Light Calculator. Electricity cost estimates incorporate the CIEV Billing Demand Adjustment Factor (BDAF) applied to billing demand for Years 1-4 (0.20 / 0.40 / 0.60 / 0.80 respectively), transitioning to full rate in Year 5 or when the rolling 12-month load factor reaches 15%, whichever comes first. Peak billing demand is modeled using Tesla Model Y as the 2026 reference (150 kW avg during 30-min billing window, rising ~6%/yr toward ~240 kW as 800V/500 kW-class vehicles penetrate the fleet) with concurrency scaling by site utilization. Fuel Cost Recovery is adjusted quarterly by Georgia Power and may increase or decrease over time. Georgia Power Make Ready program coverage of up to $300,000 per job and the $30,000 Business Rebate are subject to application approval and not guaranteed. Tesla Services Fee of $0.10/kWh is applied to all energy throughput. Excess Facilities charges are customer-specific and apply only when GA Power's revenue ratio calculation triggers them. This tool does not constitute a contract, guarantee, or formal proposal. © 2026 Car Charger Specialists, LLC &nbsp;/&nbsp; 404-520-7349 &nbsp;/&nbsp; commercial@carchargerspecialists.com
+This pro forma uses Georgia Power PLM and PLL tariff rates (tariff automatically selected based on peak demand: PLM for 30-499 kW, PLL for 500+ kW) and the CIEV-1 Charge It Electric Vehicle Charger Rider Schedule. Rate structure and adder percentages are validated directly against Georgia Power's official Power and Light Calculator. Electricity cost estimates incorporate the CIEV Billing Demand Adjustment Factor (BDAF) applied to billing demand for Years 1-4 (0.20 / 0.40 / 0.60 / 0.80 respectively), transitioning to full rate in Year 5 or when the rolling 12-month load factor reaches 15%, whichever comes first. By default (Auto) a site whose modeled peak reaches 250 kW is billed on RTP-DA; the RTP-DA and TOU-SC MAC rate plans apply a flat annual hourly price with a summer premium (per Georgia Power guidance, Sep 2026) and assume a negotiated Customer Baseline Load or Monthly Access Charge; hourly prices are not published and those projections are indicative only. Peak billing demand is modeled using Tesla Model Y as the 2026 reference (150 kW avg during 30-min billing window, rising ~6%/yr toward ~240 kW as 800V/500 kW-class vehicles penetrate the fleet) with concurrency scaling by site utilization. Fuel Cost Recovery is adjusted quarterly by Georgia Power and may increase or decrease over time. Georgia Power Make Ready program coverage of up to $300,000 per job and the $30,000 Business Rebate are subject to application approval and not guaranteed. Tesla Services Fee of $0.10/kWh is applied to all energy throughput. Excess Facilities charges are customer-specific and apply only when GA Power's revenue ratio calculation triggers them. This tool does not constitute a contract, guarantee, or formal proposal. © 2026 Car Charger Specialists, LLC &nbsp;/&nbsp; 404-520-7349 &nbsp;/&nbsp; commercial@carchargerspecialists.com
       </div>
     </div>
   </div>
@@ -1862,6 +1921,7 @@ let cfChart, rcChart;
 let currentResults = null;
 let currentUtil = 'med';
 let utility = 'gapower'; // 'gapower' | 'duke'
+let lastRes = null, lastElecHeader = 'GA Power', selectedMonthYear = 0; // month-by-month detail state
 
 // kWh/day/port bands ≈ utilization % × 1,330 (see UTIL_100_KWH). Recalibrated
 // 2026-08-26 against real anchors: ChargedEV Norcross (host-owned 8-stall)
@@ -2288,6 +2348,59 @@ function calcFullBill(monthly_kwh, peak_kw, bdaf, adders) {
   return { base, fuel, env, dsm, mff, excessFac: adders.excessFac, subtotal, tax, total: subtotal + tax };
 }
 
+// ============== RTP-DA & TOU-SC MAC: HOURLY-PRICE SCHEDULES ==============
+// RTP-DA-13 (Real Time Pricing – Day Ahead): Standard Bill on the Customer
+// Baseline Load (CBL) at PLM/PLL + FCR + ECCR + DSM, plus Σ hourly price ×
+// (load − CBL) for every kWh above the CBL. Admin charge $175/mo (<1,000 kW)
+// or $155/mo (≥1,000 kW); franchise fee and sales tax on the whole bill.
+// Eligibility: 30-min peak ≥ 250 kW every month; 5-year term.
+// TOU-SC-16 Monthly Access Charge option: 100% of kWh at the RTP-DA hourly
+// price (no fuel rider) plus a customer-specific fixed MAC (uplifted by ECCR,
+// DSM, franchise fee) and a $155/mo admin charge; 3-year term; new load meeting
+// the Territorial Act large-load exception (a 998 kW cabinet qualifies).
+// Georgia Power does not publish hourly price history. The engine uses a flat
+// annual average with a Jun–Sep multiplier (winter scaled to preserve the
+// average), per Georgia Power's own guidance (Kevin Deo, Sep 2026: model
+// 7.5–8.6¢ flat; an existing ~700 kW Tesla site in Savannah with a low CBL pays
+// ≈$0.103/kWh all-in on RTP vs ≈$0.191/kWh on Power and Light).
+const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const DAYS_IN_MONTH = [31,28,31,30,31,30,31,31,30,31,30,31];
+function isSummer(m) { return m >= 5 && m <= 8; } // Jun–Sep, 0-based
+function rtpMonthMult(m, summerMult) {
+  const s = Math.max(1, summerMult || 1);
+  return isSummer(m) ? s : (12 - 4 * s) / 8;
+}
+function rtpAdmin(peak_kw) { return peak_kw >= 1000 ? 155 : 175; }
+
+function calcRtpDaBill(monthly_kwh, peak_kw, price, adders) {
+  const cbl = Math.min(1, Math.max(0, (adders.rtpCblPct || 0) / 100));
+  const cbl_kwh = monthly_kwh * cbl, cbl_kw = peak_kw * cbl;
+  const sbBase = calcBaseCharges(cbl_kwh, cbl_kw, 1.0);
+  const sbFuel = cbl_kwh * adders.fuelRate;
+  const env = sbBase * (adders.envPct / 100);
+  const dsm = sbBase * (adders.dsmPct / 100);
+  const standard = sbBase + sbFuel + env + dsm;
+  const incrKwh = monthly_kwh - cbl_kwh;
+  const incr = incrKwh * price;
+  const admin = rtpAdmin(peak_kw);
+  const mff = (standard + incr + admin) * (adders.mffPct / 100);
+  const subtotal = standard + incr + admin + mff + adders.excessFac;
+  const tax = subtotal * (adders.taxPct / 100);
+  return { base: sbBase, fuel: sbFuel, env, dsm, standard, cblKwh: cbl_kwh, cblKw: cbl_kw, incrKwh, price, incr, admin, mff, excessFac: adders.excessFac, subtotal, tax, total: subtotal + tax, eligible: peak_kw >= 250 };
+}
+
+function calcMacBill(monthly_kwh, peak_kw, price, adders) {
+  const mac = Math.max(0, adders.macFee || 0);
+  const env = mac * (adders.envPct / 100);
+  const dsm = mac * (adders.dsmPct / 100);
+  const energy = monthly_kwh * price;
+  const admin = 155;
+  const mff = (mac + env + dsm + energy + admin) * (adders.mffPct / 100);
+  const subtotal = mac + env + dsm + energy + admin + mff + adders.excessFac;
+  const tax = subtotal * (adders.taxPct / 100);
+  return { base: mac, mac, env, dsm, energy, price, admin, mff, excessFac: adders.excessFac, subtotal, tax, total: subtotal + tax };
+}
+
 function getBDAF(yr) {
   if (yr === 1) return 0.20;
   if (yr === 2) return 0.40;
@@ -2305,6 +2418,10 @@ function getAdders() {
     taxPct: parseFloat(document.getElementById('taxPct').value) || 6.0,
     excessFac: parseFloat(document.getElementById('excessFac').value) || 0,
     firstYear: parseInt(document.getElementById('firstYear').value) || 2027,
+    rtpPrice: parseFloat(document.getElementById('rtpPrice').value) || 0.08,
+    rtpSummerMult: parseFloat(document.getElementById('rtpSummerMult').value) || 1.35,
+    rtpCblPct: (() => { const v = parseFloat(document.getElementById('rtpCblPct').value); return isNaN(v) ? 10 : Math.min(100, Math.max(0, v)); })(),
+    macFee: (() => { const v = parseFloat(document.getElementById('macFee').value); return isNaN(v) ? 1500 : Math.max(0, v); })(),
     gaPlan: document.getElementById('gaPlan').value,
   };
 }
@@ -2324,6 +2441,7 @@ function calcProForma(cfgKey, grossCapex, rebate, dailyKwh, chargePrice, years, 
   const effDailyKwh = dailyKwh * portFactor(cfgKey); // port-count utilization discount
   let growthMult = 1;
   let onTou = false; // sticky: once on TOU-EVC-4, stays (one-way transition)
+  let onRtp = false; // sticky: Auto commits to RTP-DA (5-year term) once the peak clears 250 kW
   for (let yr = 1; yr <= years; yr++) {
     // Utilization growth tapers linearly to ~zero across the 15-year horizon:
     // EV adoption keeps growing, but charging supply grows ~30%/yr with it
@@ -2349,22 +2467,41 @@ function calcProForma(cfgKey, grossCapex, rebate, dailyKwh, chargePrice, years, 
     const load_factor = monthly_kwh / (peak_kw * 730);
     // GA rate plan: 'auto' rides the CIEV rider while the load factor stays
     // under 15%, then switches permanently to TOU-EVC-4 (one-way, per
-    // operator-reported GA Power practice). 'plm'/'tou' force one plan.
+    // operator-reported GA Power practice). 'plm'/'tou'/'rtp'/'mac' force one plan.
     if (!isDuke && (adders.gaPlan === 'tou' || (adders.gaPlan === 'auto' && load_factor > 0.15))) onTou = true;
-    const plan = isDuke ? 'duke' : (onTou ? 'TOU' : 'PLM');
-    const bdaf = (isDuke || plan === 'TOU') ? 1.00 : (load_factor > 0.15 ? 1.00 : getBDAF(yr));
-    let monthly_bill, annual_elec;
-    if (isDuke) {
-      monthly_bill = calcDukeBill(monthly_kwh, peak_kw, dukeCfg, adders);
-      annual_elec = monthly_bill.total * 12;
-    } else if (plan === 'TOU') {
-      const tou = calcTouEvcAnnual(monthly_kwh, peak_kw, adders);
-      monthly_bill = tou.summer; // sample month shown = summer (worst case)
-      annual_elec = tou.annual;
-    } else {
-      monthly_bill = calcFullBill(monthly_kwh, peak_kw, bdaf, adders);
-      annual_elec = monthly_bill.total * 12;
+    // RTP-DA requires a ≥250 kW peak every month; below that the site is billed on PLM/PLL (+CIEV).
+    const rtpIneligible = !isDuke && adders.gaPlan === 'rtp' && peak_kw < 250;
+    // Auto prefers RTP-DA (Georgia Power's Savannah data: cheapest schedule for a
+    // charging site with a low CBL) as soon as the site clears the 250 kW minimum.
+    if (!isDuke && adders.gaPlan === 'auto' && peak_kw >= 250) onRtp = true;
+    const plan = isDuke ? 'duke'
+      : adders.gaPlan === 'rtp' ? (rtpIneligible ? 'PLM' : 'RTP')
+      : adders.gaPlan === 'mac' ? 'MAC'
+      : (adders.gaPlan === 'auto' && onRtp) ? 'RTP'
+      : (onTou ? 'TOU' : 'PLM');
+    const bdaf = (isDuke || plan !== 'PLM') ? 1.00 : (load_factor > 0.15 ? 1.00 : getBDAF(yr));
+    // Month-by-month bills on actual day counts (the twelve months sum to the 365-day year).
+    const months = [];
+    let annual_elec = 0;
+    for (let m = 0; m < 12; m++) {
+      const kwh_m = util * ports * DAYS_IN_MONTH[m];
+      const hourly = adders.rtpPrice * rtpMonthMult(m, adders.rtpSummerMult);
+      let bill;
+      if (isDuke) bill = calcDukeBill(kwh_m, peak_kw, dukeCfg, adders);
+      else if (plan === 'TOU') bill = calcTouEvcBill(kwh_m, peak_kw, isSummer(m) ? TOU_SUMMER_ONPEAK_SHARE : 0, adders);
+      else if (plan === 'RTP') bill = calcRtpDaBill(kwh_m, peak_kw, hourly, adders);
+      else if (plan === 'MAC') bill = calcMacBill(kwh_m, peak_kw, hourly, adders);
+      else bill = calcFullBill(kwh_m, peak_kw, bdaf, adders);
+      const gross_m = kwh_m * chargePrice;
+      const rev_m = gross_m / (1 + (adders.revTaxPct || 0) / 100);
+      const tesla_m = kwh_m * tesla_fee;
+      const feeTax_m = tesla_m * (adders.revTaxPct || 0) / 100;
+      months.push({ m, name: MONTH_NAMES[m], days: DAYS_IN_MONTH[m], kwh: kwh_m, summer: isSummer(m), plan, bill, elec: bill.total,
+        rate: bill.total / kwh_m, gross_rev: gross_m, revenue: rev_m, rev_tax: gross_m - rev_m + feeTax_m, tesla_cost: tesla_m,
+        op_cf: rev_m - bill.total - tesla_m - feeTax_m });
+      annual_elec += bill.total;
     }
+    const monthly_bill = months[6].bill; // sample month in the bill preview = July (peak summer month)
     const tesla_cost = annual_kwh * tesla_fee;
     // Sales tax is also charged on the Tesla service fee itself (statement
     // shows 6% on the fee — effectively $0.106/kWh). Shown in the Sales Tax
@@ -2383,7 +2520,7 @@ function calcProForma(cfgKey, grossCapex, rebate, dailyKwh, chargePrice, years, 
       const prev = cumCF - net_cf;
       payback = yr - 1 + (-prev / net_cf);
     }
-    rows.push({ yr, util: Math.round(util), utilPct, capped, peak_kw, load_factor, plan, annual_kwh: Math.round(annual_kwh), bdaf, eff_rate, monthly_bill, gross_rev, rev_tax: rev_tax + fee_tax, revenue, annual_elec, tesla_cost, total_cost, reimbursement, op_cf, net_cf, cumCF });
+    rows.push({ yr, util: Math.round(util), utilPct, capped, peak_kw, load_factor, plan, rtpIneligible, months, annual_kwh: Math.round(annual_kwh), bdaf, eff_rate, monthly_bill, gross_rev, rev_tax: rev_tax + fee_tax, revenue, annual_elec, tesla_cost, total_cost, reimbursement, op_cf, net_cf, cumCF });
   }
 
   const cashFlows = [-grossCapex, ...rows.map(r => r.net_cf)];
@@ -2450,6 +2587,7 @@ function renderUtil(u) {
   updateUtilTabs();
   const isDuke = utility === 'duke';
   const cfg = isDuke ? currentDuke() : null;
+  const startYear = parseInt(document.getElementById('firstYear').value) || 2027;
   const dailyKwh = utilMap[u];
   const res = calcProForma(selectedConfig, capex, rebate, dailyKwh, chargePrice, years, discRate, utilGrowth, adders, u);
 
@@ -2471,7 +2609,7 @@ function renderUtil(u) {
 
   const fullYr = Math.min(4, res.rows.length - 1);
   const sample = res.rows[0].monthly_bill;
-  const sampleKwh = res.rows[0].annual_kwh / 365 * 30;
+  const sampleKwh = res.rows[0].months[6].kwh; // July (31 days), matches monthly_bill
 
   if (isDuke) {
     const demandDetail = '$' + cfg.demandRate.toFixed(2) + '/kW' + (cfg.freeKw ? ' (first ' + cfg.freeKw + ' free)' : '') + (cfg.demandAdder ? ' + $' + cfg.demandAdder.toFixed(2) + ' rider' : '');
@@ -2505,6 +2643,41 @@ function renderUtil(u) {
       '<div class="tariff-row"><span class="tl">Tesla Services Fee</span><span class="tv">$0.10/kWh (all years)</span></div>' +
       '<div class="tariff-row"><span class="tl">Charging price to drivers</span><span class="tv">$' + chargePrice.toFixed(2) + '/kWh</span></div>';
 
+    const yr1Plan = res.rows[0].plan;
+    if (yr1Plan === 'RTP' || yr1Plan === 'MAC') {
+      const s = sample; // July bill
+      const isRtp = yr1Plan === 'RTP';
+      const win = rtpMonthMult(0, adders.rtpSummerMult), sum = rtpMonthMult(6, adders.rtpSummerMult);
+      document.getElementById('tariffBox').innerHTML =
+        '<h3>Georgia Power Tariff Summary / ' + (isRtp ? 'RTP-DA-13 Real Time Pricing (Day Ahead)' : 'TOU-SC-16 Monthly Access Charge Option') + '</h3>' +
+        '<div class="tariff-row"><span class="tl">Structure</span><span class="tv">' + (isRtp ? 'Standard Bill on ' + adders.rtpCblPct + '% CBL at ' + (res.peak_kw * adders.rtpCblPct / 100 >= 500 ? 'PLL' : 'PLM') + ' + hourly price × load above CBL' : 'Fixed MAC $' + adders.macFee.toLocaleString() + '/mo + 100% of kWh at hourly RTP price') + '</span></div>' +
+        peakRow +
+        '<div class="tariff-row"><span class="tl">Hourly price, annual average</span><span class="tv">' + (adders.rtpPrice * 100).toFixed(2) + '¢/kWh</span></div>' +
+        '<div class="tariff-row"><span class="tl">Summer (Jun–Sep) / winter price</span><span class="tv">' + (adders.rtpPrice * sum * 100).toFixed(2) + '¢ / ' + (adders.rtpPrice * win * 100).toFixed(2) + '¢ per kWh</span></div>' +
+        '<div class="tariff-row"><span class="tl">Administrative charge</span><span class="tv">$' + (isRtp ? rtpAdmin(res.peak_kw) : 155) + '/mo</span></div>' +
+        '<div class="tariff-row"><span class="tl">Contract term</span><span class="tv">' + (isRtp ? '5 years · CBL fixed for the term' : '3 years · MAC cannot be lowered') + '</span></div>' +
+        '<div class="tariff-row"><span class="tl">Year 1 all-in rate</span><span class="tv">' + fmtR(res.rows[0].eff_rate) + '</span></div>' +
+        '<div class="tariff-row"><span class="tl">Year ' + Math.min(5, years) + '+ all-in rate</span><span class="tv">' + fmtR(res.rows[fullYr].eff_rate) + '</span></div>' +
+        commonRows;
+      document.getElementById('billPreview').innerHTML =
+        '<h3>Sample Monthly Bill / Year 1 July (peak summer month), ' + UTIL_LABELS[u] + ' Utilization</h3>' +
+        (isRtp
+          ? '<div class="bill-row"><span class="bl">Standard Bill on CBL (' + Math.round(s.cblKwh).toLocaleString() + ' kWh · ' + Math.round(s.cblKw) + ' kW, incl. fuel/ECCR/DSM)</span><span class="bv">$' + s.standard.toFixed(2) + '</span></div>' +
+            '<div class="bill-row"><span class="bl">Hourly-priced energy (' + Math.round(s.incrKwh).toLocaleString() + ' kWh @ ' + (s.price * 100).toFixed(2) + '¢)</span><span class="bv">$' + s.incr.toFixed(2) + '</span></div>'
+          : '<div class="bill-row"><span class="bl">Monthly Access Charge</span><span class="bv">$' + s.mac.toFixed(2) + '</span></div>' +
+            '<div class="bill-row"><span class="bl">Hourly-priced energy (' + Math.round(sampleKwh).toLocaleString() + ' kWh @ ' + (s.price * 100).toFixed(2) + '¢)</span><span class="bv">$' + s.energy.toFixed(2) + '</span></div>' +
+            '<div class="bill-row"><span class="bl">Environmental Compliance + DSM (on MAC)</span><span class="bv">$' + (s.env + s.dsm).toFixed(2) + '</span></div>') +
+        '<div class="bill-row"><span class="bl">Administrative charge</span><span class="bv">$' + s.admin.toFixed(2) + '</span></div>' +
+        '<div class="bill-row"><span class="bl">Municipal Franchise Fee</span><span class="bv">$' + s.mff.toFixed(2) + '</span></div>' +
+        (s.excessFac ? '<div class="bill-row"><span class="bl">Excess Facilities Charge</span><span class="bv">$' + s.excessFac.toFixed(2) + '</span></div>' : '') +
+        '<div class="bill-row"><span class="bl">Sales Tax</span><span class="bv">$' + s.tax.toFixed(2) + '</span></div>' +
+        '<div class="bill-row total"><span class="bl">Total (' + Math.round(sampleKwh).toLocaleString() + ' kWh)</span><span class="bv">$' + s.total.toFixed(2) + '</span></div>' +
+        '<div style="font-size:10px;color:var(--text4);margin-top:8px;">Winter months bill at a ' + (adders.rtpPrice * win * 100).toFixed(1) + '¢/kWh hourly price vs ' + (adders.rtpPrice * sum * 100).toFixed(1) + '¢ in Jun–Sep. Use the month dropdown under Annual Cash Flow Detail to see every month.</div>';
+      document.getElementById('cievNote').innerHTML = isRtp
+        ? '<strong>Modeled on RTP-DA from Year 1.</strong>' + (adders.gaPlan === 'auto' ? ' Auto selected it: the modeled peak of ' + res.peak_kw.toLocaleString() + ' kW clears the 250 kW minimum, and on Georgia Power\'s own Savannah data RTP beats every conventional schedule.' : ' (Selected manually.)') + ' Every kWh above the ' + adders.rtpCblPct + '% baseline is billed at the hourly day-ahead price (flat ' + (adders.rtpPrice * 100).toFixed(1) + '¢ average, ' + adders.rtpSummerMult.toFixed(2) + '× in Jun–Sep). Year 1 all-in: ' + fmtR(res.rows[0].eff_rate) + '. Georgia Power cites an existing ~700 kW Tesla site in Savannah on RTP at ≈$0.103/kWh all-in vs ≈$0.191 on Power and Light (Kevin Deo, Sep 2026). The tariff\'s default CBL for new commercial load is 100% — this projection assumes Georgia Power grants the low baseline shown; get it in writing before signing the 5-year term. Hourly price history is not published; the summer premium is an assumption.' +
+          (res.rows.some(r => r.rtpIneligible) ? ' <strong>Note:</strong> in years where modeled peak demand is under the 250 kW RTP minimum, the site is billed on PLM/PLL (+CIEV) instead.' : '')
+        : '<strong>Modeled on TOU-SC Monthly Access Charge from Year 1.</strong> 100% of kWh at the hourly RTP-DA price (flat ' + (adders.rtpPrice * 100).toFixed(1) + '¢ average, ' + adders.rtpSummerMult.toFixed(2) + '× in Jun–Sep) plus a fixed $' + adders.macFee.toLocaleString() + '/mo access charge and $155/mo admin. Year 1 all-in: ' + fmtR(res.rows[0].eff_rate) + '. The MAC here is a placeholder — Georgia Power sets it from cost to serve and it cannot be lowered once set. Eligibility rides on the Territorial Act large-load exception (≥900 kW connected load; a 998 kW V4 cabinet qualifies). 3-year term.';
+    } else {
     document.getElementById('tariffBox').innerHTML = yr1Tou
       ? '<h3>Georgia Power Tariff Summary / TOU-EVC-4 Dedicated EV Schedule</h3>' +
         '<div class="tariff-row"><span class="tl">Rate schedule</span><span class="tv">Time Of Use — Electric Vehicle Charging (TOU-EVC-4)</span></div>' +
@@ -2550,7 +2723,10 @@ function renderUtil(u) {
         '<div class="bill-row total"><span class="bl">Total (' + Math.round(sampleKwh).toLocaleString() + ' kWh)</span><span class="bv">$' + sample.total.toFixed(2) + '</span></div>';
 
     const lf1 = res.rows[0].load_factor * 100;
-    document.getElementById('cievNote').innerHTML = yr1Tou
+    const autoNoRtp = adders.gaPlan === 'auto' && res.peak_kw < 250
+      ? '<strong>Auto skipped RTP-DA:</strong> this scenario\'s modeled peak is ' + res.peak_kw.toLocaleString() + ' kW, under the 250 kW minimum Georgia Power requires every month. '
+      : '';
+    document.getElementById('cievNote').innerHTML = autoNoRtp + (yr1Tou
       ? '<strong>Modeled on TOU-EVC-4 from Year 1.</strong>' +
         (adders.gaPlan === 'auto' ? ' This scenario\'s load factor is ' + lf1.toFixed(1) + '% — above the CIEV rider\'s 15% eligibility ceiling — so Auto selected Georgia Power\'s dedicated EV charging schedule instead.' : ' (Selected manually.)') +
         ' TOU-EVC-4: $152/mo, $5.25/kW, 24.4¢ on-peak (only 2-7pm weekdays Jun-Sep) and 6.1¢ off-peak. All-in cost at this utilization: ' + fmtR(res.rows[0].eff_rate) + ' Year 1. Engine validated against a real July 2026 commercial charging bill (ECCR, franchise fee, and sales tax reproduce to the penny).'
@@ -2558,7 +2734,8 @@ function renderUtil(u) {
         ? '<strong>CIEV-1 Rider first, TOU-EVC-4 later.</strong> This scenario starts under the 15% load-factor ceiling (Year 1: ' + lf1.toFixed(1) + '%), so the BDAF phase-in applies (' + fmtR(res.rows[0].eff_rate) + ' Year 1), then the site crosses 15% and the model switches permanently to TOU-EVC-4 in <strong>Year ' + switchYr + '</strong> — operators report this transition works one way only (rider first, TOU later). Confirm sequencing with your Georgia Power rep.'
         : (res.rows[0].bdaf >= 1
           ? '<strong>CIEV-1 Rider not available at this volume.</strong> Load factor is ' + lf1.toFixed(1) + '% in Year 1 — above the 15% ceiling — and the PLM/PLL plan is forced, so full demand charges apply from the start. Consider the TOU-EVC-4 option (or Auto) in the Georgia Power Rate Plan selector: it is typically cheaper at this volume.'
-          : '<strong>CIEV-1 Rider Benefit:</strong> The Georgia Power Charge It EV Rider reduces billing demand charges during your ramp-up years. At ' + UTIL_LABELS[u].toLowerCase() + ' utilization (Year 1 load factor ' + lf1.toFixed(1) + '%, under the 15% ceiling), your all-in electricity cost drops from ' + fmtR(res.rows[fullYr].eff_rate) + ' (full rate) to ' + fmtR(res.rows[0].eff_rate) + ' in Year 1 and ' + fmtR(res.rows[1].eff_rate) + ' in Year 2. The rider applies until your site reaches a 15% rolling load factor or you complete Year 4, whichever comes first.'));
+          : '<strong>CIEV-1 Rider Benefit:</strong> The Georgia Power Charge It EV Rider reduces billing demand charges during your ramp-up years. At ' + UTIL_LABELS[u].toLowerCase() + ' utilization (Year 1 load factor ' + lf1.toFixed(1) + '%, under the 15% ceiling), your all-in electricity cost drops from ' + fmtR(res.rows[fullYr].eff_rate) + ' (full rate) to ' + fmtR(res.rows[0].eff_rate) + ' in Year 1 and ' + fmtR(res.rows[1].eff_rate) + ' in Year 2. The rider applies until your site reaches a 15% rolling load factor or you complete Year 4, whichever comes first.')));
+    }
   }
 
   const labels = res.rows.map(r => 'Yr ' + r.yr);
@@ -2618,7 +2795,7 @@ function renderUtil(u) {
   });
   const tableRows = res.rows.map((r, i) =>
     '<tr>' +
-      '<td><button class="info-btn yr-info" onmouseenter="showYrTip(this,' + i + ')" onmouseleave="hideYrTip()" onclick="showYrTip(this,' + i + ');event.stopPropagation()">?</button>Yr ' + r.yr + (r.bdaf < 1 ? ' <span class="bdaf-tag">BDAF ' + r.bdaf + '</span>' : '') + (r.plan === 'TOU' ? ' <span class="bdaf-tag" style="background:var(--blue-dim);color:var(--blue)">TOU</span>' : '') + '</td>' +
+      '<td><button class="info-btn yr-info" onmouseenter="showYrTip(this,' + i + ')" onmouseleave="hideYrTip()" onclick="showYrTip(this,' + i + ');event.stopPropagation()">?</button>Yr ' + r.yr + (r.bdaf < 1 ? ' <span class="bdaf-tag">BDAF ' + r.bdaf + '</span>' : '') + (r.plan === 'TOU' ? ' <span class="bdaf-tag" style="background:var(--blue-dim);color:var(--blue)">TOU</span>' : r.plan === 'RTP' ? ' <span class="bdaf-tag" style="background:var(--blue-dim);color:var(--blue)">RTP-DA</span>' : r.plan === 'MAC' ? ' <span class="bdaf-tag" style="background:var(--blue-dim);color:var(--blue)">TOU-SC MAC</span>' : (r.rtpIneligible ? ' <span class="bdaf-tag">RTP n/a &lt;250 kW</span>' : '')) + '</td>' +
       '<td>' + r.annual_kwh.toLocaleString() + '</td>' +
       '<td>' + r.utilPct.toFixed(0) + '%' + (r.capped ? ' <span class="bdaf-tag">MAX</span>' : '') + '</td>' +
       '<td>' + fmtR(r.eff_rate) + '</td>' +
@@ -2638,11 +2815,54 @@ function renderUtil(u) {
     ? ' Revenue is gross driver billings at your posted price; the Sales Tax column is the ' + adders.revTaxPct.toFixed(1) + '% withheld from that tax-inclusive price plus the same rate charged on the Tesla service fee itself (effective fee $' + (0.10 * (1 + adders.revTaxPct / 100)).toFixed(3) + '/kWh) — both remitted by the network from the gross, per actual payout statements. Set Driver Sales Tax Handling to gross to model otherwise.'
     : '';
   const portScaleNote = revTaxNote + ' Annual kWh assumes per-port daily volume scaled by port count (×1.00 at 4 posts, ×0.95 at 6, ×0.90 at 8, ×0.80 at 16) — larger sites split the same local charging demand, so each port sees fewer sessions. Hover the ? on each year for the per-port session breakdown (~' + Math.round(AVG_SESSION_KWH) + ' kWh average session, from real Atlanta site data: 3,118 sessions / 89,010 kWh, July 2026). Util % is the share of each port\'s day occupied (100% ≈ ' + UTIL_100_KWH.toLocaleString() + ' kWh/day/port ≈ a ~31-minute session starting every half hour around the clock, same calibration — a real host site metered at 359 kWh/day/port ≈ 27%). The entered growth rate tapers linearly to ~zero by Year 15 — US fast-charging supply has grown ~30%/yr while network utilization stayed flat (Paren, Q1 2026), so new stations erode per-port growth — and volume caps at a 50% annual-average ceiling (the best Tesla-owned metro site observed runs ~47%; overnight hours are near-dead with human drivers). That kWh ceiling rises ~30% by the mid-2030s as fleet charge acceptance climbs toward 500 kW-class hardware — modeled at half the speed gain, since dwell time doesn\'t shrink with the charge curve — and peak billing demand rises with it. On Georgia Power, the CIEV BDAF phase-in applies only while the rolling load factor stays under 15% — busy sites exceed it immediately and pay full demand charges.';
+  lastRes = res; lastElecHeader = elecHeader;
+  if (selectedMonthYear >= res.rows.length) selectedMonthYear = 0;
+  const moOptions = res.rows.map(r => '<option value="' + (r.yr - 1) + '"' + (r.yr - 1 === selectedMonthYear ? ' selected' : '') + '>Year ' + r.yr + ' (' + (startYear + r.yr - 1) + ')</option>').join('');
   document.getElementById('tableWrap').innerHTML =
     '<table class="yr-table"><thead><tr>' +
     '<th>Year</th><th>Annual kWh</th><th>Util %</th><th>All-in Rate</th><th>Revenue</th><th>Sales Tax</th><th>' + elecHeader + '</th><th>Tesla Fee</th><th>Net CF</th><th>Cumulative</th>' +
     '</tr></thead><tbody>' + tableRows + '</tbody></table>' +
+    '<div class="mo-bar"><span>Month-by-month detail</span><div class="field"><select id="moSel" onchange="renderMonths(parseInt(this.value))"><option value="-1"' + (selectedMonthYear < 0 ? ' selected' : '') + '>Hidden</option>' + moOptions + '</select></div></div>' +
+    '<div id="moWrap"></div>' +
     '<div style="font-size:10px; color:var(--text4); margin-top:8px;">' + footnote + portScaleNote + '</div>';
+  renderMonths(selectedMonthYear);
+}
+
+// Month-by-month rows for one projection year (dropdown under Annual Cash Flow Detail)
+function renderMonths(i) {
+  selectedMonthYear = i;
+  const wrap = document.getElementById('moWrap');
+  if (!wrap || !lastRes) return;
+  if (i < 0 || !lastRes.rows[i]) { wrap.innerHTML = ''; return; }
+  const r = lastRes.rows[i];
+  const startYear = parseInt(document.getElementById('firstYear').value) || 2027;
+  const planLabel = { PLM: 'PLM/PLL' + (r.bdaf < 1 ? ' + CIEV BDAF ' + r.bdaf.toFixed(2) : ''), TOU: 'TOU-EVC-4', RTP: 'RTP-DA', MAC: 'TOU-SC MAC', duke: lastElecHeader }[r.plan] || r.plan;
+  const rows = r.months.map(mo => {
+    const b = mo.bill;
+    const detail = r.plan === 'RTP' ? (b.price * 100).toFixed(1) + '¢ hourly · CBL bill $' + Math.round(b.standard).toLocaleString()
+      : r.plan === 'MAC' ? (b.price * 100).toFixed(1) + '¢ hourly · MAC $' + Math.round(b.mac).toLocaleString()
+      : r.plan === 'TOU' ? (mo.summer ? Math.round(b.onKwh).toLocaleString() + ' kWh on-peak @ 24.4¢' : 'all off-peak @ 6.1¢')
+      : r.plan === 'duke' ? 'demand $' + Math.round(b.demand).toLocaleString()
+      : (r.bdaf < 1 ? 'BDAF ' + r.bdaf.toFixed(2) + ' · ' : '') + 'hours-use blocks';
+    return '<tr' + (mo.summer ? ' class="summer"' : '') + '><td class="mo-name">' + mo.name + ' ' + (startYear + r.yr - 1) + (mo.summer ? ' <span class="bdaf-tag" style="background:rgba(214,85,85,0.15);color:var(--red)">SUMMER</span>' : '') + '</td>' +
+      '<td>' + Math.round(mo.kwh).toLocaleString() + '</td>' +
+      '<td>' + fmtR(mo.rate) + '</td>' +
+      '<td style="color:var(--text3)">' + detail + '</td>' +
+      '<td class="pos">' + fmt$(mo.gross_rev) + '</td>' +
+      '<td class="' + (mo.rev_tax > 0 ? 'neg' : '') + '">' + (mo.rev_tax > 0 ? fmt$(-mo.rev_tax) : '—') + '</td>' +
+      '<td class="neg">' + fmt$(-mo.elec) + '</td>' +
+      '<td class="neg">' + fmt$(-mo.tesla_cost) + '</td>' +
+      '<td class="' + (mo.op_cf >= 0 ? 'pos' : 'neg') + '">' + fmt$(mo.op_cf) + '</td></tr>';
+  }).join('');
+  const tot = r.months.reduce((a, mo) => ({ kwh: a.kwh + mo.kwh, elec: a.elec + mo.elec, gross: a.gross + mo.gross_rev, tax: a.tax + mo.rev_tax, tesla: a.tesla + mo.tesla_cost, op: a.op + mo.op_cf }), { kwh: 0, elec: 0, gross: 0, tax: 0, tesla: 0, op: 0 });
+  const summerElec = r.months.filter(m => m.summer).reduce((a, m) => a + m.elec, 0) / 4;
+  const winterElec = r.months.filter(m => !m.summer).reduce((a, m) => a + m.elec, 0) / 8;
+  wrap.innerHTML =
+    '<table class="yr-table mo-table"><thead><tr><th>Year ' + r.yr + ' · ' + planLabel + '</th><th>kWh</th><th>All-in Rate</th><th>Bill detail</th><th>Revenue</th><th>Sales Tax</th><th>' + lastElecHeader + '</th><th>Tesla Fee</th><th>Op. CF</th></tr></thead><tbody>' +
+    rows +
+    '<tr><td class="mo-name"><strong>Year ' + r.yr + ' total</strong></td><td>' + Math.round(tot.kwh).toLocaleString() + '</td><td>' + fmtR(tot.elec / tot.kwh) + '</td><td></td><td class="pos">' + fmt$(tot.gross) + '</td><td class="neg">' + (tot.tax > 0 ? fmt$(-tot.tax) : '—') + '</td><td class="neg">' + fmt$(-tot.elec) + '</td><td class="neg">' + fmt$(-tot.tesla) + '</td><td class="' + (tot.op >= 0 ? 'pos' : 'neg') + '">' + fmt$(tot.op) + '</td></tr>' +
+    '</tbody></table>' +
+    '<div style="font-size:10px;color:var(--text4);margin:-6px 0 10px;">Average summer month (Jun–Sep) electric bill ' + fmt$(summerElec) + ' vs winter month ' + fmt$(winterElec) + (winterElec > 0 ? ' (' + ((summerElec / winterElec - 1) * 100).toFixed(0) + '% higher)' : '') + '. Months use actual day counts and sum to the annual row above; Op. CF excludes the one-time rebate/credit.' + ((r.plan === 'RTP' || r.plan === 'MAC') ? ' Hourly price = flat annual average × the Jun–Sep multiplier from the Advanced panel. Georgia Power warns most customers get sticker shock in summer — this is what it looks like month by month.' : '') + '</div>';
 }
 </script>
 </body>
