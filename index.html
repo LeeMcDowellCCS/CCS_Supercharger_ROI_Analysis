@@ -860,7 +860,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); min-
         <strong>Which Georgia Power rate should the pro forma use?</strong><br>
         Two paths for a dedicated EV charging site: <strong>PLM/PLL + CIEV-1 rider</strong> (demand charges phased in via BDAF, but the rider terminates once the rolling 12-month load factor exceeds 15%) or the dedicated <strong>TOU-EVC-4</strong> EV charging schedule ($152/mo + $5.25/kW + 24.4¢ on-peak / 6.1¢ off-peak, on-peak only 2-7pm weekdays Jun-Sep). TOU-EVC-4 is typically cheaper than full-rate PLM/PLL at high volume; the CIEV rider is cheaper while it lasts.
         <span class="why"><strong>Auto (default)</strong> selects RTP-DA whenever the modeled 30-minute peak clears the 250 kW minimum — at the modeled hourly price it undercuts every conventional schedule, including CIEV Year 1 — and assumes the low baseline set in the Advanced panel. Sites under 250 kW start on PLM/PLL + CIEV while the load factor stays under 15%, then switch permanently to TOU-EVC-4 — operators report that transition works in one direction only (start on the rider, move to TOU later; not the reverse). Not verified in the published tariff — confirm sequencing with your Georgia Power rep before committing. TOU-EVC-4 engine is validated against a real July 2026 commercial EV charging bill (ECCR, franchise fee, and sales tax lines reproduce to the penny).</span>
-        <span class="why"><strong>RTP-DA</strong> (Real Time Pricing, Day Ahead) bills a Standard Bill on a Customer Baseline Load (CBL) at PLM/PLL rates, then every kWh above the CBL at Georgia Power's hourly day-ahead price. With a low CBL nearly all charging load rides the hourly price. Georgia Power's guidance (Sep 2026) is to model a flat 7.5–8.6¢/kWh average with summer months well above it. Requires a ≥250 kW peak every month and a 5-year term. <strong>TOU-SC MAC</strong> bills 100% of kWh at the RTP-DA hourly price plus a customer-specific fixed Monthly Access Charge with no baseline; available to new load meeting the Territorial Act large-load exception (a 998 kW V4 cabinet qualifies), 3-year term. Both need a Georgia Power quote for the CBL or MAC — set them in the Advanced panel.</span>
+        <span class="why"><strong>RTP-DA</strong> (Real Time Pricing, Day Ahead) bills a Standard Bill on a Customer Baseline Load (CBL) at PLM/PLL rates, then every kWh above the CBL at Georgia Power's hourly day-ahead price. With a low CBL nearly all charging load rides the hourly price. Georgia Power's guidance (Sep 2026) is to model a flat 7.5–8.6¢/kWh average with summer months well above it; the model adds a summer weekday 2-7pm price premium (Advanced panel) weighted by the site type's hourly load shape, so afternoon-heavy sites pay a few percent more than the flat average. Requires a ≥250 kW peak every month and a 5-year term. <strong>TOU-SC MAC</strong> bills 100% of kWh at the RTP-DA hourly price plus a customer-specific fixed Monthly Access Charge with no baseline; available to new load meeting the Territorial Act large-load exception (a 998 kW V4 cabinet qualifies), 3-year term. Both need a Georgia Power quote for the CBL or MAC — set them in the Advanced panel.</span>
       </div>
       <select id="gaPlan" onchange="renderActiveUtil()">
         <option value="auto" selected>Auto — RTP-DA when peak ≥ 250 kW, else CIEV-1 rider then TOU-EVC-4</option>
@@ -1291,7 +1291,7 @@ If Georgia Power installs dedicated equipment that serves only your site, they m
           <div class="info-popup" id="rtpSummerInfo">
             <strong>Seasonal shape of the hourly price.</strong><br>
             Summer afternoons carry Georgia Power's marginal generation and capacity cost, so June–September prices run well above the annual average — the months Georgia Power says cause sticker shock. Winter months are scaled down automatically so the 12-month average still equals the RTP-DA Avg Price.
-            <span class="why">Default <strong>1.35×</strong> (winter ≈0.83×) is an assumption pending Georgia Power's monthly price history. Use the month dropdown under Annual Cash Flow Detail to see the effect.</span>
+            <span class="why">Default <strong>1.35×</strong> (winter ≈0.83×) is an assumption pending Georgia Power's monthly price history. Use the month dropdown under Annual Cash Flow Detail to see the effect. The companion RTP Peak-Window Premium field shapes the price within summer days (weekday 2-7pm) and is weighted by the site type's load shape.</span>
           </div>
           <input type="number" id="rtpSummerMult" value="1.35" step="0.05" min="1" max="3" />
         </div>
@@ -1333,9 +1333,21 @@ If Georgia Power installs dedicated equipment that serves only your site, they m
           </div>
           <input type="number" id="touOnShare" placeholder="auto (site type)" step="0.5" min="0" max="100" />
         </div>
+        <div class="field">
+          <div class="field-label">
+            RTP Peak-Window Premium (2-7pm ×)
+            <button class="info-btn" onclick="toggleInfo('rtpPeakMultInfo')">?</button>
+          </div>
+          <div class="info-popup" id="rtpPeakMultInfo">
+            <strong>Intra-day shape of the RTP-DA hourly price in summer.</strong><br>
+            Jun–Sep weekday 2-7pm hours are priced at this multiple of the day's average and every other hour is scaled down so the month still averages the RTP-DA price above. What a site actually pays is load-weighted by its Site Type's hourly shape (Tesla Busy Times, 90 Georgia sites): a flat load pays the average, an afternoon-heavy retail or highway site pays a few percent more. Applies to RTP-DA load above the CBL and to every kWh under TOU-SC MAC; winter days are modeled flat.
+            <span class="why">Default <strong>2.0×</strong> (≈21.6¢ in the summer window vs ≈8.9¢ off-window at the default price) is an assumption pending Georgia Power's hourly price history. Set <strong>1.0</strong> to return to a flat intra-day price.</span>
+          </div>
+          <input type="number" id="rtpPeakMult" value="2.0" step="0.1" min="1" max="5" />
+        </div>
       </div>
       <div class="source-note">
-        <strong>Methodology validation:</strong> Rate structure, tier breakpoints, and adder percentages validated directly against Georgia Power's official Power and Light Calculator at georgiapower.com. Both PLM (Medium, 30-499 kW demand) and PLL (Large, 500+ kW demand) rate structures are implemented. Tariff selection is automatic based on actual peak demand (pre-BDAF). Results from this tool match the GA Power calculator to the penny across scenarios from 50 kW / 5,000 kWh up to 998 kW / 500,000 kWh. The <strong>TOU-EVC-4</strong> dedicated EV charging schedule ($152/mo · $5.25/kW · 24.4008¢ on-peak 2-7pm weekdays Jun-Sep · 6.1002¢ off-peak) is also implemented and validated against a real July 2026 commercial EV charging bill — ECCR, franchise fee, and sales tax lines reproduce to the penny. Its on-peak kWh share comes from the selected site type's hourly load shape, built from Tesla's published Busy Times profiles for all 90 open Georgia Supercharger sites (Sep 2026; retail 20.1%, highway 22.3%, parking / urban 19.3%); the real bill's 22.2% can be entered as an override in the Advanced panel. The Rate Plan selector offers PLM/PLL + CIEV, TOU-EVC-4, RTP-DA and TOU-SC MAC; Auto selects RTP-DA whenever the modeled peak clears 250 kW and otherwise rides the CIEV rider until the 15% load-factor ceiling, then switches one-way to TOU (operator-reported sequencing; confirm with Georgia Power). <strong>RTP-DA</strong> and <strong>TOU-SC MAC</strong> follow the published RTP-DA-13 and TOU-SC-16 schedules using a flat annual hourly price with a Jun–Sep premium, set from Georgia Power's Sep 2026 guidance to model a 7.5–8.6¢ flat average; Georgia Power does not publish hourly price history, so treat both as indicative until your rep supplies 24 months of prices and a CBL or MAC quote.<br><br>
+        <strong>Methodology validation:</strong> Rate structure, tier breakpoints, and adder percentages validated directly against Georgia Power's official Power and Light Calculator at georgiapower.com. Both PLM (Medium, 30-499 kW demand) and PLL (Large, 500+ kW demand) rate structures are implemented. Tariff selection is automatic based on actual peak demand (pre-BDAF). Results from this tool match the GA Power calculator to the penny across scenarios from 50 kW / 5,000 kWh up to 998 kW / 500,000 kWh. The <strong>TOU-EVC-4</strong> dedicated EV charging schedule ($152/mo · $5.25/kW · 24.4008¢ on-peak 2-7pm weekdays Jun-Sep · 6.1002¢ off-peak) is also implemented and validated against a real July 2026 commercial EV charging bill — ECCR, franchise fee, and sales tax lines reproduce to the penny. Its on-peak kWh share comes from the selected site type's hourly load shape, built from Tesla's published Busy Times profiles for all 90 open Georgia Supercharger sites (Sep 2026; retail 20.1%, highway 22.3%, parking / urban 19.3%); the real bill's 22.2% can be entered as an override in the Advanced panel. The Rate Plan selector offers PLM/PLL + CIEV, TOU-EVC-4, RTP-DA and TOU-SC MAC; Auto selects RTP-DA whenever the modeled peak clears 250 kW and otherwise rides the CIEV rider until the 15% load-factor ceiling, then switches one-way to TOU (operator-reported sequencing; confirm with Georgia Power). <strong>RTP-DA</strong> and <strong>TOU-SC MAC</strong> follow the published RTP-DA-13 and TOU-SC-16 schedules using a flat annual hourly price with a Jun–Sep premium, set from Georgia Power's Sep 2026 guidance to model a 7.5–8.6¢ flat average, plus a summer weekday 2-7pm intra-day premium (default 2.0× the day average, other hours scaled to preserve it) weighted by the site type's Tesla Busy Times load shape; Georgia Power does not publish hourly price history, so treat both as indicative until your rep supplies 24 months of prices and a CBL or MAC quote.<br><br>
 <strong>Peak demand modeling:</strong> Tesla Model Y is used as the 2026 reference vehicle (peak ~250 kW brief, average ~150 kW sustained during the 30-minute billing demand window). As 800V / 500 kW-class vehicles penetrate the fleet, the sustained average is modeled rising ~6%/yr to a ~240 kW plateau by the mid-2030s — 500 kW itself is a fleeting peak (a Cybertruck's full V4 session still averages ~150 kW). Cabinet demand scales with how many cars charge simultaneously during peak hour, capped at 998 kW per cabinet (1,996 kW for 2-cabinet sites). Rising fleet speeds also lift the utilization kWh ceiling, at half strength — charge time shrinks but dwell time doesn't.
       </div>
      </div>
@@ -1457,7 +1469,7 @@ If Georgia Power installs dedicated equipment that serves only your site, they m
     <div class="footer-left">
       <div class="footer-brand">Car Charger Specialists, LLC &nbsp;/&nbsp; EN217495</div>
       <div class="footer-disclaimer" id="footerDisc">
-This pro forma uses Georgia Power PLM and PLL tariff rates (tariff automatically selected based on peak demand: PLM for 30-499 kW, PLL for 500+ kW) and the CIEV-1 Charge It Electric Vehicle Charger Rider Schedule. Rate structure and adder percentages are validated directly against Georgia Power's official Power and Light Calculator. Electricity cost estimates incorporate the CIEV Billing Demand Adjustment Factor (BDAF) applied to billing demand for Years 1-4 (0.20 / 0.40 / 0.60 / 0.80 respectively), transitioning to full rate in Year 5 or when the rolling 12-month load factor reaches 15%, whichever comes first. By default (Auto) a site whose modeled peak reaches 250 kW is billed on RTP-DA; the RTP-DA and TOU-SC MAC rate plans apply a flat annual hourly price with a summer premium (per Georgia Power guidance, Sep 2026) and assume a negotiated Customer Baseline Load or Monthly Access Charge; hourly prices are not published and those projections are indicative only. The TOU-EVC-4 on-peak kWh share is derived from the selected site type's hourly load shape (Tesla published Busy Times for all 90 open Georgia Supercharger sites, Sep 2026) unless overridden. Peak billing demand is modeled using Tesla Model Y as the 2026 reference (150 kW avg during 30-min billing window, rising ~6%/yr toward ~240 kW as 800V/500 kW-class vehicles penetrate the fleet) with concurrency scaling by site utilization. Fuel Cost Recovery is adjusted quarterly by Georgia Power and may increase or decrease over time. Georgia Power Make Ready program coverage of up to $300,000 per job and the $30,000 Business Rebate are subject to application approval and not guaranteed. Tesla Services Fee of $0.10/kWh is applied to all energy throughput. Excess Facilities charges are customer-specific and apply only when GA Power's revenue ratio calculation triggers them. This tool does not constitute a contract, guarantee, or formal proposal. © 2026 Car Charger Specialists, LLC &nbsp;/&nbsp; 404-520-7349 &nbsp;/&nbsp; commercial@carchargerspecialists.com
+This pro forma uses Georgia Power PLM and PLL tariff rates (tariff automatically selected based on peak demand: PLM for 30-499 kW, PLL for 500+ kW) and the CIEV-1 Charge It Electric Vehicle Charger Rider Schedule. Rate structure and adder percentages are validated directly against Georgia Power's official Power and Light Calculator. Electricity cost estimates incorporate the CIEV Billing Demand Adjustment Factor (BDAF) applied to billing demand for Years 1-4 (0.20 / 0.40 / 0.60 / 0.80 respectively), transitioning to full rate in Year 5 or when the rolling 12-month load factor reaches 15%, whichever comes first. By default (Auto) a site whose modeled peak reaches 250 kW is billed on RTP-DA; the RTP-DA and TOU-SC MAC rate plans apply a flat annual hourly price with a summer premium (per Georgia Power guidance, Sep 2026) and a summer weekday-afternoon intra-day premium weighted by the site type's load shape, and assume a negotiated Customer Baseline Load or Monthly Access Charge; hourly prices are not published and those projections are indicative only. The TOU-EVC-4 on-peak kWh share is derived from the selected site type's hourly load shape (Tesla published Busy Times for all 90 open Georgia Supercharger sites, Sep 2026) unless overridden. Peak billing demand is modeled using Tesla Model Y as the 2026 reference (150 kW avg during 30-min billing window, rising ~6%/yr toward ~240 kW as 800V/500 kW-class vehicles penetrate the fleet) with concurrency scaling by site utilization. Fuel Cost Recovery is adjusted quarterly by Georgia Power and may increase or decrease over time. Georgia Power Make Ready program coverage of up to $300,000 per job and the $30,000 Business Rebate are subject to application approval and not guaranteed. Tesla Services Fee of $0.10/kWh is applied to all energy throughput. Excess Facilities charges are customer-specific and apply only when GA Power's revenue ratio calculation triggers them. This tool does not constitute a contract, guarantee, or formal proposal. © 2026 Car Charger Specialists, LLC &nbsp;/&nbsp; 404-520-7349 &nbsp;/&nbsp; commercial@carchargerspecialists.com
       </div>
     </div>
   </div>
@@ -2427,10 +2439,24 @@ function calcFullBill(monthly_kwh, peak_kw, bdaf, adders) {
 // Georgia Power does not publish hourly price history. The engine uses a flat
 // annual average with a Jun–Sep multiplier (winter scaled to preserve the
 // average), per Georgia Power's own guidance (Sep 2026: model a 7.5–8.6¢
-// flat average).
+// flat average). Within summer months a weekday 2-7pm premium is applied
+// and load-weighted by the site type's hourly shape (see rtpShapeMult).
 const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const DAYS_IN_MONTH = [31,28,31,30,31,30,31,31,30,31,30,31];
 function isSummer(m) { return m >= 5 && m <= 8; } // Jun–Sep, 0-based
+// Intra-day shape of the RTP-DA price in summer months: weekday 2-7pm hours
+// are priced at peakMult × the day's time-average and every other hour is
+// scaled down so the month's time-weighted average still equals the monthly
+// price. A site then pays the load-weighted price — its share of kWh inside
+// the window (SITE_SHAPE.onPeak, from Tesla Busy Times) at the premium and
+// the rest at the discounted level. A flat load pays exactly the average;
+// afternoon-heavy sites pay more. peakMult 1.0 disables the effect.
+function rtpShapeMult(shape, peakMult) {
+  const pm = Math.max(1, peakMult || 1);
+  const fTime = (21.74 * 5) / (30.44 * 24); // weekday 2-7pm hours as a share of the month's hours ≈ 14.9%
+  const lo = Math.max(0, (1 - fTime * pm) / (1 - fTime));
+  return shape.onPeak * pm + (1 - shape.onPeak) * lo;
+}
 function rtpMonthMult(m, summerMult) {
   const s = Math.max(1, summerMult || 1);
   return isSummer(m) ? s : (12 - 4 * s) / 8;
@@ -2490,6 +2516,8 @@ function getAdders() {
     gaPlan: document.getElementById('gaPlan').value,
     // TOU-EVC-4 summer on-peak kWh share override (%); 0 = use the site-type load shape
     touOnShare: (() => { const v = parseFloat(document.getElementById('touOnShare').value); return isNaN(v) ? 0 : Math.min(100, Math.max(0, v)); })(),
+    // RTP-DA summer weekday 2-7pm price vs the day's average (×); 1.0 = flat intra-day price
+    rtpPeakMult: (() => { const v = parseFloat(document.getElementById('rtpPeakMult').value); return isNaN(v) ? 2.0 : Math.min(5, Math.max(1, v)); })(),
   };
 }
 
@@ -2512,6 +2540,9 @@ function calcProForma(cfgKey, grossCapex, rebate, dailyKwh, chargePrice, years, 
   // TOU-EVC-4 on-peak kWh share for summer months comes from the site type's
   // hourly load shape (SITE_SHAPE) unless overridden in the Advanced panel.
   const touOnShare = isDuke ? 0 : touOnPeakShare(adders);
+  // RTP-DA / TOU-SC MAC: summer months carry a weekday 2-7pm price premium;
+  // the site type's load shape sets the load-weighted multiplier it pays.
+  const rtpShape = isDuke ? 1 : rtpShapeMult(siteShape(), adders.rtpPeakMult);
   for (let yr = 1; yr <= years; yr++) {
     // Utilization growth tapers linearly to ~zero across the 15-year horizon:
     // EV adoption keeps growing, but charging supply grows ~30%/yr with it
@@ -2555,7 +2586,7 @@ function calcProForma(cfgKey, grossCapex, rebate, dailyKwh, chargePrice, years, 
     let annual_elec = 0;
     for (let m = 0; m < 12; m++) {
       const kwh_m = util * ports * DAYS_IN_MONTH[m];
-      const hourly = adders.rtpPrice * rtpMonthMult(m, adders.rtpSummerMult);
+      const hourly = adders.rtpPrice * rtpMonthMult(m, adders.rtpSummerMult) * (isSummer(m) ? rtpShape : 1);
       let bill;
       if (isDuke) bill = calcDukeBill(kwh_m, peak_kw, dukeCfg, adders);
       else if (plan === 'TOU') bill = calcTouEvcBill(kwh_m, peak_kw, isSummer(m) ? touOnShare : 0, adders);
@@ -2598,7 +2629,7 @@ function calcProForma(cfgKey, grossCapex, rebate, dailyKwh, chargePrice, years, 
   const avgRev = rows.reduce((s, r) => s + r.revenue, 0) / years;
   const firstTou = rows.find(r => r.plan === 'TOU');
   return { rows, npv, payback, avgRev, peak_kw: rows[0].peak_kw, peak_kw_end: rows[rows.length - 1].peak_kw, firstTouYear: firstTou ? firstTou.yr : null, grossCapex, rebate,
-    touOnShare, touOnShareOverride: !isDuke && adders.touOnShare > 0 };
+    touOnShare, touOnShareOverride: !isDuke && adders.touOnShare > 0, rtpShapeMult: rtpShape };
 }
 
 function fmt$(v) {
@@ -2736,6 +2767,7 @@ function renderUtil(u) {
         peakRow +
         '<div class="tariff-row"><span class="tl">Hourly price, annual average</span><span class="tv">' + (adders.rtpPrice * 100).toFixed(2) + '¢/kWh</span></div>' +
         '<div class="tariff-row"><span class="tl">Summer (Jun–Sep) / winter price</span><span class="tv">' + (adders.rtpPrice * sum * 100).toFixed(2) + '¢ / ' + (adders.rtpPrice * win * 100).toFixed(2) + '¢ per kWh</span></div>' +
+        '<div class="tariff-row"><span class="tl">Summer intra-day premium (site load shape)</span><span class="tv">' + (res.rtpShapeMult >= 1 ? '+' : '') + ((res.rtpShapeMult - 1) * 100).toFixed(1) + '% → ' + (adders.rtpPrice * sum * res.rtpShapeMult * 100).toFixed(2) + '¢ realized Jun–Sep &nbsp;<span style="font-size:10px;color:var(--text4)">(2-7pm weekdays at ' + adders.rtpPeakMult.toFixed(1) + '× the day average · ' + SITE_LABELS[stKey].toLowerCase() + ' shape, ' + touSharePct + ' of kWh in window)</span></span></div>' +
         '<div class="tariff-row"><span class="tl">Administrative charge</span><span class="tv">$' + (isRtp ? rtpAdmin(res.peak_kw) : 155) + '/mo</span></div>' +
         '<div class="tariff-row"><span class="tl">Contract term</span><span class="tv">' + (isRtp ? '5 years · CBL fixed for the term' : '3 years · MAC cannot be lowered') + '</span></div>' +
         '<div class="tariff-row"><span class="tl">Year 1 all-in rate</span><span class="tv">' + fmtR(res.rows[0].eff_rate) + '</span></div>' +
@@ -2754,9 +2786,9 @@ function renderUtil(u) {
         (s.excessFac ? '<div class="bill-row"><span class="bl">Excess Facilities Charge</span><span class="bv">$' + s.excessFac.toFixed(2) + '</span></div>' : '') +
         '<div class="bill-row"><span class="bl">Sales Tax</span><span class="bv">$' + s.tax.toFixed(2) + '</span></div>' +
         '<div class="bill-row total"><span class="bl">Total (' + Math.round(sampleKwh).toLocaleString() + ' kWh)</span><span class="bv">$' + s.total.toFixed(2) + '</span></div>' +
-        '<div style="font-size:10px;color:var(--text4);margin-top:8px;">Winter months bill at a ' + (adders.rtpPrice * win * 100).toFixed(1) + '¢/kWh hourly price vs ' + (adders.rtpPrice * sum * 100).toFixed(1) + '¢ in Jun–Sep. Use the month dropdown under Annual Cash Flow Detail to see every month.</div>';
+        '<div style="font-size:10px;color:var(--text4);margin-top:8px;">Winter months bill at a ' + (adders.rtpPrice * win * 100).toFixed(1) + '¢/kWh hourly price vs ' + (adders.rtpPrice * sum * res.rtpShapeMult * 100).toFixed(1) + '¢ realized in Jun–Sep (' + (adders.rtpPrice * sum * 100).toFixed(1) + '¢ day average, lifted ' + ((res.rtpShapeMult - 1) * 100).toFixed(1) + '% by the site\'s afternoon-heavy load shape). Use the month dropdown under Annual Cash Flow Detail to see every month.</div>';
       document.getElementById('cievNote').innerHTML = isRtp
-        ? '<strong>Modeled on RTP-DA from Year 1.</strong>' + (adders.gaPlan === 'auto' ? ' Auto selected it: the modeled peak of ' + res.peak_kw.toLocaleString() + ' kW clears the 250 kW minimum, and at the modeled hourly price RTP beats every conventional schedule.' : ' (Selected manually.)') + ' Every kWh above the ' + adders.rtpCblPct + '% baseline is billed at the hourly day-ahead price (flat ' + (adders.rtpPrice * 100).toFixed(1) + '¢ average, ' + adders.rtpSummerMult.toFixed(2) + '× in Jun–Sep). Year 1 all-in: ' + fmtR(res.rows[0].eff_rate) + '. The tariff\'s default CBL for new commercial load is 100% — this projection assumes Georgia Power grants the low baseline shown; get it in writing before signing the 5-year term. Hourly price history is not published; the summer premium is an assumption.' +
+        ? '<strong>Modeled on RTP-DA from Year 1.</strong>' + (adders.gaPlan === 'auto' ? ' Auto selected it: the modeled peak of ' + res.peak_kw.toLocaleString() + ' kW clears the 250 kW minimum, and at the modeled hourly price RTP beats every conventional schedule.' : ' (Selected manually.)') + ' Every kWh above the ' + adders.rtpCblPct + '% baseline is billed at the hourly day-ahead price (flat ' + (adders.rtpPrice * 100).toFixed(1) + '¢ average, ' + adders.rtpSummerMult.toFixed(2) + '× in Jun–Sep). Summer weekday 2-7pm hours are priced at ' + adders.rtpPeakMult.toFixed(1) + '× the day average; with ' + touSharePct + ' of this ' + SITE_LABELS[stKey].toLowerCase() + ' site\'s kWh in that window (Tesla Busy Times shape), it pays ' + ((res.rtpShapeMult - 1) * 100).toFixed(1) + '% above the flat summer price. Year 1 all-in: ' + fmtR(res.rows[0].eff_rate) + '. The tariff\'s default CBL for new commercial load is 100% — this projection assumes Georgia Power grants the low baseline shown; get it in writing before signing the 5-year term. Hourly price history is not published; the summer premium is an assumption.' +
           (res.rows.some(r => r.rtpIneligible) ? ' <strong>Note:</strong> in years where modeled peak demand is under the 250 kW RTP minimum, the site is billed on PLM/PLL (+CIEV) instead.' : '')
         : '<strong>Modeled on TOU-SC Monthly Access Charge from Year 1.</strong> 100% of kWh at the hourly RTP-DA price (flat ' + (adders.rtpPrice * 100).toFixed(1) + '¢ average, ' + adders.rtpSummerMult.toFixed(2) + '× in Jun–Sep) plus a fixed $' + adders.macFee.toLocaleString() + '/mo access charge and $155/mo admin. Year 1 all-in: ' + fmtR(res.rows[0].eff_rate) + '. The MAC here is a placeholder — Georgia Power sets it from cost to serve and it cannot be lowered once set. Eligibility rides on the Territorial Act large-load exception (≥900 kW connected load; a 998 kW V4 cabinet qualifies). 3-year term.';
     } else {
