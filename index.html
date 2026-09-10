@@ -703,6 +703,10 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); min-
 .bill-row.total .bv { color: var(--yellow); font-size: 15px; font-weight: 600; }
 
 /* CIEV NOTE */
+.plan-table tr.sel td { background: var(--blue-dim); }
+.plan-table .tag { display: inline-block; font-size: 9px; letter-spacing: .06em; text-transform: uppercase; padding: 1px 6px; border-radius: 3px; background: var(--surface3); color: var(--text4); margin-left: 6px; vertical-align: middle; }
+.plan-table .tag.sel { background: var(--blue-dim); color: var(--blue); }
+.plan-table .tag.best { background: rgba(93, 202, 138, .18); color: #5dca8a; }
 .ciev-note {
   background: var(--blue-dim);
   border-left: 3px solid var(--blue);
@@ -858,7 +862,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); min-
       </div>
       <div class="info-popup" id="gaPlanInfo">
         <strong>Which Georgia Power rate should the pro forma use?</strong><br>
-        Two paths for a dedicated EV charging site: <strong>PLM/PLL + CIEV-1 rider</strong> (demand charges phased in via BDAF, but the rider terminates once the rolling 12-month load factor exceeds 15%) or the dedicated <strong>TOU-EVC-4</strong> EV charging schedule ($152/mo + $5.25/kW + 24.4¢ on-peak / 6.1¢ off-peak, on-peak only 2-7pm weekdays Jun-Sep). TOU-EVC-4 is typically cheaper than full-rate PLM/PLL at high volume; the CIEV rider is cheaper while it lasts.
+        Two paths for a dedicated EV charging site: <strong>PLM/PLL + CIEV-1 rider</strong> (demand charges phased in via BDAF, but the rider terminates once the rolling 12-month load factor exceeds 15%) or the dedicated <strong>TOU-EVC-4</strong> EV charging schedule ($152/mo + $5.25/kW + 24.4¢ on-peak / 6.1¢ off-peak, on-peak only 2-7pm weekdays Jun-Sep). TOU-EVC-4 is typically cheaper than full-rate PLM/PLL at high volume; the CIEV rider is cheaper while it lasts. The results include a Rate Plan Comparison table that runs the scenario on screen through every plan side by side.
         <span class="why"><strong>Auto (default)</strong> selects RTP-DA whenever the modeled 30-minute peak clears the 250 kW minimum — at the modeled hourly price it undercuts every conventional schedule, including CIEV Year 1 — and assumes the low baseline set in the Advanced panel. Sites under 250 kW start on PLM/PLL + CIEV while the load factor stays under 15%, then switch permanently to TOU-EVC-4 — operators report that transition works in one direction only (start on the rider, move to TOU later; not the reverse). Not verified in the published tariff — confirm sequencing with your Georgia Power rep before committing. TOU-EVC-4 engine is validated against a real July 2026 commercial EV charging bill (ECCR, franchise fee, and sales tax lines reproduce to the penny).</span>
         <span class="why"><strong>RTP-DA</strong> (Real Time Pricing, Day Ahead) bills a Standard Bill on a Customer Baseline Load (CBL) at PLM/PLL rates, then every kWh above the CBL at Georgia Power's hourly day-ahead price. With a low CBL nearly all charging load rides the hourly price. Georgia Power's guidance (Sep 2026) is to model a flat 7.5–8.6¢/kWh average with summer months well above it; the model adds a summer weekday 2-7pm price premium (Advanced panel) weighted by the site type's hourly load shape, so afternoon-heavy sites pay a few percent more than the flat average. Requires a ≥250 kW peak every month and a 5-year term. <strong>TOU-SC MAC</strong> bills 100% of kWh at the RTP-DA hourly price plus a customer-specific fixed Monthly Access Charge with no baseline; available to new load meeting the Territorial Act large-load exception (a 998 kW V4 cabinet qualifies), 3-year term. Both need a Georgia Power quote for the CBL or MAC — set them in the Advanced panel.</span>
       </div>
@@ -923,7 +927,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); min-
         <div class="info-popup" id="siteInfo">
           <strong>What kind of property is this?</strong><br>
           Different property types attract different amounts of charging traffic. An airport-adjacent site sees rideshare drivers all day; a hotel sees mostly evening charging from overnight guests; a highway corridor sees road trippers in a hurry.
-          <span class="why">We'll automatically detect this when you pick an address above, but you can override it manually if you know your site better than the map does. Site type also sets the hourly load shape used by the Georgia Power rate engines — the share of summer kWh that lands in the 2-7pm weekday on-peak window (retail ≈20%, highway ≈22%) — taken from Tesla's published Busy Times for all 90 open Georgia Supercharger sites.</span>
+          <span class="why">We'll automatically detect this when you pick an address above, but you can override it manually if you know your site better than the map does. Site type also sets the hourly load shape used by the rate engines — the share of summer kWh that lands in the 2-7pm weekday on-peak window (retail ≈20%, highway ≈22%) and the busiest-hour ratio that drives peak billing demand (retail 1.57×, highway 1.77×) — taken from Tesla's published Busy Times for all 90 open Georgia Supercharger sites.</span>
         </div>
         <select id="siteType">
           <option value="retail">Retail / Shopping Center</option>
@@ -1348,7 +1352,7 @@ If Georgia Power installs dedicated equipment that serves only your site, they m
       </div>
       <div class="source-note">
         <strong>Methodology validation:</strong> Rate structure, tier breakpoints, and adder percentages validated directly against Georgia Power's official Power and Light Calculator at georgiapower.com. Both PLM (Medium, 30-499 kW demand) and PLL (Large, 500+ kW demand) rate structures are implemented. Tariff selection is automatic based on actual peak demand (pre-BDAF). Results from this tool match the GA Power calculator to the penny across scenarios from 50 kW / 5,000 kWh up to 998 kW / 500,000 kWh. The <strong>TOU-EVC-4</strong> dedicated EV charging schedule ($152/mo · $5.25/kW · 24.4008¢ on-peak 2-7pm weekdays Jun-Sep · 6.1002¢ off-peak) is also implemented and validated against a real July 2026 commercial EV charging bill — ECCR, franchise fee, and sales tax lines reproduce to the penny. Its on-peak kWh share comes from the selected site type's hourly load shape, built from Tesla's published Busy Times profiles for all 90 open Georgia Supercharger sites (Sep 2026; retail 20.1%, highway 22.3%, parking / urban 19.3%); the real bill's 22.2% can be entered as an override in the Advanced panel. The Rate Plan selector offers PLM/PLL + CIEV, TOU-EVC-4, RTP-DA and TOU-SC MAC; Auto selects RTP-DA whenever the modeled peak clears 250 kW and otherwise rides the CIEV rider until the 15% load-factor ceiling, then switches one-way to TOU (operator-reported sequencing; confirm with Georgia Power). <strong>RTP-DA</strong> and <strong>TOU-SC MAC</strong> follow the published RTP-DA-13 and TOU-SC-16 schedules using a flat annual hourly price with a Jun–Sep premium, set from Georgia Power's Sep 2026 guidance to model a 7.5–8.6¢ flat average, plus a summer weekday 2-7pm intra-day premium (default 2.0× the day average, other hours scaled to preserve it) weighted by the site type's Tesla Busy Times load shape; Georgia Power does not publish hourly price history, so treat both as indicative until your rep supplies 24 months of prices and a CBL or MAC quote.<br><br>
-<strong>Peak demand modeling:</strong> Tesla Model Y is used as the 2026 reference vehicle (peak ~250 kW brief, average ~150 kW sustained during the 30-minute billing demand window). As 800V / 500 kW-class vehicles penetrate the fleet, the sustained average is modeled rising ~6%/yr to a ~240 kW plateau by the mid-2030s — 500 kW itself is a fleeting peak (a Cybertruck's full V4 session still averages ~150 kW). Cabinet demand scales with how many cars charge simultaneously during peak hour, capped at 998 kW per cabinet (1,996 kW for 2-cabinet sites). Rising fleet speeds also lift the utilization kWh ceiling, at half strength — charge time shrinks but dwell time doesn't.
+<strong>Peak demand modeling:</strong> Tesla Model Y is used as the 2026 reference vehicle (peak ~250 kW brief, average ~150 kW sustained during the 30-minute billing demand window). As 800V / 500 kW-class vehicles penetrate the fleet, the sustained average is modeled rising ~6%/yr to a ~240 kW plateau by the mid-2030s — 500 kW itself is a fleeting peak (a Cybertruck's full V4 session still averages ~150 kW). Cabinet demand follows how many cars charge simultaneously in the busiest hour: stalls × utilization × the site type's busiest-hour ratio from its Tesla Busy Times load shape (retail 1.57, highway 1.77, parking / urban 1.41), plus a small headroom for the month's single worst 30-minute window — calibrated to a real 8-stall metro retail bill (559 kW at 27% utilization, July 2026) — floored at one car and capped at 998 kW per cabinet (1,996 kW for 2-cabinet sites). Because it tracks utilization, billing demand grows with the site over the projection. Rising fleet speeds also lift the utilization kWh ceiling, at half strength — charge time shrinks but dwell time doesn't.
       </div>
      </div>
 
@@ -1444,6 +1448,7 @@ If Georgia Power installs dedicated equipment that serves only your site, they m
     <div class="tariff-box" id="tariffBox"></div>
     <div class="bill-preview" id="billPreview"></div>
     <div class="ciev-note" id="cievNote"></div>
+    <div class="tariff-box" id="planCompare" style="display:none"></div>
 
     <div class="chart-section">
       <div class="chart-title">Cumulative Cash Flow</div>
@@ -1469,7 +1474,7 @@ If Georgia Power installs dedicated equipment that serves only your site, they m
     <div class="footer-left">
       <div class="footer-brand">Car Charger Specialists, LLC &nbsp;/&nbsp; EN217495</div>
       <div class="footer-disclaimer" id="footerDisc">
-This pro forma uses Georgia Power PLM and PLL tariff rates (tariff automatically selected based on peak demand: PLM for 30-499 kW, PLL for 500+ kW) and the CIEV-1 Charge It Electric Vehicle Charger Rider Schedule. Rate structure and adder percentages are validated directly against Georgia Power's official Power and Light Calculator. Electricity cost estimates incorporate the CIEV Billing Demand Adjustment Factor (BDAF) applied to billing demand for Years 1-4 (0.20 / 0.40 / 0.60 / 0.80 respectively), transitioning to full rate in Year 5 or when the rolling 12-month load factor reaches 15%, whichever comes first. By default (Auto) a site whose modeled peak reaches 250 kW is billed on RTP-DA; the RTP-DA and TOU-SC MAC rate plans apply a flat annual hourly price with a summer premium (per Georgia Power guidance, Sep 2026) and a summer weekday-afternoon intra-day premium weighted by the site type's load shape, and assume a negotiated Customer Baseline Load or Monthly Access Charge; hourly prices are not published and those projections are indicative only. The TOU-EVC-4 on-peak kWh share is derived from the selected site type's hourly load shape (Tesla published Busy Times for all 90 open Georgia Supercharger sites, Sep 2026) unless overridden. Peak billing demand is modeled using Tesla Model Y as the 2026 reference (150 kW avg during 30-min billing window, rising ~6%/yr toward ~240 kW as 800V/500 kW-class vehicles penetrate the fleet) with concurrency scaling by site utilization. Fuel Cost Recovery is adjusted quarterly by Georgia Power and may increase or decrease over time. Georgia Power Make Ready program coverage of up to $300,000 per job and the $30,000 Business Rebate are subject to application approval and not guaranteed. Tesla Services Fee of $0.10/kWh is applied to all energy throughput. Excess Facilities charges are customer-specific and apply only when GA Power's revenue ratio calculation triggers them. This tool does not constitute a contract, guarantee, or formal proposal. © 2026 Car Charger Specialists, LLC &nbsp;/&nbsp; 404-520-7349 &nbsp;/&nbsp; commercial@carchargerspecialists.com
+This pro forma uses Georgia Power PLM and PLL tariff rates (tariff automatically selected based on peak demand: PLM for 30-499 kW, PLL for 500+ kW) and the CIEV-1 Charge It Electric Vehicle Charger Rider Schedule. Rate structure and adder percentages are validated directly against Georgia Power's official Power and Light Calculator. Electricity cost estimates incorporate the CIEV Billing Demand Adjustment Factor (BDAF) applied to billing demand for Years 1-4 (0.20 / 0.40 / 0.60 / 0.80 respectively), transitioning to full rate in Year 5 or when the rolling 12-month load factor reaches 15%, whichever comes first. By default (Auto) a site whose modeled peak reaches 250 kW is billed on RTP-DA; the RTP-DA and TOU-SC MAC rate plans apply a flat annual hourly price with a summer premium (per Georgia Power guidance, Sep 2026) and a summer weekday-afternoon intra-day premium weighted by the site type's load shape, and assume a negotiated Customer Baseline Load or Monthly Access Charge; hourly prices are not published and those projections are indicative only. The TOU-EVC-4 on-peak kWh share is derived from the selected site type's hourly load shape (Tesla published Busy Times for all 90 open Georgia Supercharger sites, Sep 2026) unless overridden. Peak billing demand is modeled using Tesla Model Y as the 2026 reference (150 kW avg during 30-min billing window, rising ~6%/yr toward ~240 kW as 800V/500 kW-class vehicles penetrate the fleet) with concurrency = stalls × utilization × the site type's busiest-hour ratio (Tesla Busy Times load shape), calibrated to a real 8-stall bill (559 kW at 27% utilization). Fuel Cost Recovery is adjusted quarterly by Georgia Power and may increase or decrease over time. Georgia Power Make Ready program coverage of up to $300,000 per job and the $30,000 Business Rebate are subject to application approval and not guaranteed. Tesla Services Fee of $0.10/kWh is applied to all energy throughput. Excess Facilities charges are customer-specific and apply only when GA Power's revenue ratio calculation triggers them. This tool does not constitute a contract, guarantee, or formal proposal. © 2026 Car Charger Specialists, LLC &nbsp;/&nbsp; 404-520-7349 &nbsp;/&nbsp; commercial@carchargerspecialists.com
       </div>
     </div>
   </div>
@@ -2110,7 +2115,7 @@ const DISC_GA = '<strong>ESTIMATE ONLY.</strong> Projections generated in good f
 const DISC_DUKE = '<strong>ESTIMATE ONLY.</strong> Projections use published Duke Energy general-service tariff schedules and the Commercial Charger Prep Credit. Duke offers no commercial EV rate with a demand-charge phase-in, so full demand charges apply from Year 1. Some rider values are bundled or provisional (see the Advanced panel). Default CAPEX values reflect CCS advertised turnkey pricing (equipment + installation), pre-tax; state sales tax applies to the equipment portion at invoicing. Results are not guaranteed. Actual results vary based on site conditions, the utility and rate schedule you are ultimately assigned, service upgrades, equipment pricing, and real-world utilization. This tool is for planning purposes only and does not constitute a contract, commitment, or formal proposal.';
 
 let GA_FOOTER_HTML = null;
-const FOOTER_DUKE = 'This pro forma uses published Duke Energy general-service tariff schedules (the schedule shown is auto-matched to the selected territory) and the Duke Commercial Charger Prep Credit. Duke does not offer a commercial EV rate with a demand-charge phase-in in North Carolina, South Carolina, or Florida — there is no equivalent to Georgia Power\'s CIEV-1 rider — so full demand charges apply from Year 1 on a standard general-service schedule. Billing demand is modeled as equal to measured peak demand; Duke schedules also carry demand ratchets (billing demand held at 50–80% of peak/contract) which are approximated by this assumption for a consistently-peaking site. Some rider and fuel components are bundled or provisional and are exposed as editable inputs in the Advanced panel. The Charger Prep Credit of $117,716 per 998 kW V4 cabinet (equivalent to $29,429 per port at 4 posts per cabinet) assumes a Public DC Fast Charger at a high-volume site with Service Upgrades Required / New Service; Duke bases the credit on nameplate kW per port (cabinet kW ÷ ports fed), so the total is effectively fixed per cabinet and doubles on 2-cabinet builds. It covers make-ready electrical only and is subject to application approval. Default CAPEX values are CCS advertised turnkey pricing (equipment MSRP + installation), pre-tax; state sales tax applies to the equipment portion at invoicing. Peak billing demand is modeled using Tesla Model Y as the 2026 reference (150 kW avg during 30-min window, rising ~6%/yr toward ~240 kW as 800V/500 kW-class vehicles penetrate the fleet) with concurrency scaling by site utilization. Tesla Services Fee of $0.10/kWh is applied to all energy throughput. This tool does not constitute a contract, guarantee, or formal proposal. © 2026 Car Charger Specialists, LLC &nbsp;/&nbsp; 404-520-7349 &nbsp;/&nbsp; commercial@carchargerspecialists.com';
+const FOOTER_DUKE = 'This pro forma uses published Duke Energy general-service tariff schedules (the schedule shown is auto-matched to the selected territory) and the Duke Commercial Charger Prep Credit. Duke does not offer a commercial EV rate with a demand-charge phase-in in North Carolina, South Carolina, or Florida — there is no equivalent to Georgia Power\'s CIEV-1 rider — so full demand charges apply from Year 1 on a standard general-service schedule. Billing demand is modeled as equal to measured peak demand; Duke schedules also carry demand ratchets (billing demand held at 50–80% of peak/contract) which are approximated by this assumption for a consistently-peaking site. Some rider and fuel components are bundled or provisional and are exposed as editable inputs in the Advanced panel. The Charger Prep Credit of $117,716 per 998 kW V4 cabinet (equivalent to $29,429 per port at 4 posts per cabinet) assumes a Public DC Fast Charger at a high-volume site with Service Upgrades Required / New Service; Duke bases the credit on nameplate kW per port (cabinet kW ÷ ports fed), so the total is effectively fixed per cabinet and doubles on 2-cabinet builds. It covers make-ready electrical only and is subject to application approval. Default CAPEX values are CCS advertised turnkey pricing (equipment MSRP + installation), pre-tax; state sales tax applies to the equipment portion at invoicing. Peak billing demand is modeled using Tesla Model Y as the 2026 reference (150 kW avg during 30-min window, rising ~6%/yr toward ~240 kW as 800V/500 kW-class vehicles penetrate the fleet) with concurrency = stalls × utilization × the site type\'s busiest-hour ratio (Tesla Busy Times load shape for Georgia Supercharger sites), calibrated to a real 8-stall bill (559 kW at 27% utilization). Tesla Services Fee of $0.10/kWh is applied to all energy throughput. This tool does not constitute a contract, guarantee, or formal proposal. © 2026 Car Charger Specialists, LLC &nbsp;/&nbsp; 404-520-7349 &nbsp;/&nbsp; commercial@carchargerspecialists.com';
 
 function setUtility(u) {
   utility = u;
@@ -2154,7 +2159,7 @@ function syncDukeDefaults() {
     '<strong>Source &amp; methodology:</strong> ' + cfg.src + '<br><br>' +
     '<strong>Charger Prep Credit:</strong> Duke\'s one-time make-ready credit is based on nameplate kW per port, which Duke measures as the 998 kW cabinet divided by the ports it feeds. Since the make-ready serves the full cabinet, the credit is effectively fixed at <strong>$' +
     Math.round(cfg.creditPerCab).toLocaleString() + ' per 998 kW cabinet</strong> (a 4-port site = $29,429/port × 4). It is one tri-state program (FL/NC/SC), derived from Duke\'s North Carolina calculator and treated as the same across states pending confirmation. In North Carolina the credit is reimbursed after installation, so the model treats full CAPEX as an upfront (Year 0) outlay and the credit as a Year 1 cash inflow.<br><br>' +
-    '<strong>Peak demand modeling:</strong> Tesla Model Y reference vehicle (150 kW average per car during the 30-minute billing window in 2026, rising ~6%/yr toward a ~240 kW plateau as 800V / 500 kW-class vehicles penetrate the fleet), concurrency scaling by site utilization, capped at 998 kW per cabinet — identical to the Georgia Power side. Duke has no CIEV-style demand-charge phase-in, so full demand applies every year.';
+    '<strong>Peak demand modeling:</strong> Tesla Model Y reference vehicle (150 kW average per car during the 30-minute billing window in 2026, rising ~6%/yr toward a ~240 kW plateau as 800V / 500 kW-class vehicles penetrate the fleet), concurrency = stalls × utilization × the site type\'s busiest-hour ratio from its Tesla Busy Times load shape, capped at 998 kW per cabinet — identical to the Georgia Power side. Duke has no CIEV-style demand-charge phase-in, so full demand applies every year.';
 }
 
 // Re-render results (if visible) using whichever provider/territory is active
@@ -2180,17 +2185,22 @@ function fleetPowerRamp(calYr) {
   return Math.min(1 + 0.06 * Math.max(0, calYr - 2026), 1.6);
 }
 
-function calcPeakDemand(key, utilLevel, ramp) {
+// Peak (max 30-minute) billing demand from the site's utilization and its
+// hourly load shape. Average stalls occupied in the busiest hour = stalls ×
+// utilization × SITE_SHAPE.peakRatio (Tesla Busy Times); the month's single
+// worst 30-minute window runs above that by a headroom factor of
+// 1 + 0.283/√stalls (1.10 at 8 stalls, 1.14 at 4, 1.07 at 16), calibrated
+// to a real 8-stall metro retail bill: 559 kW max demand at 27% utilization
+// (July 2026) → model 567 kW. Floor: one car (150 kW × fleet ramp) — any
+// charging at all bills at least one vehicle's 30-minute average. Caps:
+// every stall busy, and total cabinet capacity (a single 998 kW cabinet
+// power-shares past ~6 cars; a 2-cabinet site can bill up to 1,996 kW).
+function calcPeakDemand(key, utilFrac, ramp, shape) {
   const AVG_PER_CAR = 150;
-  const concurrency = {
-    4:  { low: 1, med: 2, high: 3,  peak: 4 },
-    6:  { low: 1, med: 2, high: 4,  peak: 6 },
-    8:  { low: 2, med: 3, high: 5,  peak: 7 },
-    16: { low: 3, med: 6, high: 10, peak: 14 }
-  };
-  const cars = concurrency[CONFIGS[key].ports][utilLevel];
-  // Site demand is clipped at total cabinet capacity: a single 998 kW cabinet
-  // power-shares past ~6 cars, while a 2-cabinet 8-post site can bill up to 1,996 kW.
+  const ports = CONFIGS[key].ports;
+  const shp = shape || siteShape();
+  const headroom = 1 + 0.283 / Math.sqrt(ports);
+  const cars = Math.min(ports, Math.max(1, ports * utilFrac * shp.peakRatio * headroom));
   return Math.round(Math.min(cars * AVG_PER_CAR * (ramp || 1), CABINET_KW * CONFIGS[key].cabinets));
 }
 
@@ -2542,7 +2552,8 @@ function calcProForma(cfgKey, grossCapex, rebate, dailyKwh, chargePrice, years, 
   const touOnShare = isDuke ? 0 : touOnPeakShare(adders);
   // RTP-DA / TOU-SC MAC: summer months carry a weekday 2-7pm price premium;
   // the site type's load shape sets the load-weighted multiplier it pays.
-  const rtpShape = isDuke ? 1 : rtpShapeMult(siteShape(), adders.rtpPeakMult);
+  const shape = siteShape();
+  const rtpShape = isDuke ? 1 : rtpShapeMult(shape, adders.rtpPeakMult);
   for (let yr = 1; yr <= years; yr++) {
     // Utilization growth tapers linearly to ~zero across the 15-year horizon:
     // EV adoption keeps growing, but charging supply grows ~30%/yr with it
@@ -2555,11 +2566,13 @@ function calcProForma(cfgKey, grossCapex, rebate, dailyKwh, chargePrice, years, 
     // only half the speed gain passes into throughput, because dwell time
     // (shopping, eating) doesn't shrink with the charge curve.
     const ramp = fleetPowerRamp(startYear + yr - 1);
-    const peak_kw = calcPeakDemand(cfgKey, utilLevel, ramp);
     const speedLift = 1 + 0.5 * (ramp - 1);
     const util = Math.min(effDailyKwh * growthMult, UTIL_CAP_KWH * speedLift);
     const utilPct = Math.min(100, util / (UTIL_100_KWH * speedLift) * 100);
     const capped = util >= UTIL_CAP_KWH * speedLift - 0.5;
+    // Peak billing demand follows this year's utilization and the site type's
+    // busiest-hour ratio, so it grows with the site and caps with it.
+    const peak_kw = calcPeakDemand(cfgKey, utilPct / 100, ramp, shape);
     const monthly_kwh = util * ports * 30;
     const annual_kwh = util * ports * 365;
     // CIEV rider terminates once the rolling 12-month load factor exceeds 15%
@@ -2684,6 +2697,59 @@ function switchUtil(btn, u) {
   if (currentResults) renderUtil(u);
 }
 
+// Georgia Power rate-plan comparison for the scenario on screen: the same
+// site, equipment, utilization path and peak demand run through every plan
+// the Rate Plan selector offers, so PLM/PLL + CIEV can be read against
+// TOU-EVC-4, RTP-DA and TOU-SC MAC side by side. Auto's row shows the
+// sequence it would follow. Hidden for Duke (one schedule per territory).
+const PLAN_NAMES = { PLM: 'PLM/PLL + CIEV', TOU: 'TOU-EVC-4', RTP: 'RTP-DA', MAC: 'TOU-SC MAC' };
+function planSequence(rows) {
+  const seq = [];
+  rows.forEach(r => {
+    const last = seq[seq.length - 1];
+    if (!last || last.plan !== r.plan) seq.push({ plan: r.plan, from: r.yr, to: r.yr });
+    else last.to = r.yr;
+  });
+  return seq.map(s => PLAN_NAMES[s.plan] + (seq.length > 1 ? ' Yr ' + (s.from === s.to ? s.from : s.from + '–' + s.to) : ' all years')).join(' → ');
+}
+function renderPlanCompare(u) {
+  const box = document.getElementById('planCompare');
+  if (utility === 'duke' || !currentResults) { box.style.display = 'none'; box.innerHTML = ''; return; }
+  const { chargePrice, years, discRate, utilGrowth, capex, rebate, utilMap, selectedConfig, adders } = currentResults;
+  const dailyKwh = utilMap[u];
+  const plans = [['plm', 'PLM/PLL + CIEV-1 rider'], ['tou', 'TOU-EVC-4'], ['rtp', 'RTP-DA'], ['mac', 'TOU-SC MAC'], ['auto', 'Auto (model default)']];
+  const runs = plans.map(([p, label]) => {
+    const a = Object.assign({}, adders, { gaPlan: p });
+    const r = calcProForma(selectedConfig, capex, rebate, dailyKwh, chargePrice, years, discRate, utilGrowth, a, u);
+    return { p, label, res: r, elec: r.rows.reduce((s, x) => s + x.annual_elec, 0), kwh: r.rows.reduce((s, x) => s + x.annual_kwh, 0) };
+  });
+  const best = runs.filter(x => x.p !== 'auto').reduce((b, x) => (x.elec < b.elec ? x : b));
+  const fullYr = Math.min(4, years - 1);
+  const rowsHtml = runs.map(x => {
+    const r = x.res;
+    const sel = x.p === adders.gaPlan;
+    const fullRow = r.rows.find(y => y.bdaf >= 1);
+    const note = x.p === 'auto' ? planSequence(r.rows)
+      : x.p === 'rtp' && r.rows.some(y => y.rtpIneligible) ? 'billed PLM/PLL in years under the 250 kW RTP minimum (' + r.rows.filter(y => y.rtpIneligible).length + ' of ' + years + ')'
+      : x.p === 'rtp' ? adders.rtpCblPct + '% CBL · ' + (adders.rtpPrice * 100).toFixed(1) + '¢ avg hourly price'
+      : x.p === 'plm' && r.rows[0].bdaf >= 1 ? 'load factor above 15%: CIEV rider unavailable, full demand from Yr 1'
+      : x.p === 'plm' ? 'BDAF ' + r.rows[0].bdaf.toFixed(2) + ' Yr 1' + (fullRow ? ', full rate from Yr ' + fullRow.yr : '')
+      : x.p === 'tou' ? (r.touOnShare * 100).toFixed(1) + '% of summer kWh on-peak'
+      : x.p === 'mac' ? '$' + adders.macFee.toLocaleString() + '/mo access charge, all kWh at hourly price'
+      : '';
+    return '<tr' + (sel ? ' class="sel"' : '') + '><td class="mo-name"><strong>' + x.label + '</strong>' +
+      (x === best ? '<span class="tag best">lowest</span>' : '') + (sel ? '<span class="tag sel">selected</span>' : '') + '</td>' +
+      '<td>' + fmtR(r.rows[0].eff_rate) + '</td><td>' + fmtR(r.rows[fullYr].eff_rate) + '</td>' +
+      '<td>' + fmt$(r.rows[0].annual_elec) + '</td><td>' + fmt$(x.elec) + '</td><td>' + fmtR(x.elec / x.kwh) + '</td>' +
+      '<td class="' + (r.npv >= 0 ? 'pos' : 'neg') + '">' + fmt$(r.npv) + '</td><td>' + (r.payback ? r.payback.toFixed(1) + ' yr' : 'N/A') + '</td>' +
+      '<td style="font-size:10px;color:var(--text4)">' + note + '</td></tr>';
+  }).join('');
+  box.style.display = '';
+  box.innerHTML = '<h3>Georgia Power Rate Plan Comparison / ' + UTIL_LABELS[u] + ' Utilization, ' + configLabel(selectedConfig) + '</h3>' +
+    '<div style="overflow-x:auto"><table class="yr-table plan-table"><thead><tr><th>Rate plan</th><th>Yr 1 all-in</th><th>Yr ' + (fullYr + 1) + '+ all-in</th><th>Yr 1 electricity</th><th>' + years + '-yr electricity</th><th>' + years + '-yr avg rate</th><th>NPV</th><th>Payback</th><th>Notes</th></tr></thead><tbody>' + rowsHtml + '</tbody></table></div>' +
+    '<div style="font-size:10px;color:var(--text4);margin-top:8px;">Same site, equipment, utilization path and peak demand under every plan — only the Georgia Power schedule changes. <em>Lowest</em> marks the cheapest ' + years + '-year electricity cost; <em>Selected</em> is the Rate Plan selector\'s current setting. RTP-DA and TOU-SC MAC assume the negotiated CBL / MAC and indicative hourly prices set in the Advanced panel.</div>';
+}
+
 function renderUtil(u) {
   const { chargePrice, years, discRate, utilGrowth, capex, rebate, netCapex, cabinets, utilMap, selectedConfig, adders } = currentResults;
   updateUtilTabs();
@@ -2718,7 +2784,7 @@ function renderUtil(u) {
     document.getElementById('tariffBox').innerHTML =
       '<h3>' + cfg.label + ' Tariff Summary / ' + cfg.schedule.split(' — ')[0] + '</h3>' +
       '<div class="tariff-row"><span class="tl">Rate schedule</span><span class="tv">' + cfg.schedule + '</span></div>' +
-      '<div class="tariff-row"><span class="tl">Peak / billing demand (30-min)</span><span class="tv">' + res.peak_kw.toLocaleString() + ' kW Yr 1 → ' + res.peak_kw_end.toLocaleString() + ' kW Yr ' + years + ' &nbsp;<span style="font-size:10px;color:var(--text4)">(' + UTIL_LABELS[u].toLowerCase() + ' concurrency · fleet charge speeds rising)</span></span></div>' +
+      '<div class="tariff-row"><span class="tl">Peak / billing demand (30-min)</span><span class="tv">' + res.peak_kw.toLocaleString() + ' kW Yr 1 → ' + res.peak_kw_end.toLocaleString() + ' kW Yr ' + years + ' &nbsp;<span style="font-size:10px;color:var(--text4)">(stalls × utilization × ' + siteShape().peakRatio.toFixed(2) + ' busiest-hour ratio · fleet charge speeds rising)</span></span></div>' +
       '<div class="tariff-row"><span class="tl">Customer charge</span><span class="tv">$' + cfg.basic.toFixed(2) + '/mo</span></div>' +
       '<div class="tariff-row"><span class="tl">Demand charge</span><span class="tv">' + demandDetail + '</span></div>' +
       '<div class="tariff-row"><span class="tl">All-in rate (full demand, all years)</span><span class="tv">' + fmtR(res.rows[fullYr].eff_rate) + '</span></div>' +
@@ -2751,7 +2817,7 @@ function renderUtil(u) {
     const touShareText = res.touOnShareOverride
       ? 'On-peak share of summer kWh set to ' + touSharePct + ' from the Advanced panel.'
       : 'In summer months ' + touSharePct + ' of kWh is billed on-peak — the ' + SITE_LABELS[stKey].toLowerCase() + ' hourly load shape from Tesla\'s published Busy Times for ' + shp.n + ' Georgia Supercharger sites (busiest hour runs ' + shp.peakRatio.toFixed(2) + '× the daily average; weekends ' + Math.round((shp.wkndRatio - 1) * 100) + '% busier than weekdays).'
-    const peakRow = '<div class="tariff-row"><span class="tl">Peak billing demand (30-min)</span><span class="tv">' + res.peak_kw.toLocaleString() + ' kW Yr 1 → ' + res.peak_kw_end.toLocaleString() + ' kW Yr ' + years + ' &nbsp;<span style="font-size:10px;color:var(--text4)">(' + UTIL_LABELS[u].toLowerCase() + ' concurrency · fleet charge speeds rising)</span></span></div>';
+    const peakRow = '<div class="tariff-row"><span class="tl">Peak billing demand (30-min)</span><span class="tv">' + res.peak_kw.toLocaleString() + ' kW Yr 1 → ' + res.peak_kw_end.toLocaleString() + ' kW Yr ' + years + ' &nbsp;<span style="font-size:10px;color:var(--text4)">(stalls × utilization × ' + siteShape().peakRatio.toFixed(2) + ' busiest-hour ratio · fleet charge speeds rising)</span></span></div>';
     const commonRows =
       '<div class="tariff-row"><span class="tl">Tesla Services Fee</span><span class="tv">$0.10/kWh (all years)</span></div>' +
       '<div class="tariff-row"><span class="tl">Charging price to drivers</span><span class="tv">$' + chargePrice.toFixed(2) + '/kWh</span></div>';
@@ -2852,6 +2918,8 @@ function renderUtil(u) {
           : '<strong>CIEV-1 Rider Benefit:</strong> The Georgia Power Charge It EV Rider reduces billing demand charges during your ramp-up years. At ' + UTIL_LABELS[u].toLowerCase() + ' utilization (Year 1 load factor ' + lf1.toFixed(1) + '%, under the 15% ceiling), your all-in electricity cost drops from ' + fmtR(res.rows[fullYr].eff_rate) + ' (full rate) to ' + fmtR(res.rows[0].eff_rate) + ' in Year 1 and ' + fmtR(res.rows[1].eff_rate) + ' in Year 2. The rider applies until your site reaches a 15% rolling load factor or you complete Year 4, whichever comes first.')));
     }
   }
+
+  renderPlanCompare(u);
 
   const labels = res.rows.map(r => 'Yr ' + r.yr);
   const cumCFs = res.rows.map(r => Math.round(r.cumCF));
