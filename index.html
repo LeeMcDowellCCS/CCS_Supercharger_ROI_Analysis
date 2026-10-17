@@ -1185,6 +1185,32 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); min-
         </div>
         <input type="number" id="revTaxRate" value="6.0" step="0.1" min="0" max="15" />
       </div>
+
+      <div class="field">
+        <div class="field-label">
+          Tesla Fee Escalator (%/yr)
+          <button class="info-btn" onclick="toggleInfo('teslaEscInfo')">?</button>
+        </div>
+        <div class="info-popup" id="teslaEscInfo">
+          <strong>The Tesla services fee rises every year.</strong><br>
+          Tesla's Supercharger Long Term Services Agreement prices services at $0.10/kWh, measured by the DC meter in each post, escalating by 3% compounding on each anniversary of the System Commissioning Date. Year 1 pays $0.10, Year 10 about $0.130, Year 15 about $0.151.
+          <span class="why">Default of <strong>3%</strong> is the LTSA's figure. Set 0 if your signed LTSA fixes the fee.</span>
+        </div>
+        <input type="number" id="teslaEscPct" value="3.0" step="0.5" min="0" max="10" />
+      </div>
+
+      <div class="field">
+        <div class="field-label">
+          Tesla Minimum per Post ($/mo)
+          <button class="info-btn" onclick="toggleInfo('teslaMinInfo')">?</button>
+        </div>
+        <div class="info-popup" id="teslaMinInfo">
+          <strong>The Tesla fee never drops below this floor.</strong><br>
+          The LTSA sets a Minimum Services Price of $200 per post per month. Each month you pay the larger of the per-kWh fee or $200 times the number of posts, so a quiet site still pays Tesla at least $2,400 per post per year. At $0.10/kWh the floor binds below about 66 kWh/day/post; the escalator lowers that threshold each year.
+          <span class="why">Default of <strong>$200</strong> is the LTSA's figure. It is a minimum, not a cap: it never lowers the fee on a busy site.</span>
+        </div>
+        <input type="number" id="teslaMinPost" value="200" step="10" min="0" max="2000" />
+      </div>
     </div>
   </div>
 
@@ -1474,7 +1500,7 @@ If Georgia Power installs dedicated equipment that serves only your site, they m
     <div class="footer-left">
       <div class="footer-brand">Car Charger Specialists, LLC &nbsp;/&nbsp; EN217495</div>
       <div class="footer-disclaimer" id="footerDisc">
-This pro forma uses Georgia Power PLM and PLL tariff rates (tariff automatically selected based on peak demand: PLM for 30-499 kW, PLL for 500+ kW) and the CIEV-1 Charge It Electric Vehicle Charger Rider Schedule. Rate structure and adder percentages are validated directly against Georgia Power's official Power and Light Calculator. Electricity cost estimates incorporate the CIEV Billing Demand Adjustment Factor (BDAF) applied to billing demand for Years 1-4 (0.20 / 0.40 / 0.60 / 0.80 respectively), transitioning to full rate in Year 5 or when the rolling 12-month load factor reaches 15%, whichever comes first. By default (Auto) a site whose modeled peak reaches 250 kW is billed on RTP-DA; the RTP-DA and TOU-SC MAC rate plans apply a flat annual hourly price with a summer premium (per Georgia Power guidance, Sep 2026) and a summer weekday-afternoon intra-day premium weighted by the site type's load shape, and assume a negotiated Customer Baseline Load or Monthly Access Charge; hourly prices are not published and those projections are indicative only. The TOU-EVC-4 on-peak kWh share is derived from the selected site type's hourly load shape (Tesla published Busy Times for all 90 open Georgia Supercharger sites, Sep 2026) unless overridden. Peak billing demand is modeled using Tesla Model Y as the 2026 reference (150 kW avg during 30-min billing window, rising ~6%/yr toward ~240 kW as 800V/500 kW-class vehicles penetrate the fleet) with concurrency = stalls × utilization × the site type's busiest-hour ratio (Tesla Busy Times load shape), calibrated to a real 8-stall bill (559 kW at 27% utilization). Fuel Cost Recovery is adjusted quarterly by Georgia Power and may increase or decrease over time. Georgia Power Make Ready program coverage of up to $300,000 per job and the $30,000 Business Rebate are subject to application approval and not guaranteed. Tesla Services Fee of $0.10/kWh is applied to all energy throughput. Excess Facilities charges are customer-specific and apply only when GA Power's revenue ratio calculation triggers them. This tool does not constitute a contract, guarantee, or formal proposal. © 2026 Car Charger Specialists, LLC &nbsp;/&nbsp; 404-520-7349 &nbsp;/&nbsp; commercial@carchargerspecialists.com
+This pro forma uses Georgia Power PLM and PLL tariff rates (tariff automatically selected based on peak demand: PLM for 30-499 kW, PLL for 500+ kW) and the CIEV-1 Charge It Electric Vehicle Charger Rider Schedule. Rate structure and adder percentages are validated directly against Georgia Power's official Power and Light Calculator. Electricity cost estimates incorporate the CIEV Billing Demand Adjustment Factor (BDAF) applied to billing demand for Years 1-4 (0.20 / 0.40 / 0.60 / 0.80 respectively), transitioning to full rate in Year 5 or when the rolling 12-month load factor reaches 15%, whichever comes first. By default (Auto) a site whose modeled peak reaches 250 kW is billed on RTP-DA; the RTP-DA and TOU-SC MAC rate plans apply a flat annual hourly price with a summer premium (per Georgia Power guidance, Sep 2026) and a summer weekday-afternoon intra-day premium weighted by the site type's load shape, and assume a negotiated Customer Baseline Load or Monthly Access Charge; hourly prices are not published and those projections are indicative only. The TOU-EVC-4 on-peak kWh share is derived from the selected site type's hourly load shape (Tesla published Busy Times for all 90 open Georgia Supercharger sites, Sep 2026) unless overridden. Peak billing demand is modeled using Tesla Model Y as the 2026 reference (150 kW avg during 30-min billing window, rising ~6%/yr toward ~240 kW as 800V/500 kW-class vehicles penetrate the fleet) with concurrency = stalls × utilization × the site type's busiest-hour ratio (Tesla Busy Times load shape), calibrated to a real 8-stall bill (559 kW at 27% utilization). Fuel Cost Recovery is adjusted quarterly by Georgia Power and may increase or decrease over time. Georgia Power Make Ready program coverage of up to $300,000 per job and the $30,000 Business Rebate are subject to application approval and not guaranteed. Tesla Services Fee follows the Supercharger Long Term Services Agreement: $0.10/kWh of all energy throughput in Year 1, escalating 3% compounding on each anniversary of commissioning, and never less than the Minimum Services Price of $200 per post per month (both editable). Excess Facilities charges are customer-specific and apply only when GA Power's revenue ratio calculation triggers them. This tool does not constitute a contract, guarantee, or formal proposal. © 2026 Car Charger Specialists, LLC &nbsp;/&nbsp; 404-520-7349 &nbsp;/&nbsp; commercial@carchargerspecialists.com
       </div>
     </div>
   </div>
@@ -2115,7 +2141,7 @@ const DISC_GA = '<strong>ESTIMATE ONLY.</strong> Projections generated in good f
 const DISC_DUKE = '<strong>ESTIMATE ONLY.</strong> Projections use published Duke Energy general-service tariff schedules and the Commercial Charger Prep Credit. Duke offers no commercial EV rate with a demand-charge phase-in, so full demand charges apply from Year 1. Some rider values are bundled or provisional (see the Advanced panel). Default CAPEX values reflect CCS advertised turnkey pricing (equipment + installation), pre-tax; state sales tax applies to the equipment portion at invoicing. Results are not guaranteed. Actual results vary based on site conditions, the utility and rate schedule you are ultimately assigned, service upgrades, equipment pricing, and real-world utilization. This tool is for planning purposes only and does not constitute a contract, commitment, or formal proposal.';
 
 let GA_FOOTER_HTML = null;
-const FOOTER_DUKE = 'This pro forma uses published Duke Energy general-service tariff schedules (the schedule shown is auto-matched to the selected territory) and the Duke Commercial Charger Prep Credit. Duke does not offer a commercial EV rate with a demand-charge phase-in in North Carolina, South Carolina, or Florida — there is no equivalent to Georgia Power\'s CIEV-1 rider — so full demand charges apply from Year 1 on a standard general-service schedule. Billing demand is modeled as equal to measured peak demand; Duke schedules also carry demand ratchets (billing demand held at 50–80% of peak/contract) which are approximated by this assumption for a consistently-peaking site. Some rider and fuel components are bundled or provisional and are exposed as editable inputs in the Advanced panel. The Charger Prep Credit of $117,716 per 998 kW V4 cabinet (equivalent to $29,429 per port at 4 posts per cabinet) assumes a Public DC Fast Charger at a high-volume site with Service Upgrades Required / New Service; Duke bases the credit on nameplate kW per port (cabinet kW ÷ ports fed), so the total is effectively fixed per cabinet and doubles on 2-cabinet builds. It covers make-ready electrical only and is subject to application approval. Default CAPEX values are CCS advertised turnkey pricing (equipment MSRP + installation), pre-tax; state sales tax applies to the equipment portion at invoicing. Peak billing demand is modeled using Tesla Model Y as the 2026 reference (150 kW avg during 30-min window, rising ~6%/yr toward ~240 kW as 800V/500 kW-class vehicles penetrate the fleet) with concurrency = stalls × utilization × the site type\'s busiest-hour ratio (Tesla Busy Times load shape for Georgia Supercharger sites), calibrated to a real 8-stall bill (559 kW at 27% utilization). Tesla Services Fee of $0.10/kWh is applied to all energy throughput. This tool does not constitute a contract, guarantee, or formal proposal. © 2026 Car Charger Specialists, LLC &nbsp;/&nbsp; 404-520-7349 &nbsp;/&nbsp; commercial@carchargerspecialists.com';
+const FOOTER_DUKE = 'This pro forma uses published Duke Energy general-service tariff schedules (the schedule shown is auto-matched to the selected territory) and the Duke Commercial Charger Prep Credit. Duke does not offer a commercial EV rate with a demand-charge phase-in in North Carolina, South Carolina, or Florida — there is no equivalent to Georgia Power\'s CIEV-1 rider — so full demand charges apply from Year 1 on a standard general-service schedule. Billing demand is modeled as equal to measured peak demand; Duke schedules also carry demand ratchets (billing demand held at 50–80% of peak/contract) which are approximated by this assumption for a consistently-peaking site. Some rider and fuel components are bundled or provisional and are exposed as editable inputs in the Advanced panel. The Charger Prep Credit of $117,716 per 998 kW V4 cabinet (equivalent to $29,429 per port at 4 posts per cabinet) assumes a Public DC Fast Charger at a high-volume site with Service Upgrades Required / New Service; Duke bases the credit on nameplate kW per port (cabinet kW ÷ ports fed), so the total is effectively fixed per cabinet and doubles on 2-cabinet builds. It covers make-ready electrical only and is subject to application approval. Default CAPEX values are CCS advertised turnkey pricing (equipment MSRP + installation), pre-tax; state sales tax applies to the equipment portion at invoicing. Peak billing demand is modeled using Tesla Model Y as the 2026 reference (150 kW avg during 30-min window, rising ~6%/yr toward ~240 kW as 800V/500 kW-class vehicles penetrate the fleet) with concurrency = stalls × utilization × the site type\'s busiest-hour ratio (Tesla Busy Times load shape for Georgia Supercharger sites), calibrated to a real 8-stall bill (559 kW at 27% utilization). Tesla Services Fee follows the Supercharger Long Term Services Agreement: $0.10/kWh of all energy throughput in Year 1, escalating 3% compounding on each anniversary of commissioning, and never less than the Minimum Services Price of $200 per post per month (both editable). This tool does not constitute a contract, guarantee, or formal proposal. © 2026 Car Charger Specialists, LLC &nbsp;/&nbsp; 404-520-7349 &nbsp;/&nbsp; commercial@carchargerspecialists.com';
 
 function setUtility(u) {
   utility = u;
@@ -2172,6 +2198,7 @@ function renderActiveUtil() {
 
 // ============== EQUIPMENT / DEMAND MODELING ==============
 const CABINET_KW = 998;                 // Tesla V4 cabinet rating
+const TESLA_FEE = 0.10;                 // Tesla LTSA Services Price, $/kWh in Year 1
 function cabinetsFor(key) { return CONFIGS[key].cabinets; }
 function perPortNameplate(key) { return CABINET_KW * CONFIGS[key].cabinets / CONFIGS[key].ports; }
 function configLabel(key) { return CONFIGS[key].label; }
@@ -2531,10 +2558,24 @@ function getAdders() {
   };
 }
 
+// The Tesla LTSA fee as the tariff summary states it: Year 1 and final-year $/kWh, the monthly
+// minimum per post, and how many months the minimum set the fee.
+function teslaFeeLabel(adders, res) {
+  const last = res.rows[res.rows.length - 1];
+  const floorMonths = res.rows.reduce((n, r) => n + r.teslaFloorMonths, 0);
+  let s = '$' + TESLA_FEE.toFixed(2) + '/kWh Yr 1';
+  if (adders.teslaEscPct) s += ' → $' + last.tesla_fee.toFixed(3) + ' Yr ' + last.yr + ' (+' + adders.teslaEscPct + '%/yr)';
+  if (adders.teslaMinPost) s += ' · min $' + adders.teslaMinPost.toLocaleString() + '/post/mo' + (floorMonths ? ' (sets the fee ' + floorMonths + ' mo)' : '');
+  return s;
+}
+
 function calcProForma(cfgKey, grossCapex, rebate, dailyKwh, chargePrice, years, discRate, utilGrowth, adders, utilLevel) {
   const ports = CONFIGS[cfgKey].ports;
   const startYear = parseInt(document.getElementById('firstYear').value) || 2027;
-  const tesla_fee = 0.10;
+  // Tesla LTSA: $0.10/kWh in Year 1, escalating (default 3%) compounding on each anniversary of
+  // commissioning, and never below the Minimum Services Price (default $200 per post per month).
+  const teslaEsc = (adders.teslaEscPct || 0) / 100;
+  const teslaMinMonth = (adders.teslaMinPost || 0) * ports;
   const rebateYear = 1; // credit reimbursed after installation (Year 1 inflow)
   const rows = [];
   let cumCF = -grossCapex; // full CAPEX paid upfront at Year 0
@@ -2597,6 +2638,9 @@ function calcProForma(cfgKey, grossCapex, rebate, dailyKwh, chargePrice, years, 
     // Month-by-month bills on actual day counts (the twelve months sum to the 365-day year).
     const months = [];
     let annual_elec = 0;
+    let tesla_cost = 0;
+    const tesla_fee = TESLA_FEE * Math.pow(1 + teslaEsc, yr - 1);
+    let teslaFloorMonths = 0;
     for (let m = 0; m < 12; m++) {
       const kwh_m = util * ports * DAYS_IN_MONTH[m];
       const hourly = adders.rtpPrice * rtpMonthMult(m, adders.rtpSummerMult) * (isSummer(m) ? rtpShape : 1);
@@ -2608,7 +2652,10 @@ function calcProForma(cfgKey, grossCapex, rebate, dailyKwh, chargePrice, years, 
       else bill = calcFullBill(kwh_m, peak_kw, bdaf, adders);
       const gross_m = kwh_m * chargePrice;
       const rev_m = gross_m / (1 + (adders.revTaxPct || 0) / 100);
-      const tesla_m = kwh_m * tesla_fee;
+      const teslaKwh_m = kwh_m * tesla_fee;
+      const tesla_m = Math.max(teslaKwh_m, teslaMinMonth);
+      if (tesla_m > teslaKwh_m) teslaFloorMonths++;
+      tesla_cost += tesla_m;
       const feeTax_m = tesla_m * (adders.revTaxPct || 0) / 100;
       months.push({ m, name: MONTH_NAMES[m], days: DAYS_IN_MONTH[m], kwh: kwh_m, summer: isSummer(m), plan, bill, elec: bill.total,
         rate: bill.total / kwh_m, gross_rev: gross_m, revenue: rev_m, rev_tax: gross_m - rev_m + feeTax_m, tesla_cost: tesla_m,
@@ -2616,10 +2663,9 @@ function calcProForma(cfgKey, grossCapex, rebate, dailyKwh, chargePrice, years, 
       annual_elec += bill.total;
     }
     const monthly_bill = months[6].bill; // sample month in the bill preview = July (peak summer month)
-    const tesla_cost = annual_kwh * tesla_fee;
     // Sales tax is also charged on the Tesla service fee itself (statement
     // shows 6% on the fee — effectively $0.106/kWh). Shown in the Sales Tax
-    // column; the Tesla Fee column stays at the clean $0.10.
+    // column; the Tesla Fee column carries the fee alone.
     const fee_tax = tesla_cost * (adders.revTaxPct || 0) / 100;
     const gross_rev = annual_kwh * chargePrice;
     const revenue = gross_rev / (1 + (adders.revTaxPct || 0) / 100); // net of withheld sales tax
@@ -2634,7 +2680,7 @@ function calcProForma(cfgKey, grossCapex, rebate, dailyKwh, chargePrice, years, 
       const prev = cumCF - net_cf;
       payback = yr - 1 + (-prev / net_cf);
     }
-    rows.push({ yr, util: Math.round(util), utilPct, capped, peak_kw, load_factor, plan, rtpIneligible, months, annual_kwh: Math.round(annual_kwh), bdaf, eff_rate, monthly_bill, gross_rev, rev_tax: rev_tax + fee_tax, revenue, annual_elec, tesla_cost, total_cost, reimbursement, op_cf, net_cf, cumCF });
+    rows.push({ yr, util: Math.round(util), utilPct, capped, peak_kw, load_factor, plan, rtpIneligible, months, annual_kwh: Math.round(annual_kwh), bdaf, eff_rate, monthly_bill, gross_rev, rev_tax: rev_tax + fee_tax, revenue, annual_elec, tesla_fee, tesla_cost, teslaFloorMonths, total_cost, reimbursement, op_cf, net_cf, cumCF });
   }
 
   const cashFlows = [-grossCapex, ...rows.map(r => r.net_cf)];
@@ -2669,6 +2715,9 @@ function runProForma() {
   // from the utility-bill sales tax input.
   adders.revTaxPct = document.getElementById('revTaxMode').value === 'gross'
     ? (parseFloat(document.getElementById('revTaxRate').value) || 0) : 0;
+  // Tesla LTSA: $0.10/kWh escalating yearly, never below a monthly minimum per post.
+  adders.teslaEscPct = parseFloat(document.getElementById('teslaEscPct').value) || 0;
+  adders.teslaMinPost = parseFloat(document.getElementById('teslaMinPost').value) || 0;
   const cabinets = cabinetsFor(selectedConfig);
   // GA: $30k Business Rebate. Duke: Charger Prep Credit fixed per 998 kW cabinet.
   const rebate = isDuke ? adders.creditPerCab * cabinets : 30000;
@@ -2788,7 +2837,7 @@ function renderUtil(u) {
       '<div class="tariff-row"><span class="tl">Customer charge</span><span class="tv">$' + cfg.basic.toFixed(2) + '/mo</span></div>' +
       '<div class="tariff-row"><span class="tl">Demand charge</span><span class="tv">' + demandDetail + '</span></div>' +
       '<div class="tariff-row"><span class="tl">All-in rate (full demand, all years)</span><span class="tv">' + fmtR(res.rows[fullYr].eff_rate) + '</span></div>' +
-      '<div class="tariff-row"><span class="tl">Tesla Services Fee</span><span class="tv">$0.10/kWh (all years)</span></div>' +
+      '<div class="tariff-row"><span class="tl">Tesla Services Fee (LTSA)</span><span class="tv">' + teslaFeeLabel(adders, res) + '</span></div>' +
       '<div class="tariff-row"><span class="tl">Charging price to drivers</span><span class="tv">$' + chargePrice.toFixed(2) + '/kWh</span></div>';
 
     document.getElementById('billPreview').innerHTML =
@@ -2819,7 +2868,7 @@ function renderUtil(u) {
       : 'In summer months ' + touSharePct + ' of kWh is billed on-peak — the ' + SITE_LABELS[stKey].toLowerCase() + ' hourly load shape from Tesla\'s published Busy Times for ' + shp.n + ' Georgia Supercharger sites (busiest hour runs ' + shp.peakRatio.toFixed(2) + '× the daily average; weekends ' + Math.round((shp.wkndRatio - 1) * 100) + '% busier than weekdays).'
     const peakRow = '<div class="tariff-row"><span class="tl">Peak billing demand (30-min)</span><span class="tv">' + res.peak_kw.toLocaleString() + ' kW Yr 1 → ' + res.peak_kw_end.toLocaleString() + ' kW Yr ' + years + ' &nbsp;<span style="font-size:10px;color:var(--text4)">(stalls × utilization × ' + siteShape().peakRatio.toFixed(2) + ' busiest-hour ratio · fleet charge speeds rising)</span></span></div>';
     const commonRows =
-      '<div class="tariff-row"><span class="tl">Tesla Services Fee</span><span class="tv">$0.10/kWh (all years)</span></div>' +
+      '<div class="tariff-row"><span class="tl">Tesla Services Fee (LTSA)</span><span class="tv">' + teslaFeeLabel(adders, res) + '</span></div>' +
       '<div class="tariff-row"><span class="tl">Charging price to drivers</span><span class="tv">$' + chargePrice.toFixed(2) + '/kWh</span></div>';
 
     const yr1Plan = res.rows[0].plan;
@@ -2995,7 +3044,7 @@ function renderUtil(u) {
     ? '* Duke Commercial Charger Prep Credit of ' + fmt$(adders.creditPerCab) + '/998 kW cabinet × ' + cabinets + ' = ' + fmt$(rebate) + ', reimbursed after installation (modeled as a Year 1 cash inflow, not netted at Year 0); assumes Service Upgrades Required and subject to application approval. All-in Rate includes the customer charge, demand charge, energy charge, fuel &amp; riders, and applicable taxes for ' + cfg.label + ' (' + cfg.schedule.split(' — ')[0] + ', ' + cfg.effDate + ').' + (cfg.provisional ? ' Some values are provisional — see the Advanced panel.' : '')
     : '* $30,000 Georgia Power Business Rebate, subject to application approval and paid after installation (modeled as a Year 1 cash inflow, not netted at Year 0). All-in Rate includes base charges, fuel recovery, environmental compliance, DSM, franchise fee, excess facilities, and sales tax. Georgia\'s motor-fuel excise on public EV charging (SB 146, ~$0.028/kWh) is NOT included in this projection: implementation has been delayed year after year (2025 → 2026 → 2027 → 2028) and remains unimplemented. If it eventually takes effect, expect roughly 2.8¢/kWh of additional operating cost from that date forward.';
   const revTaxNote = adders.revTaxPct
-    ? ' Revenue is gross driver billings at your posted price; the Sales Tax column is the ' + adders.revTaxPct.toFixed(1) + '% withheld from that tax-inclusive price plus the same rate charged on the Tesla service fee itself (effective fee $' + (0.10 * (1 + adders.revTaxPct / 100)).toFixed(3) + '/kWh) — both remitted by the network from the gross, per actual payout statements. Set Driver Sales Tax Handling to gross to model otherwise.'
+    ? ' Revenue is gross driver billings at your posted price; the Sales Tax column is the ' + adders.revTaxPct.toFixed(1) + '% withheld from that tax-inclusive price plus the same rate charged on the Tesla service fee itself (effective Year 1 fee $' + (TESLA_FEE * (1 + adders.revTaxPct / 100)).toFixed(3) + '/kWh) — both remitted by the network from the gross, per actual payout statements. Set Driver Sales Tax Handling to gross to model otherwise.'
     : '';
   const portScaleNote = revTaxNote + ' Annual kWh assumes per-port daily volume scaled by port count (×1.00 at 4 posts, ×0.95 at 6, ×0.90 at 8, ×0.80 at 16) — larger sites split the same local charging demand, so each port sees fewer sessions. Hover the ? on each year for the per-port session breakdown (~' + Math.round(AVG_SESSION_KWH) + ' kWh average session, from real Atlanta site data: 3,118 sessions / 89,010 kWh, July 2026). Util % is the share of each port\'s day occupied (100% ≈ ' + UTIL_100_KWH.toLocaleString() + ' kWh/day/port ≈ a ~31-minute session starting every half hour around the clock, same calibration — a real host site metered at 359 kWh/day/port ≈ 27%). The entered growth rate tapers linearly to ~zero by Year 15 — US fast-charging supply has grown ~30%/yr while network utilization stayed flat (Paren, Q1 2026), so new stations erode per-port growth — and volume caps at a 50% annual-average ceiling (the best Tesla-owned metro site observed runs ~47%; overnight hours are near-dead with human drivers). That kWh ceiling rises ~30% by the mid-2030s as fleet charge acceptance climbs toward 500 kW-class hardware — modeled at half the speed gain, since dwell time doesn\'t shrink with the charge curve — and peak billing demand rises with it. On Georgia Power, the CIEV BDAF phase-in applies only while the rolling load factor stays under 15% — busy sites exceed it immediately and pay full demand charges.';
   lastRes = res; lastElecHeader = elecHeader;
